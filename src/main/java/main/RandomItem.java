@@ -6,6 +6,7 @@ import org.bukkit.Material;
 import org.bukkit.NamespacedKey;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
+import org.bukkit.event.enchantment.EnchantItemEvent;
 import org.bukkit.event.entity.EntityPickupItemEvent;
 import org.bukkit.event.inventory.BrewEvent;
 import org.bukkit.event.inventory.InventoryAction;
@@ -20,9 +21,6 @@ public class RandomItem implements Listener {
 	public static final NamespacedKey KEY = new NamespacedKey(Main.PLUGIN, "randomCheck");
 	public static final Material[] MATERIALS = Material.values().clone();
 	public static final HashMap<InventoryType, String> INV_TYPES = new HashMap<InventoryType, String>(){
-		/**
-		 * 
-		 */
 		private static final long serialVersionUID = -3707007329761881137L;
 
 		{
@@ -40,24 +38,35 @@ public class RandomItem implements Listener {
 			put(InventoryType.WORKBENCH, "WORKBENCH");
 		}
 	};
-
-	@EventHandler
-	public void inventoryClick(InventoryClickEvent e) {
-		if (e.getSlotType().equals(InventoryType.SlotType.RESULT)) {
-			if (e.getCurrentItem() != null) {
-				if (!e.getCurrentItem().getType().equals(Material.AIR)) {
-					ItemStack stack = e.getCurrentItem();
+	
+	public void changeRandomItem(ItemStack stack) {
+		if (stack != null) {
+			if (!stack.getType().equals(Material.AIR)) {
+				if (stack.getItemMeta() != null) {
 					ItemMeta meta = stack.getItemMeta();
 					PersistentDataContainer tag = meta.getPersistentDataContainer();
 					if (!tag.has(KEY, PersistentDataType.STRING)) {
 						tag.set(KEY, PersistentDataType.STRING, "true");
 						stack.setItemMeta(meta);
 						int randIdx = (int)(Math.random() * MATERIALS.length);
+						System.out.println(stack.getType() + " => " + MATERIALS[randIdx]);
 						stack.setType(MATERIALS[randIdx]);
 					}
 				}
 			}
+		}
+	}
+
+	@EventHandler
+	public void inventoryClick(InventoryClickEvent e) {
+		if (e.getSlotType().equals(InventoryType.SlotType.RESULT)) {
+			// 슬롯타입이 RESULT인 칸을 클릭했을 때,
+			// #가끔 적용 안됨 (모루, ) => 왜?
+			// #다른 아이템이 커서에 있는 상태에서 누르면 조합대에서 미리 볼 수있음 => 악용가능
+			changeRandomItem(e.getCurrentItem());
 		} else if (e.getAction().equals(InventoryAction.COLLECT_TO_CURSOR)) {
+			// 아이템을 더블클릭해서 같은 종류의 아이템을 한꺼번에 모았을 때,
+			// #가끔 적용 안됨 (훈연기, ) => 왜?
 			InventoryType invType = e.getWhoClicked().getOpenInventory().getType();
 			if (INV_TYPES.get(invType) != null) {
 				int rawSlotID = -1;
@@ -87,17 +96,11 @@ public class RandomItem implements Listener {
 						rawSlotID = 3;
 						break;
 				}
-				ItemStack stack = e.getWhoClicked().getOpenInventory().getItem(rawSlotID);
-				if (stack != null && e.getCursor() != null) {
-					if (!stack.getType().equals(Material.AIR) && e.getCursor().getType().equals(stack.getType())) {
-						ItemMeta meta = stack.getItemMeta();
-						PersistentDataContainer tag = meta.getPersistentDataContainer();
-						if (!tag.has(KEY, PersistentDataType.STRING)) {
-							tag.set(KEY, PersistentDataType.STRING, "true");
-							stack.setItemMeta(meta);
-							int randIdx = (int)(Math.random() * MATERIALS.length);
-							stack.setType(MATERIALS[randIdx]);
-						}
+				ItemStack resultStack = e.getWhoClicked().getOpenInventory().getItem(rawSlotID);
+				if (e.getCursor() != null) {
+					if (e.getCursor().getType().equals(resultStack.getType())) {
+						// #조합대에서 미리 볼 수있음. => 악용 가능성 있음
+						changeRandomItem(resultStack);
 					}
 				}
 			}
@@ -106,19 +109,19 @@ public class RandomItem implements Listener {
 	
 	@EventHandler
 	public void pickupItem(EntityPickupItemEvent e) {
-		ItemStack stack = e.getItem().getItemStack();
-		ItemMeta meta = stack.getItemMeta();
-		PersistentDataContainer tag = meta.getPersistentDataContainer();
-		if (!tag.has(KEY, PersistentDataType.STRING)) {
-			tag.set(KEY, PersistentDataType.STRING, "true");
-			stack.setItemMeta(meta);
-			int randIdx = (int)(Math.random() * MATERIALS.length);
-			stack.setType(MATERIALS[randIdx]);
-		}
+		changeRandomItem(e.getItem().getItemStack());
 	}
 	
 	@EventHandler
-	public void brewItem(BrewEvent e) {
-		System.out.println("양조기 추출완료");
+	public void brewPotion(BrewEvent e) {
+		e.getResults().forEach(potion -> {
+			changeRandomItem(potion);
+		});
+	}
+	
+	@EventHandler
+	public void enchantItem(EnchantItemEvent e) {
+		// #가끔 적용 안됨 => 어째서?
+		changeRandomItem(e.getItem());
 	}
 }
