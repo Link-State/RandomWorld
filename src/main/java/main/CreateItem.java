@@ -1,5 +1,7 @@
 package main;
 
+import java.util.HashMap;
+
 import org.bukkit.Material;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
@@ -9,7 +11,12 @@ import org.bukkit.event.inventory.InventoryType;
 import org.bukkit.inventory.ItemStack;
 
 public class CreateItem extends RandomItem implements Listener {
-
+	private HashMap<String, Boolean> registed_Events = new HashMap<String, Boolean>();
+	
+	CreateItem(String filter_list, String events) {
+		super(filter_list);
+	}
+	
 	@EventHandler
 	public void inventoryClick(InventoryClickEvent e) {
 		if (e.getSlotType().equals(InventoryType.SlotType.RESULT)) {

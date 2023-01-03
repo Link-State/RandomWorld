@@ -5,7 +5,11 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.enchantment.EnchantItemEvent;
 
 public class EnchantItem extends RandomItem implements Listener {
-	
+
+	EnchantItem(String filter_list) {
+		super(filter_list);
+	}
+
 	@EventHandler
 	public void enchantItem(EnchantItemEvent e) {
 		// #가끔 적용 안됨 => 왜? = 자연생성 아이템이 아니어서.

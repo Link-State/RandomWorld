@@ -1,8 +1,8 @@
-name: RandomWorld
 main: main.Main
+name: RandomWorld
 version: 1.0
 api-version: 1.19
+author: Link_State
+website: https://github.com/Link-State
 commands:
   randomworld:
-    
-    

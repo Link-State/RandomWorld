@@ -17,18 +17,13 @@ public class RandomItem {
 		private static final long serialVersionUID = -3707007329761881137L;
 		{
 			Material[] materials = Material.values();
-			ArrayList<Material> buffer = new ArrayList<Material>();
 			
 			// 자연적으로 얻을 수 있는 아이템인지 판별
 			for (Material m : materials) {
 				if (m.isItem()) {
-					buffer.add(m);
+					add(m);
 				}
 			}
-			
-			// buffer에서 특정 아이템만 적용, * = 전체적용, BLOCK = 설치가능한 블럭만 적용, 등등... 특정 아이템 이름 적용
-			
-			// 위에서 적용한 아이템중 특정 아이템만 제외, "" = 제외안함, BLOCK = 설치가능한 블럭만 제외, 등등... 특정 아이템 이름 제외
 		}
 	};
 	public static final HashMap<InventoryType, Integer> INV_TYPES = new HashMap<InventoryType, Integer>() {
@@ -48,6 +43,13 @@ public class RandomItem {
 			put(InventoryType.LOOM, 3);
 		}
 	};
+	private ArrayList<Material> filtered_Materials = new ArrayList<Material>();
+	
+	RandomItem(String filter_list) {
+		// MATERIALS중, filtered_Materials에 특정 아이템만 적용, * = 전체적용, BLOCK = 설치가능한 블럭만 적용, 등등... 특정 아이템 이름 적용
+		
+		// 위에서 적용한 아이템중 특정 아이템만 제외, "" = 제외안함, BLOCK = 설치가능한 블럭만 제외, 등등... 특정 아이템 이름 제외
+	}
 	
 	/**
 	 * -ITEM STATUS-
