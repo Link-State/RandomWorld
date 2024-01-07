@@ -14,9 +14,9 @@ import org.bukkit.plugin.Plugin;
 import org.bukkit.plugin.java.JavaPlugin;
 
 public class Main extends JavaPlugin {
-	public static Plugin PLUGIN;
-	public static HashMap<String, Listener> EVENTS;
-	public static HashMap<UUID, RandomEvent> REGISTED_PLAYER;
+	public static Plugin PLUGIN; // 해당 플러그인
+	public static HashMap<String, Listener> EVENTS; // 등록될 이벤트 해시맵
+	public static HashMap<UUID, RandomEvent> REGISTED_PLAYER; // 랜덤 아이템을 적용할 플레이어 리스트
 	public static SimpleConfigManager MANAGER;
 	public static SimpleConfig CONFIG;
 	
