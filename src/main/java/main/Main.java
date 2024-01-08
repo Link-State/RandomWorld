@@ -1,6 +1,8 @@
 package main;
 
 import java.io.File;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.UUID;
@@ -19,12 +21,28 @@ public class Main extends JavaPlugin {
 	public static HashMap<UUID, RandomEvent> REGISTED_PLAYER; // 랜덤 아이템을 적용할 플레이어 해시맵
 	public static SimpleConfigManager MANAGER;
 	public static SimpleConfig CONFIG;
+	public static final HashMap<String, String[]> EVENTNAME_FIELD = new HashMap<String, String[]>();
 	
 	// 플러그인 활성화 시,
 	@Override
 	public void onEnable() {
-		boolean isPluginOn = loadConfigFile(); // config파일을 생성 및 불러오고 성공 시 true 반환
-		
+
+		// 이벤트 이름:설명리스트 해시맵
+		EVENTNAME_FIELD.put("PICKUP", new String[] {"아이템을 주웠을 때"});
+		EVENTNAME_FIELD.put("WORKBENCH", new String[] {"제작대를 사용했을 때"});
+		EVENTNAME_FIELD.put("CRAFTING",new String[] {"플레이어의 2x2 제작대를 사용했을 때"});
+		EVENTNAME_FIELD.put("FURNACE", new String[] {"화로를 사용했을 때"});
+		EVENTNAME_FIELD.put("BLAST_FURNACE", new String[] {"용광로를 사용했을 때"});
+		EVENTNAME_FIELD.put("SMOKER", new String[] {"훈연기를 사용했을 때"});
+		EVENTNAME_FIELD.put("BREWING", new String[] {"물약 제조가 완료됐을 때"});
+		EVENTNAME_FIELD.put("STONECUTTER", new String[] {"석재 절단기를 사용했을 때"});
+		EVENTNAME_FIELD.put("SMITHING", new String[] {"대장장이 작업대를 사용했을 때"});
+		EVENTNAME_FIELD.put("CARTOGRAPHY", new String[] {"지도 제작대를 사용했을 때"});
+		EVENTNAME_FIELD.put("LOOM", new String[] {"베틀을 사용했을 때"});
+		EVENTNAME_FIELD.put("ANVIL", new String[] {"모루를 사용했을 때"});
+		EVENTNAME_FIELD.put("ENCHANTING", new String[] {"마법부여가 완료됐을 때"});
+		EVENTNAME_FIELD.put("GRINDSTONE", new String[] {"숫돌을 사용했을 때"});
+		EVENTNAME_FIELD.put("MERCHANT", new String[] {"상인에게서 물건을 구입했을 때"});
 		
 		// 과정
 		// 1. 플러그인 켜짐
@@ -39,8 +57,13 @@ public class Main extends JavaPlugin {
 		
 		// config파일, userdata폴더 체크
 		
-		if (!isPluginOn)
+		// config에서 Enable_plugin이 false이면 플러그인 실행 안함
+
+		boolean isPluginOn = loadConfigFile(); // config파일을 생성 및 불러오고 성공 시 true 반환
+		
+		if (!isPluginOn) {
 			return;
+		}
 		
 		// config 파일 불러오기 성공 시
 		PLUGIN = Bukkit.getPluginManager().getPlugin("RandomWorld"); // 플러그인 객체
@@ -80,15 +103,12 @@ public class Main extends JavaPlugin {
 		return super.onCommand(sender, command, label, args);
 	}
 	
+	
 	// 플러그인 온 오프
 	private void switchPlugin(boolean b) {
 		return;
 	}
 	
-	// 유저 필터링 적용
-	private void applyUser(String list) {
-		return;
-	}
 	
 	// 이벤트 필터링 적용
 	private void applyEvents(String list) {
@@ -134,10 +154,6 @@ public class Main extends JavaPlugin {
 		return;
 	}
 	
-	// 각 이벤트의 아이템 필터링 적용
-	private void applyItemBan(String event, String key) {
-		return;
-	}
 	
 	// config파일 불러오기
 	private boolean loadConfigFile() {
@@ -145,7 +161,7 @@ public class Main extends JavaPlugin {
 		CONFIG = MANAGER.getNewConfig("config.yml"); // config 파일
 		File userdata = new File(this.getDataFolder() + File.separator + "userdata"); // 유저 파일
 		
-		// 유저파일이 없는 경우 생성
+		// 유저데이터 폴더가 없는 경우 생성
 		if (!userdata.exists()) {
 			try {
 				userdata.mkdirs();
@@ -156,144 +172,9 @@ public class Main extends JavaPlugin {
 		}
 
 		// config파일 작성
-		if (CONFIG.contains("Plugin Enable")) {
-			if (!CONFIG.getBoolean("Plugin Enable")) {
-				return false;
-			}
-		}
-		
-		CONFIG.set("Plugin Enable", true, "플러그인 활성화 여부");
-		CONFIG.saveConfig();
-		
-		// -------------------------------------------------------------
-		
-		// 각 세팅
-		String[] settingName = {
-				"Enable_Plugin",
-				"Enable_UserNames",
-				"Enable_Events",
-				"COMMON_EXCEPT",
-				"PICKUP_EXCEPT",
-				"WORKBENCH_EXCEPT",
-				"CRAFTING_EXCEPT",
-				"FURNACE_EXCEPT",
-				"BLAST_FURNACE_EXCEPT",
-				"SMOKER_EXCEPT",
-				"BREWING_EXCEPT",
-				"STONECUTTER_EXCEPT",
-				"SMITHING_EXCEPT",
-				"CARTOGRAPHY_EXCEPT",
-				"LOOM_EXCEPT",
-				"ANVIL_EXCEPT",
-				"ENCHANTING_EXCEPT",
-				"GRINDSTONE_EXCEPT",
-				"MERCHANT_EXCEPT",
-				"COMMON_BAN",
-				"PICKUP_BAN",
-				"WORKBENCH_BAN",
-				"CRAFTING_BAN",
-				"FURNACE_BAN",
-				"BLAST_FURNACE_BAN",
-				"SMOKER_BAN",
-				"BREWING_BAN",
-				"STONECUTTER_BAN",
-				"SMITHING_BAN",
-				"CARTOGRAPHY_BAN",
-				"LOOM_BAN",
-				"ANVIL_BAN",
-				"ENCHANTING_BAN",
-				"GRINDSTONE_BAN",
-				"MERCHANT_BAN"
-		};
-		
-		// 각 세팅 설명
-		String[][] settingDescript = {
-				{"사용 방법 - ${블로그 링크}", "", "플러그인 활성화 여부"},
-				{"랜덤아이템을 적용 할 플레이어 목록"},
-				{"랜덤아이템을 적용 할 이벤트"},
-				{"공통 - 얘로는 바뀌지 않음"},
-				{"아이템을 주웠을 때"},
-				{"제작대를 사용했을 때"},
-				{"플레이어의 2x2 제작대를 사용했을 때"},
-				{"화로를 사용했을 때"},
-				{"용광로를 사용했을 때"},
-				{"훈연기를 사용했을 때"},
-				{"물약 제조가 완료됐을 때"},
-				{"석재 절단기를 사용했을 때"},
-				{"대장장이 작업대를 사용했을 때"},
-				{"지도 제작대를 사용했을 때"},
-				{"베틀을 사용했을 때"},
-				{"모루를 사용했을 때"},
-				{"마법부여가 완료됐을 때"},
-				{"숫돌을 사용했을 때"},
-				{"상인에게서 물건을 구입했을 때"},
-				{"공통 - 얘는 안바뀜"},
-				{"아이템을 주웠을 때"},
-				{"제작대를 사용했을 때"},
-				{"플레이어의 2x2 제작대를 사용했을 때"},
-				{"화로를 사용했을 때"},
-				{"용광로를 사용했을 때"},
-				{"훈연기를 사용했을 때"},
-				{"물약 제조가 완료됐을 때"},
-				{"석재 절단기를 사용했을 때"},
-				{"대장장이 작업대를 사용했을 때"},
-				{"지도 제작대를 사용했을 때"},
-				{"베틀을 사용했을 때"},
-				{"모루를 사용했을 때"},
-				{"마법부여가 완료됐을 때"},
-				{"숫돌을 사용했을 때"},
-				{"상인에게서 물건을 구입했을 때"}
-		};
-		
-//		String[][] settingDescript = {
-//				{"Manual - ${blog link}", "", "plugin activate"},
-//				{"Player List"},
-//				{"Event List"},
-//				{"when pickup any item"},
-//				{"when using workbench"},
-//				{"when using crafting table"},
-//				{"when using funace"},
-//				{"when using blast furnace"},
-//				{"when using smoker"},
-//				{"when the potion is complete"},
-//				{"when using stone cutter"},
-//				{"when using smithing table"},
-//				{"when using cartography"},
-//				{"when using loom"},
-//				{"when using anvil"},
-//				{"when the item is enchanted"},
-//				{"when using grind stone"},
-//				{"when buying items from merchant"}
-//		};
-		
-		
-		File[] userdatas = userdata.listFiles();
-		// 
-		
-		// 세팅 리스트와 세팅설명 리스트가 같아야 config파일 생성
-		if (settingName.length == settingDescript.length) {
-			int updateCount = 0; // config 업데이트 횟수
-			
-			for (int idx = 0; idx < settingName.length; idx++) {
-				// config파일에 해당 세팅이 없으면 새로 추가
-				if (!CONFIG.contains(settingName[idx])) {
-					CONFIG.set(
-						settingName[idx],
-						settingName[idx].equals("Enable_Plugin") ? true : "",
-						settingDescript[idx]
-					);
-					updateCount++;
-				}
-			}
-			
-			// 업데이트가 있었으면 config 저장
-			if (updateCount > 0) {
-				CONFIG.saveConfig();
-				System.out.println("updated " + updateCount + " config setting");
-			}
-		} else {
-			System.out.println("source code err!");
-			return false;
+		if (!CONFIG.contains("Enable_Plugin")) {
+			CONFIG.set("Enable_Plugin", true, "플러그인 활성화 여부");
+			CONFIG.saveConfig();
 		}
 		
 		return CONFIG.getBoolean("Enable_Plugin");
