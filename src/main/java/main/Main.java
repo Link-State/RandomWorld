@@ -15,39 +15,54 @@ import org.bukkit.plugin.java.JavaPlugin;
 
 public class Main extends JavaPlugin {
 	public static Plugin PLUGIN; // 해당 플러그인
-	public static HashMap<String, Listener> EVENTS; // 등록될 이벤트 해시맵
-	public static HashMap<UUID, RandomEvent> REGISTED_PLAYER; // 랜덤 아이템을 적용할 플레이어 리스트
+	public static HashMap<String, Listener> EVENTS; // 사용할 이벤트 해시맵
+	public static HashMap<UUID, RandomEvent> REGISTED_PLAYER; // 랜덤 아이템을 적용할 플레이어 해시맵
 	public static SimpleConfigManager MANAGER;
 	public static SimpleConfig CONFIG;
 	
+	// 플러그인 활성화 시,
 	@Override
 	public void onEnable() {
-		boolean isPluginOn = loadConfigFile();
-		if (isPluginOn) {
-			PLUGIN = Bukkit.getPluginManager().getPlugin("RandomWorld");
-			
-			EVENTS = new HashMap<String, Listener>();
-			EVENTS.put("pickup", new PickupItem());
-			EVENTS.put("brew", new BrewPotion());
-			EVENTS.put("enchant", new EnchantItem());
-			EVENTS.put("inventoryclick", new CreateItem());
-			
-			REGISTED_PLAYER = new HashMap<UUID, RandomEvent>();
-			Collection<? extends Player> players = Bukkit.getOnlinePlayers();
+		boolean isPluginOn = loadConfigFile(); // config파일을 생성 및 불러오고 성공 시 true 반환
+		
+		
+		// 과정
+		// 1. 플러그인 켜짐
+		// 2. config.yml파일과 userdata폴더 체크 후 없으면 생성, 있으면 userdata의 유저들 static해시맵 변수로 불러오기 후 기본값은 null (키는 uuid, 값은 null)
+		// 3. 새로운 유저 입장 시, userdata폴더에 데이터 있는지 체크 후 없으면 새로 생성, 기본 값 저장 후 static변수에 등록, 있으면 불러와서 static변수에 등록
+		// 4. 유저 퇴장 시, 해시맵에서 값을 null로 변경
+		
+		
+		// userdata의 정보를 기반으로 RandomEvent객체 생성
+		// config파일에는 플러그인 활성화 여부
+		// userdata에는 적용할 이벤트, 이벤트 별 바뀌게하지 않을 아이템, 이벤트 별 바꾸지 않을 아이템
+		
+		// config파일, userdata폴더 체크
+		
+		if (!isPluginOn)
+			return;
+		
+		// config 파일 불러오기 성공 시
+		PLUGIN = Bukkit.getPluginManager().getPlugin("RandomWorld"); // 플러그인 객체
+		EVENTS = new HashMap<String, Listener>();
+		EVENTS.put("pickup", new PickupItem());
+		EVENTS.put("brew", new BrewPotion());
+		EVENTS.put("enchant", new EnchantItem());
+		EVENTS.put("inventoryclick", new CreateItem());
+		REGISTED_PLAYER = new HashMap<UUID, RandomEvent>();
+		Collection<? extends Player> players = Bukkit.getOnlinePlayers();
 
-			// 1. config에서 허용된 유저인지 받아올 것
-			// 2. 쓰레드를 이용한 비동기방식으로 실행 ㄱㄱ
-			for (Player p : players) {
-				RandomEvent re = new RandomEvent(p);
-				REGISTED_PLAYER.put(p.getUniqueId(), re);
-			}
-
-			// 1. 이벤트를 아무도 안쓰는 경우 언레지스트기능 구현
-			Bukkit.getPluginManager().registerEvents(EVENTS.get("pickup"), this);
-			Bukkit.getPluginManager().registerEvents(EVENTS.get("brew"), this);
-			Bukkit.getPluginManager().registerEvents(EVENTS.get("enchant"), this);
-			Bukkit.getPluginManager().registerEvents(EVENTS.get("inventoryclick"), this);
+		// 현재 접속 중인 플레이어들
+		for (Player p : players) {
+			RandomEvent re = new RandomEvent(p);
+			REGISTED_PLAYER.put(p.getUniqueId(), re);
 		}
+
+		// 1. 이벤트를 아무도 안쓰는 경우 언레지스트기능 구현
+		Bukkit.getPluginManager().registerEvents(EVENTS.get("pickup"), this);
+		Bukkit.getPluginManager().registerEvents(EVENTS.get("brew"), this);
+		Bukkit.getPluginManager().registerEvents(EVENTS.get("enchant"), this);
+		Bukkit.getPluginManager().registerEvents(EVENTS.get("inventoryclick"), this);
 	}
 	
 	@Override
@@ -77,34 +92,40 @@ public class Main extends JavaPlugin {
 	
 	// 이벤트 필터링 적용
 	private void applyEvents(String list) {
+		// 해당 리스트가 비었으면 전체 등록
 		if (list.isEmpty()) {
 			
-		} else {
+		}
+		// 그렇지않다면 일부 등록
+		else {
 			String[] events = CONFIG.getString("Enable_Events").replaceAll(" ", "").replaceAll(",+", ",").toUpperCase().split(",");
 			for (String e : events) {
-				if (e.equals("WORKBENCH")
-					|| e.equals("CRAFTING")
-					|| e.equals("FURNACE")
-					|| e.equals("BLAST_FURNACE")
-					|| e.equals("SMOKER")
-					|| e.equals("STONECUTTER")
-					|| e.equals("SMITHING")
-					|| e.equals("CARTOGRAPHY")
-					|| e.equals("LOOM")
-					|| e.equals("ANVIL")
-					|| e.equals("GRINDSTONE")
-					|| e.equals("MERCHANT")) {
+				if (
+						e.equals("WORKBENCH") ||
+						e.equals("CRAFTING") ||
+						e.equals("FURNACE") ||
+						e.equals("BLAST_FURNACE") ||
+						e.equals("SMOKER") ||
+						e.equals("STONECUTTER") ||
+						e.equals("SMITHING") ||
+						e.equals("CARTOGRAPHY") ||
+						e.equals("LOOM") ||
+						e.equals("ANVIL") ||
+						e.equals("GRINDSTONE") ||
+						e.equals("MERCHANT")
+					) {
 					// <hashMap>
 					// EVENTS.get("InvClick").
 					// 	Crafting : item1, item2, ...
 					// 	Furnace : item1, item2, ...
 					// ...
+					// 인벤토리 클릭 이벤트
 				} else if (e.equalsIgnoreCase("PICKUP")) {
-					
+					// 줍기 이벤트
 				} else if (e.equalsIgnoreCase("BREWING")) {
-					//
+					// 양조 이벤트
 				} else if (e.equalsIgnoreCase("ENCHANTING")) {
-					//
+					// 인첸트 이벤트
 				} else {
 					
 				}
@@ -113,16 +134,18 @@ public class Main extends JavaPlugin {
 		return;
 	}
 	
-	// 이벤트의 아이템 필터링 적용
+	// 각 이벤트의 아이템 필터링 적용
 	private void applyItemBan(String event, String key) {
 		return;
 	}
 	
+	// config파일 불러오기
 	private boolean loadConfigFile() {
 		MANAGER = new SimpleConfigManager(this);
-		CONFIG = MANAGER.getNewConfig("config.yml");
-		File userdata = new File(this.getDataFolder() + File.separator + "userdata");
+		CONFIG = MANAGER.getNewConfig("config.yml"); // config 파일
+		File userdata = new File(this.getDataFolder() + File.separator + "userdata"); // 유저 파일
 		
+		// 유저파일이 없는 경우 생성
 		if (!userdata.exists()) {
 			try {
 				userdata.mkdirs();
@@ -131,7 +154,20 @@ public class Main extends JavaPlugin {
 				userdata = null;
 			}
 		}
+
+		// config파일 작성
+		if (CONFIG.contains("Plugin Enable")) {
+			if (!CONFIG.getBoolean("Plugin Enable")) {
+				return false;
+			}
+		}
 		
+		CONFIG.set("Plugin Enable", true, "플러그인 활성화 여부");
+		CONFIG.saveConfig();
+		
+		// -------------------------------------------------------------
+		
+		// 각 세팅
 		String[] settingName = {
 				"Enable_Plugin",
 				"Enable_UserNames",
@@ -169,6 +205,8 @@ public class Main extends JavaPlugin {
 				"GRINDSTONE_BAN",
 				"MERCHANT_BAN"
 		};
+		
+		// 각 세팅 설명
 		String[][] settingDescript = {
 				{"사용 방법 - ${블로그 링크}", "", "플러그인 활성화 여부"},
 				{"랜덤아이템을 적용 할 플레이어 목록"},
@@ -228,14 +266,27 @@ public class Main extends JavaPlugin {
 //				{"when buying items from merchant"}
 //		};
 		
+		
+		File[] userdatas = userdata.listFiles();
+		// 
+		
+		// 세팅 리스트와 세팅설명 리스트가 같아야 config파일 생성
 		if (settingName.length == settingDescript.length) {
-			int updateCount = 0;
+			int updateCount = 0; // config 업데이트 횟수
+			
 			for (int idx = 0; idx < settingName.length; idx++) {
+				// config파일에 해당 세팅이 없으면 새로 추가
 				if (!CONFIG.contains(settingName[idx])) {
-					CONFIG.set(settingName[idx], (settingName[idx].equals("Enable_Plugin") ? true : ""), settingDescript[idx]);
+					CONFIG.set(
+						settingName[idx],
+						settingName[idx].equals("Enable_Plugin") ? true : "",
+						settingDescript[idx]
+					);
 					updateCount++;
 				}
 			}
+			
+			// 업데이트가 있었으면 config 저장
 			if (updateCount > 0) {
 				CONFIG.saveConfig();
 				System.out.println("updated " + updateCount + " config setting");

@@ -8,8 +8,11 @@ public class BrewPotion extends RandomItem implements Listener {
 
 	@EventHandler
 	public void brewPotion(BrewEvent e) {
+		
+		// 양조된 아이템 목록
 		e.getResults().forEach(potion -> {
 //			changeRandomItem(potion);
+			
 		});
 	}
 }

@@ -9,6 +9,7 @@ public class PlayerIO implements Listener {
 	
 	@EventHandler
 	public void PlayerJoin(PlayerJoinEvent e) {
+		
 		Main.REGISTED_PLAYER.put(e.getPlayer().getUniqueId(), new RandomEvent(e.getPlayer()));
 	}
 	
