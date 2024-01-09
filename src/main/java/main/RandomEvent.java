@@ -35,7 +35,7 @@ public class RandomEvent {
 			
 			for (String event_name : event_names) {
 				this.userdata.set(event_name + "_EXCEPT", "", Main.EVENTNAME_FIELD.get(event_name));
-				this.userdata.set(event_name + "_BAN", "", Main.EVENTNAME_FIELD.get(event_name));
+				this.userdata.set(event_name + "_BAN", "");
 			}
 			
 			this.userdata.saveConfig();
@@ -126,19 +126,24 @@ public class RandomEvent {
 	
 	public void setBan(String eventName, String itemList) {
 		HashMap<Material, Boolean> negativeItems = new HashMap<Material, Boolean>();
-
-		if (!itemList.isEmpty()) {
-			int unmatchCount = 0;
-			String[] itemNames = itemList.replaceAll("\n", "").replaceAll(" ", "").replaceAll(",+", ",").toLowerCase().split(",");
-			for (String itemName : itemNames) {
-				Material material = Material.matchMaterial(itemName);
-				if (material != null) {
-					negativeItems.put(material, true);
-				} else {
-					unmatchCount++;
+		itemList = itemList.replaceAll("\n", "").replaceAll(" ", "");
+		String common_itemList = this.userdata.getString("ALL_BAN").replaceAll("\n", "").replaceAll(" ", "");
+		String all_itemList = itemList.concat("," + common_itemList).replaceAll(",,", "").toLowerCase();
+		
+		if (itemList.equals("*") || common_itemList.equals("*")) {
+			Material[] materials = Material.values();
+			for (Material m : materials) {
+				if (m.isItem()) {
+					negativeItems.put(m, true);
 				}
 			}
-			System.out.println("unmatched " + unmatchCount + " material(s)");
+		}
+		
+		for (String item : all_itemList.split(",")) {
+			Material str2mtl = Material.matchMaterial(item);
+			if (str2mtl != null) {
+				negativeItems.put(str2mtl, true);
+			}
 		}
 		
 		this.itemBan.put(eventName, negativeItems);
@@ -148,39 +153,28 @@ public class RandomEvent {
 	public void setFilter(String eventName, String itemList) {
 		HashMap<Material, Boolean> valuable = new HashMap<Material, Boolean>();
 		
-		itemList = itemList.replaceAll("\n", "").replaceAll(" ", "").toUpperCase();
+		itemList = itemList.replaceAll("\n", "").replaceAll(" ", "");
+		String common_itemList = this.userdata.getString("ALL_EXCEPT").replaceAll("\n", "").replaceAll(" ", "");
+		String all_itemList = itemList.concat("," + common_itemList).replaceAll(",,", ",").toLowerCase();
 		
-		// 아이템 전부 허용
-		if (itemList.isEmpty()) {
-			// 사용 가능한 아이템만 판별 - 이 코드는 자주 호출하지 않는 것이 좋음
-			Material[] materials = Material.values();
-			for (Material m : materials) {
-				if (m.isItem()) {
-					valuable.put(m, true);
-				}
-			}
-			
-			this.itemFilter.put(eventName, valuable);
+		// 전부 제외할 때
+		if (itemList.equals("*") || common_itemList.equals("*")) {
+			return;
 		}
-		// 아이템 일부 허용
-		else if (!itemList.equals("*") && !itemList.isEmpty()) {
-			HashMap<String, Material> filtered_hash = new HashMap<String, Material>();
-			
-			// 사용 가능한 아이템만 판별 - 이 코드는 자주 호출하지 않는 것이 좋음
-			Material[] materials = Material.values();
-			for (Material m : materials) {
-				if (m.isItem()) {
-					filtered_hash.put(m.name(), m);
-					valuable.put(m, true);
-				}
+
+		// 사용 가능한 아이템만 판별 - 이 코드는 자주 호출하지 않는 것이 좋음
+		Material[] materials = Material.values();
+		for (Material m : materials) {
+			if (m.isItem()) {
+				valuable.put(m, true);
 			}
-			
-			// 전체 아이템 중, userdata.yml에 적힌 아이템 리스트만 골라서 remove
-			for (String item : itemList.split(",")) {
-				valuable.remove(filtered_hash.get(item));
-			}
-			
-			this.itemFilter.put(eventName, valuable);
 		}
+		
+		// 전체 아이템 중, userdata.yml에 적힌 아이템 리스트만 골라서 remove
+		for (String item : all_itemList.split(",")) {
+			valuable.remove(Material.matchMaterial(item));
+		}
+		
+		this.itemFilter.put(eventName, valuable);
 	}
 }

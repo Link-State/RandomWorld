@@ -43,6 +43,7 @@ public class Main extends JavaPlugin {
 		EVENTNAME_FIELD.put("ENCHANTING", new String[] {"마법부여가 완료됐을 때"});
 		EVENTNAME_FIELD.put("GRINDSTONE", new String[] {"숫돌을 사용했을 때"});
 		EVENTNAME_FIELD.put("MERCHANT", new String[] {"상인에게서 물건을 구입했을 때"});
+		EVENTNAME_FIELD.put("POTION", new String[] {"물약 효과를 받았을 때"});
 		
 		// 과정
 		// 1. 플러그인 켜짐
@@ -82,6 +83,7 @@ public class Main extends JavaPlugin {
 		}
 
 		// 1. 이벤트를 아무도 안쓰는 경우 언레지스트기능 구현
+		Bukkit.getPluginManager().registerEvents(new PlayerIO(), this);
 		Bukkit.getPluginManager().registerEvents(EVENTS.get("pickup"), this);
 		Bukkit.getPluginManager().registerEvents(EVENTS.get("brew"), this);
 		Bukkit.getPluginManager().registerEvents(EVENTS.get("enchant"), this);
