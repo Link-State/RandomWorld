@@ -21,7 +21,7 @@ public class EnchantItem extends RandomItem implements Listener {
 			// 성분이 null이 아닐 경우
 			if (material != null) {
 				// 해당 플레이어에게 해당 아이템을 인첸트하는 것이 허용 된 경우
-				if (!re.isBan("ENCHANTING", stack.getType())) {
+				if (!re.isItemBan("ENCHANTING", stack.getType())) {
 					changeRandomItem(stack, material);
 				}
 			}

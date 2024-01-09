@@ -1,6 +1,7 @@
 package main;
 
 import java.io.File;
+import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -8,12 +9,14 @@ import java.util.HashMap;
 import java.util.UUID;
 
 import org.bukkit.Bukkit;
+import org.bukkit.World;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import org.bukkit.event.Listener;
 import org.bukkit.plugin.Plugin;
 import org.bukkit.plugin.java.JavaPlugin;
+import org.bukkit.potion.PotionEffectType;
 
 public class Main extends JavaPlugin {
 	public static Plugin PLUGIN; // 해당 플러그인
@@ -21,30 +24,54 @@ public class Main extends JavaPlugin {
 	public static HashMap<UUID, RandomEvent> REGISTED_PLAYER; // 랜덤 아이템을 적용할 플레이어 해시맵
 	public static SimpleConfigManager MANAGER;
 	public static SimpleConfig CONFIG;
-	public static final HashMap<String, String[]> EVENTNAME_FIELD = new HashMap<String, String[]>();
+	public static final HashMap<String, String[]> ITEM_FIELD = new HashMap<String, String[]>(); // 아이템 관련 이벤트 명
+	public static final HashMap<String, String[]> POTION_FIELD = new HashMap<String, String[]>(); // 포션 관련 이벤트 명
+	public static final HashMap<String, String[]> ENCHANT_FIELD = new HashMap<String, String[]>(); // 인첸트 관련 이벤트 명
+	public static boolean EFFECT_ENTITY;
+	public static ArrayList<World> DISABLE_WORLD;
+	public static ArrayList<PotionEffectType> POTION_EFFECT_TYPES = new ArrayList<PotionEffectType>();
 	
 	// 플러그인 활성화 시,
 	@Override
 	public void onEnable() {
+		// POTION_EFFECT_TYPES 필드 생성
+		Field[] fields = PotionEffectType.class.getFields(); // 필드변수 목록
+		
+		for (Field field : fields) {
+			Object obj = null;
+			try {
+				obj = field.get(PotionEffectType.ABSORPTION); // PotionEffectType형으로 변환 가능하면 Object객체 저장
+			} catch (Exception err) {
+				continue;
+			}
+			
+			// PotionEffectType 객체일 경우
+			if (obj instanceof PotionEffectType) {
+				PotionEffectType effect = (PotionEffectType) obj;
+				POTION_EFFECT_TYPES.add(effect);
+			}
+		}
 
 		// 이벤트 이름:설명리스트 해시맵
-		EVENTNAME_FIELD.put("PICKUP", new String[] {"아이템을 주웠을 때"});
-		EVENTNAME_FIELD.put("WORKBENCH", new String[] {"제작대를 사용했을 때"});
-		EVENTNAME_FIELD.put("CRAFTING",new String[] {"플레이어의 2x2 제작대를 사용했을 때"});
-		EVENTNAME_FIELD.put("FURNACE", new String[] {"화로를 사용했을 때"});
-		EVENTNAME_FIELD.put("BLAST_FURNACE", new String[] {"용광로를 사용했을 때"});
-		EVENTNAME_FIELD.put("SMOKER", new String[] {"훈연기를 사용했을 때"});
-		EVENTNAME_FIELD.put("BREWING", new String[] {"물약 제조가 완료됐을 때"});
-		EVENTNAME_FIELD.put("STONECUTTER", new String[] {"석재 절단기를 사용했을 때"});
-		EVENTNAME_FIELD.put("SMITHING", new String[] {"대장장이 작업대를 사용했을 때"});
-		EVENTNAME_FIELD.put("CARTOGRAPHY", new String[] {"지도 제작대를 사용했을 때"});
-		EVENTNAME_FIELD.put("LOOM", new String[] {"베틀을 사용했을 때"});
-		EVENTNAME_FIELD.put("ANVIL", new String[] {"모루를 사용했을 때"});
-		EVENTNAME_FIELD.put("ENCHANTING", new String[] {"마법부여가 완료됐을 때"});
-		EVENTNAME_FIELD.put("GRINDSTONE", new String[] {"숫돌을 사용했을 때"});
-		EVENTNAME_FIELD.put("MERCHANT", new String[] {"상인에게서 물건을 구입했을 때"});
-		EVENTNAME_FIELD.put("POTION", new String[] {"물약 효과를 받았을 때"});
-		
+		ITEM_FIELD.put("PICKUP", new String[] {"아이템을 주웠을 때"});
+		ITEM_FIELD.put("WORKBENCH", new String[] {"제작대를 사용했을 때"});
+		ITEM_FIELD.put("CRAFTING",new String[] {"플레이어의 2x2 제작대를 사용했을 때"});
+		ITEM_FIELD.put("FURNACE", new String[] {"화로를 사용했을 때"});
+		ITEM_FIELD.put("BLAST_FURNACE", new String[] {"용광로를 사용했을 때"});
+		ITEM_FIELD.put("SMOKER", new String[] {"훈연기를 사용했을 때"});
+		ITEM_FIELD.put("BREWING", new String[] {"물약 제조가 완료됐을 때"});
+		ITEM_FIELD.put("STONECUTTER", new String[] {"석재 절단기를 사용했을 때"});
+		ITEM_FIELD.put("SMITHING", new String[] {"대장장이 작업대를 사용했을 때"});
+		ITEM_FIELD.put("CARTOGRAPHY", new String[] {"지도 제작대를 사용했을 때"});
+		ITEM_FIELD.put("LOOM", new String[] {"베틀을 사용했을 때"});
+		ITEM_FIELD.put("ANVIL", new String[] {"모루를 사용했을 때"});
+		ITEM_FIELD.put("ENCHANTING", new String[] {"마법부여가 완료됐을 때"});
+		ITEM_FIELD.put("GRINDSTONE", new String[] {"숫돌을 사용했을 때"});
+		ITEM_FIELD.put("MERCHANT", new String[] {"상인에게서 물건을 구입했을 때"});
+
+		POTION_FIELD.put("POTION", new String[] {"물약 효과를 받았을 때"});
+
+		ENCHANT_FIELD.put("ENCHANT", new String[] {"인첸트를 했을 때"});
 		// 과정
 		// 1. 플러그인 켜짐
 		// 2. config.yml파일과 userdata폴더 체크 후 없으면 생성, 있으면 userdata의 유저들 static해시맵 변수로 불러오기 후 기본값은 null (키는 uuid, 값은 null)
@@ -83,11 +110,12 @@ public class Main extends JavaPlugin {
 		}
 
 		// 1. 이벤트를 아무도 안쓰는 경우 언레지스트기능 구현
-		Bukkit.getPluginManager().registerEvents(new PlayerIO(), this);
 		Bukkit.getPluginManager().registerEvents(EVENTS.get("pickup"), this);
 		Bukkit.getPluginManager().registerEvents(EVENTS.get("brew"), this);
 		Bukkit.getPluginManager().registerEvents(EVENTS.get("enchant"), this);
 		Bukkit.getPluginManager().registerEvents(EVENTS.get("inventoryclick"), this);
+		Bukkit.getPluginManager().registerEvents(new PlayerIO(), this);
+		Bukkit.getPluginManager().registerEvents(new GivePotionEffect(), this);
 	}
 	
 	@Override
@@ -176,8 +204,15 @@ public class Main extends JavaPlugin {
 		// config파일 작성
 		if (!CONFIG.contains("Enable_Plugin")) {
 			CONFIG.set("Enable_Plugin", true, "플러그인 활성화 여부");
+			CONFIG.set("Enable_Entity", true, "유저 외 엔티티 랜덤 영향 여부");
+			CONFIG.set("Disable_World", "", "랜덤효과 비활성화 맵 목록");
 			CONFIG.saveConfig();
 		}
+		
+		
+		EFFECT_ENTITY = CONFIG.getBoolean("Enable_Entity");
+		// DISABLE_WORLD = CONFIG.getString("Disable_World");
+		
 		
 		return CONFIG.getBoolean("Enable_Plugin");
 	}

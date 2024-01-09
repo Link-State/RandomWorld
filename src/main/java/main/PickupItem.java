@@ -27,7 +27,7 @@ public class PickupItem extends RandomItem implements Listener {
 				
 				// 변경한 아이템이 null이 아니고 config에서 밴 된(필터링 처리 된) 아이템일 경우
 				if (material != null) {
-					if (!re.isBan("PICKUP", stack.getType())) {
+					if (!re.isItemBan("PICKUP", stack.getType())) {
 						
 						// 무작위로 선택된 아이템으로 변경
 						changeRandomItem(stack, material);

@@ -18,7 +18,7 @@
 			<attribute name="module" value="true"/>
 		</attributes>
 	</classpathentry>
-	<classpathentry kind="lib" path="C:/Users/Link State/git/RandomWorld/spigot-api-1.20.4-R0.1-SNAPSHOT.jar">
+	<classpathentry kind="lib" path="C:/Users/psych/git/RandomWorld/spigot-api-1.20.4-R0.1-SNAPSHOT.jar">
 		<attributes>
 			<attribute name="module" value="true"/>
 		</attributes>
