@@ -9,9 +9,11 @@ import java.util.HashMap;
 import java.util.UUID;
 
 import org.bukkit.Bukkit;
+import org.bukkit.Material;
 import org.bukkit.World;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
+import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.Player;
 import org.bukkit.event.Listener;
 import org.bukkit.plugin.Plugin;
@@ -22,36 +24,19 @@ public class Main extends JavaPlugin {
 	public static Plugin PLUGIN; // 해당 플러그인
 	public static HashMap<String, Listener> EVENTS; // 사용할 이벤트 해시맵
 	public static HashMap<UUID, RandomEvent> REGISTED_PLAYER; // 랜덤 아이템을 적용할 플레이어 해시맵
+	public static RandomEvent COMMON; // 공통으로 적용할 해시맵
+	public static RandomEvent ENTITY;
+	public static int MAX_EFFECT_COUNT = 5;
 	public static SimpleConfigManager MANAGER;
 	public static SimpleConfig CONFIG;
 	public static final HashMap<String, String[]> ITEM_FIELD = new HashMap<String, String[]>(); // 아이템 관련 이벤트 명
 	public static final HashMap<String, String[]> POTION_FIELD = new HashMap<String, String[]>(); // 포션 관련 이벤트 명
 	public static final HashMap<String, String[]> ENCHANT_FIELD = new HashMap<String, String[]>(); // 인첸트 관련 이벤트 명
-	public static boolean EFFECT_ENTITY;
 	public static ArrayList<World> DISABLE_WORLD;
-	public static ArrayList<PotionEffectType> POTION_EFFECT_TYPES = new ArrayList<PotionEffectType>();
 	
 	// 플러그인 활성화 시,
 	@Override
 	public void onEnable() {
-		// POTION_EFFECT_TYPES 필드 생성
-		Field[] fields = PotionEffectType.class.getFields(); // 필드변수 목록
-		
-		for (Field field : fields) {
-			Object obj = null;
-			try {
-				obj = field.get(PotionEffectType.ABSORPTION); // PotionEffectType형으로 변환 가능하면 Object객체 저장
-			} catch (Exception err) {
-				continue;
-			}
-			
-			// PotionEffectType 객체일 경우
-			if (obj instanceof PotionEffectType) {
-				PotionEffectType effect = (PotionEffectType) obj;
-				POTION_EFFECT_TYPES.add(effect);
-			}
-		}
-
 		// 이벤트 이름:설명리스트 해시맵
 		ITEM_FIELD.put("PICKUP", new String[] {"아이템을 주웠을 때"});
 		ITEM_FIELD.put("WORKBENCH", new String[] {"제작대를 사용했을 때"});
@@ -105,7 +90,7 @@ public class Main extends JavaPlugin {
 
 		// 현재 접속 중인 플레이어들
 		for (Player p : players) {
-			RandomEvent re = new RandomEvent(p);
+			RandomEvent re = new RandomEvent(p.getUniqueId().toString());
 			REGISTED_PLAYER.put(p.getUniqueId(), re);
 		}
 
@@ -187,8 +172,6 @@ public class Main extends JavaPlugin {
 	
 	// config파일 불러오기
 	private boolean loadConfigFile() {
-		MANAGER = new SimpleConfigManager(this);
-		CONFIG = MANAGER.getNewConfig("config.yml"); // config 파일
 		File userdata = new File(this.getDataFolder() + File.separator + "userdata"); // 유저 파일
 		
 		// 유저데이터 폴더가 없는 경우 생성
@@ -200,17 +183,27 @@ public class Main extends JavaPlugin {
 				userdata = null;
 			}
 		}
-
+		
+		MANAGER = new SimpleConfigManager(this);
+		CONFIG = MANAGER.getNewConfig("config.yml"); // config 파일
+		
 		// config파일 작성
 		if (!CONFIG.contains("Enable_Plugin")) {
 			CONFIG.set("Enable_Plugin", true, "플러그인 활성화 여부");
 			CONFIG.set("Enable_Entity", true, "유저 외 엔티티 랜덤 영향 여부");
+			CONFIG.set("Max_effect_count", 5, "거북이모자 또는 돌고래");
 			CONFIG.set("Disable_World", "", "랜덤효과 비활성화 맵 목록");
 			CONFIG.saveConfig();
 		}
 		
+		COMMON = new RandomEvent("COMMON"); // 공통 랜덤효과
+		ENTITY = null; // 엔티티 랜덤효과
+		MAX_EFFECT_COUNT = CONFIG.getInt("Max_effect_count");
 		
-		EFFECT_ENTITY = CONFIG.getBoolean("Enable_Entity");
+		// 엔티티도 랜덤효과를 허용한 경우
+		if (CONFIG.getBoolean("Enable_Entity")) {
+			ENTITY = new RandomEvent("ENTITY");
+		}
 		// DISABLE_WORLD = CONFIG.getString("Disable_World");
 		
 		

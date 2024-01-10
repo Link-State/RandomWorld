@@ -13,7 +13,7 @@ public class PlayerIO implements Listener {
 	public void PlayerJoin(PlayerJoinEvent e) {
 		
 		Player p = e.getPlayer();
-		RandomEvent re = new RandomEvent(e.getPlayer());
+		RandomEvent re = new RandomEvent(e.getPlayer().getUniqueId().toString());
 		Main.REGISTED_PLAYER.put(p.getUniqueId(), re);
 	}
 	

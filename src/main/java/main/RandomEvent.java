@@ -1,112 +1,107 @@
 package main;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.Set;
 
+import org.bukkit.Keyed;
 import org.bukkit.Material;
+import org.bukkit.Registry;
+import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.Player;
 import org.bukkit.potion.PotionEffectType;
 
 public class RandomEvent {
-	private final Player p; // 플레이어
-	private final SimpleConfig userdata; // 유저 데이터
+	private final SimpleConfig data; // 데이터
 	private HashMap<String, Boolean> activated; // 각 이벤트 별, 활성화여부 해시맵
 	private HashMap<String, HashMap<Material, Boolean>> itemFilter; // 랜덤 결과로 나오지 않을 아이템 해시맵
 	private HashMap<String, HashMap<Material, Boolean>> itemBan; // 바꾸지 않을 아이템 해시맵
 	private HashMap<String, HashMap<PotionEffectType, Boolean>> potionFilter; // 랜덤 결과로 나오지 않을 포션효과 해시맵
 	private HashMap<String, HashMap<PotionEffectType, Boolean>> potionBan; // 바꾸지 않을 포션효과 해시맵
-	private HashMap<String, HashMap<Material, Boolean>> enchantFilter; // 랜덤 결과로 나오지 않을 인첸트효과 해시맵
-	private HashMap<String, HashMap<Material, Boolean>> enchantBan; // 바꾸지 않을 인첸트효과 해시맵
-	
+	private HashMap<String, HashMap<Enchantment, Boolean>> enchantFilter; // 랜덤 결과로 나오지 않을 인첸트효과 해시맵
+	private HashMap<String, HashMap<Enchantment, Boolean>> enchantBan; // 바꾸지 않을 인첸트효과 해시맵
 	
 	// 생성자
-	public RandomEvent(Player p) {
-		this.p = p;
-		this.userdata = Main.MANAGER.getNewConfig("/userdata/" + p.getUniqueId() + ".yml");
+	public RandomEvent(String resident_name) {
+		this.data = Main.MANAGER.getNewConfig("/userdata/" + resident_name + ".yml");
 		this.activated = new HashMap<String, Boolean>();
 		this.itemFilter = new HashMap<String, HashMap<Material, Boolean>>();
 		this.itemBan = new HashMap<String, HashMap<Material, Boolean>>();
 		this.potionFilter = new HashMap<String, HashMap<PotionEffectType, Boolean>>();
 		this.potionBan = new HashMap<String, HashMap<PotionEffectType, Boolean>>();
-		this.enchantFilter = new HashMap<String, HashMap<Material, Boolean>>();
-		this.enchantBan = new HashMap<String, HashMap<Material, Boolean>>();
+		this.enchantFilter = new HashMap<String, HashMap<Enchantment, Boolean>>();
+		this.enchantBan = new HashMap<String, HashMap<Enchantment, Boolean>>();
 		
 		// 유저데이터 만들고 등록하고 끝
-		Set<String> event_names = Main.ITEM_FIELD.keySet();
+		Set<String> item_names = Main.ITEM_FIELD.keySet();
+		Set<String> effect_names = Main.POTION_FIELD.keySet();
+		Set<String> enchant_names = Main.ENCHANT_FIELD.keySet();
 		
-		if (!this.userdata.contains("Enable_Events")) {
-			this.userdata.set("Enable_Events", "*", "활성화 할 이벤트 목록");
-			this.userdata.set("ALL_EXCEPT", "", "모든 EXCEPT 이벤트에 적용");
-			this.userdata.set("ALL_BAN", "", "모든 BAN 이벤트에 적용");
-
+		if (!this.data.contains("Enable_Events")) {
+			this.data.set("Enable_Events", "*", "활성화 할 이벤트 목록");
+			this.data.set("ALL_EXCEPT", "", "모든 EXCEPT 이벤트에 적용");
+			this.data.set("ALL_BAN", "", "모든 BAN 이벤트에 적용");
 			
-			for (String event_name : event_names) {
-				this.userdata.set(event_name + "_EXCEPT", "", Main.ITEM_FIELD.get(event_name));
-				this.userdata.set(event_name + "_BAN", "");
+			for (String name : item_names) {
+				this.data.set(name + "_EXCEPT", "", Main.ITEM_FIELD.get(name));
+				this.data.set(name + "_BAN", "");
 			}
 			
-			event_names = Main.POTION_FIELD.keySet();
-			
-			for (String event_name : event_names) {
-				this.userdata.set(event_name + "_EXCEPT", "", Main.POTION_FIELD.get(event_name));
-				this.userdata.set(event_name + "_BAN", "", Main.POTION_FIELD.get(event_name));
+			for (String name : effect_names) {
+				this.data.set(name + "_EXCEPT", "", Main.POTION_FIELD.get(name));
+				this.data.set(name + "_BAN", "");
 			}
 			
-			event_names = Main.ENCHANT_FIELD.keySet();
-			
-			for (String event_name : event_names) {
-				this.userdata.set(event_name + "_EXCEPT", "", Main.ENCHANT_FIELD.get(event_name));
-				this.userdata.set(event_name + "_BAN", "", Main.ENCHANT_FIELD.get(event_name));
+			for (String name : enchant_names) {
+				this.data.set(name + "_EXCEPT", "", Main.ENCHANT_FIELD.get(name));
+				this.data.set(name + "_BAN", "");
 			}
 			
-			this.userdata.saveConfig();
+			this.data.saveConfig();
 		}
-		
+
 		// 유저데이터에서 가져오기
-		String eventsString = this.userdata.getString("Enable_Events").replaceAll("\n", "").replaceAll(" ", "").toUpperCase();
+		String eventsString = this.data.getString("Enable_Events").replaceAll("\n", "").replaceAll(" ", "").toUpperCase();
 		
 		ArrayList<String> eventList;
 		if (eventsString.equals("*")) {
-			eventList = new ArrayList<String>(Arrays.asList(event_names.toArray(new String[0])));
+			eventList = new ArrayList<String>();
+			eventList.addAll(item_names);
+			eventList.addAll(effect_names);
+			eventList.addAll(enchant_names);
 		}
 		else {
 			eventList = new ArrayList<String>(Arrays.asList(eventsString.split(",")));
 		}
 		
 		// 유저가 활성화하고자 하는 이벤트 리스트를 하나씩 순회
-		for (String event_name : eventList) {
+		for (String name : eventList) {
 			// 유저가 설정한 아이템 이벤트가 존재하면
-			if (Main.ITEM_FIELD.containsKey(event_name)) {
-				this.setActivate(event_name, true); // 활성화
-				
-				String itemList_Except = this.userdata.getString(event_name + "_EXCEPT"); // 해당 이벤트의 Except 아이템들
-				this.setItemFilter(event_name, itemList_Except); // 아이템 필터링 업데이트
-
-				String itemList_Ban = this.userdata.getString(event_name + "_BAN"); // 해당 이벤트의 Ban 아이템들
-				this.setItemBan(event_name, itemList_Ban); // 아이템 밴 업데이트
+			
+			String except = this.data.getString(name + "_EXCEPT");
+			String ban = this.data.getString(name + "_BAN");
+			
+			if (Main.ITEM_FIELD.containsKey(name)) {
+				this.setActivate(name, true); // 활성화
+				this.setItemFilter(name, except); // 아이템 필터링 업데이트
+				this.setItemBan(name, ban); // 아이템 밴 업데이트
 			}
 			// 유저가 설정한 포션효과 이벤트가 존재하면
-			else if (Main.POTION_FIELD.containsKey(event_name)) {
-				this.setActivate(event_name, true); // 활성화
-				
-				String EffectList_Except = this.userdata.getString("POTION_EXCEPT");
-				this.setEffectFilter(); // 아이템
-				
-				this.setEffectBan();
+			else if (Main.POTION_FIELD.containsKey(name)) {
+				this.setActivate(name, true); // 활성화
+				this.setEffectFilter(name, except); // 포션 필터링 업데이트
+				this.setEffectBan(name, ban); // 포션 밴 업데이트
 			}
 			// 유저가 설정한 인첸트 이벤트가 존재하면
-			else if (Main.ENCHANT_FIELD.containsKey(event_name)) {
-				this.setActivate(event_name, true); // 활성화
-				// 구현 필요
+			else if (Main.ENCHANT_FIELD.containsKey(name)) {
+				this.setActivate(name, true); // 활성화
+				this.setEnchantFilter(name, except); // 인첸트 필터링 업데이트
+				this.setEnchantBan(name, ban); // 인첸트 밴 업데이트
 			}
 		}
-	}
-	
-	
-	public Player getPlayer() {
-		return this.p;
 	}
 	
 	
@@ -136,9 +131,39 @@ public class RandomEvent {
 		return keys[randIdx];
 	}
 	
+
+	public PotionEffectType getRandomEffect(String eventName, PotionEffectType origin) {
+		// origin 포션효과가 ban list에 존재하면 return null
+		if (this.potionBan.get(eventName) != null) {
+			if (this.potionBan.get(eventName).get(origin) != null) {
+				return null;
+			}
+		}
+		
+		// 사용자 필터링에 맞게 포션효과 리턴
+		HashMap<PotionEffectType, Boolean> eventEffects = this.potionFilter.get(eventName);
+		if (eventEffects == null || eventEffects.size() <= 0) {
+			return null;
+		}
+		
+		PotionEffectType[] keys = eventEffects.keySet().toArray(new PotionEffectType[0]);
+		int randIdx = (int)(Math.random() * keys.length);
+		
+		return keys[randIdx];
+	}
 	
-	public void getRandomEnchant() {
-		return;
+	
+	public Enchantment getRandomEnchant(String eventName) {
+		// 사용자 필터링에 맞게 포션효과 리턴
+		HashMap<Enchantment, Boolean> eventEnchants = this.enchantFilter.get(eventName);
+		if (eventEnchants == null || eventEnchants.size() <= 0) {
+			return null;
+		}
+		
+		Enchantment[] keys = eventEnchants.keySet().toArray(new Enchantment[0]);
+		int randIdx = (int)(Math.random() * keys.length);
+		
+		return keys[randIdx];
 	}
 	
 	
@@ -179,31 +204,133 @@ public class RandomEvent {
 		return false;
 	}
 	
+	public boolean isEffectBan(String eventName, PotionEffectType effect) {
+		return true;
+	}
 	
-	public void setEffectBan() {
+	public boolean isEnchantBan(String eventName, Enchantment enchant) {
+		return true;
+	}
+	
+	
+	public void setEffectBan(String eventName, String effectList) {
+		HashMap<PotionEffectType, Boolean> negativeEffects = new HashMap<PotionEffectType, Boolean>();
+		effectList = effectList.replaceAll("\n", "").replaceAll(" ", "");
+		String common_effectList = this.data.getString("ALL_BAN").replaceAll("\n", "").replaceAll(" ", "");
+		String all_effectList = effectList.concat("," + common_effectList).replaceAll(",,", "").toLowerCase();
 		
+		if (effectList.equals("*") || common_effectList.equals("*")) {
+			Iterator<PotionEffectType> re = Registry.EFFECT.iterator();
+			while (re.hasNext()) {
+				negativeEffects.put(re.next(), true);
+			}
+		}
+		
+		for (String effect : all_effectList.split(",")) {
+			PotionEffectType str2eft = Registry.EFFECT.match(effect);
+			if (str2eft != null) {
+				negativeEffects.put(str2eft, true);
+			}
+		}
+		
+		this.potionBan.put(eventName, negativeEffects);
 	}
 
 	
-	public void setEffectFilter() {
+	public void setEffectFilter(String eventName, String effectList) {
 		// 전체 이펙트에서 거를 이펙트만 제거해서 this.potionFilter에 저장
+		HashMap<PotionEffectType, Boolean> valuable = new HashMap<PotionEffectType, Boolean>();
+		
+		effectList = effectList.replaceAll("\n", "").replaceAll(" ", ""); // 유저 필터링
+		String common_effectList = this.data.getString("ALL_EXCEPT").replaceAll("\n", "").replaceAll(" ", ""); // 공통 필터링
+		String all_effectList = effectList.concat("," + common_effectList).replaceAll(",,", ",").toLowerCase(); // 유저 + 공통 필터링
+		
+		// 전부 제외할 때
+		if (effectList.equals("*") || common_effectList.equals("*")) {
+			return;
+		}
+
+		// 포션 효과 해시맵 생성
+		Iterator<PotionEffectType> re = Registry.EFFECT.iterator();
+		while (re.hasNext()) {
+			// key는 minecraft:포션효과
+			valuable.put(re.next(), true);
+		}
+		
+		// 전체 포션효과 중, userdata에 적힌 포션효과만 골라서 remove
+		for (String effect : all_effectList.split(",")) {
+			PotionEffectType key = Registry.EFFECT.match(effect);
+			if (key != null) {
+				valuable.remove(key);
+			}
+		}
+		
+		this.potionFilter.put(eventName, valuable);
 	}
 	
 	
-	public void setEnchantBan() {
+	public void setEnchantBan(String eventName, String enchantList) {
+		HashMap<Enchantment, Boolean> negativeEnchants = new HashMap<Enchantment, Boolean>();
+		enchantList = enchantList.replaceAll("\n", "").replaceAll(" ", "");
+		String common_enchantList = this.data.getString("ALL_BAN").replaceAll("\n", "").replaceAll(" ", "");
+		String all_enchantList = enchantList.concat("," + common_enchantList).replaceAll(",,", "").toLowerCase();
 		
+		if (enchantList.equals("*") || common_enchantList.equals("*")) {
+			Iterator<Enchantment> re = Registry.ENCHANTMENT.iterator();
+			while (re.hasNext()) {
+				negativeEnchants.put(re.next(), true);
+			}
+		}
+		
+		for (String enchant : all_enchantList.split(",")) {
+			Enchantment str2eht = Registry.ENCHANTMENT.match(enchant);
+			if (str2eht != null) {
+				negativeEnchants.put(str2eht, true);
+			}
+		}
+		
+		this.enchantBan.put(eventName, negativeEnchants);
 	}
 	
 
-	public void setEnchantFilter() {
+	public void setEnchantFilter(String eventName, String enchantList) {
+		// 전체 이펙트에서 거를 이펙트만 제거해서 this.potionFilter에 저장
+		HashMap<Enchantment, Boolean> valuable = new HashMap<Enchantment, Boolean>();
 		
+		enchantList = enchantList.replaceAll("\n", "").replaceAll(" ", ""); // 유저 필터링
+		String common_enchantList = this.data.getString("ALL_EXCEPT").replaceAll("\n", "").replaceAll(" ", ""); // 공통 필터링
+		String all_enchantList = enchantList.concat("," + common_enchantList).replaceAll(",,", ",").toLowerCase(); // 유저 + 공통 필터링
+		
+		// 전부 제외할 때
+		if (enchantList.equals("*") || common_enchantList.equals("*")) {
+			return;
+		}
+
+		// 포션 효과 해시맵 생성
+		Iterator<Enchantment> re = Registry.ENCHANTMENT.iterator();
+		while (re.hasNext()) {
+			// key는 minecraft:인첸트명
+			Enchantment ppp = re.next();
+			valuable.put(ppp, true);
+//			System.out.println(ppp.getKey());
+		}
+		
+		// 전체 포션효과 중, userdata에 적힌 포션효과만 골라서 remove
+		for (String enchant : all_enchantList.split(",")) {
+			Enchantment key = Registry.ENCHANTMENT.match(enchant);
+			if (key != null) {
+				valuable.remove(key);
+			}
+		}
+		
+		this.enchantFilter.put(eventName, valuable);
 	}
 	
 	
 	public void setItemBan(String eventName, String itemList) {
 		HashMap<Material, Boolean> negativeItems = new HashMap<Material, Boolean>();
 		itemList = itemList.replaceAll("\n", "").replaceAll(" ", "");
-		String common_itemList = this.userdata.getString("ALL_BAN").replaceAll("\n", "").replaceAll(" ", "");
+		String common_itemList = this.data.getString("ALL_BAN").replaceAll("\n", "").replaceAll(" ", "");
 		String all_itemList = itemList.concat("," + common_itemList).replaceAll(",,", "").toLowerCase();
 		
 		if (itemList.equals("*") || common_itemList.equals("*")) {
@@ -222,6 +349,16 @@ public class RandomEvent {
 			}
 		}
 		
+		// 유저에게 설정된 item ban이 없으면 공통 item ban 설정으로 덮어씌우기
+		if (itemList.equals("")) {
+			// 깊은 복사
+			HashMap<Material, Boolean> common_itemban = Main.COMMON.itemBan.get(eventName);
+			Set<Material> keys = common_itemban.keySet();
+			for (Material key : keys) {
+				negativeItems.put(key, common_itemban.get(key));
+			}
+		}
+		
 		this.itemBan.put(eventName, negativeItems);
 	}
 	
@@ -230,7 +367,7 @@ public class RandomEvent {
 		HashMap<Material, Boolean> valuable = new HashMap<Material, Boolean>();
 		
 		itemList = itemList.replaceAll("\n", "").replaceAll(" ", "");
-		String common_itemList = this.userdata.getString("ALL_EXCEPT").replaceAll("\n", "").replaceAll(" ", "");
+		String common_itemList = this.data.getString("ALL_EXCEPT").replaceAll("\n", "").replaceAll(" ", "");
 		String all_itemList = itemList.concat("," + common_itemList).replaceAll(",,", ",").toLowerCase();
 		
 		// 전부 제외할 때
@@ -249,6 +386,10 @@ public class RandomEvent {
 		// 전체 아이템 중, userdata.yml에 적힌 아이템 리스트만 골라서 remove
 		for (String item : all_itemList.split(",")) {
 			valuable.remove(Material.matchMaterial(item));
+		}
+		
+		if (itemList.equals("")) {
+			
 		}
 		
 		this.itemFilter.put(eventName, valuable);
