@@ -219,6 +219,12 @@ public class RandomEvent {
 		String common_effectList = this.data.getString("ALL_BAN").replaceAll("\n", "").replaceAll(" ", "");
 		String all_effectList = effectList.concat("," + common_effectList).replaceAll(",,", "").toLowerCase();
 		
+		if (all_effectList.equals(",")) {
+			negativeEffects = Main.COMMON.potionBan.get(eventName);
+			this.potionBan.put(eventName, negativeEffects);
+			return;
+		}
+		
 		if (effectList.equals("*") || common_effectList.equals("*")) {
 			Iterator<PotionEffectType> re = Registry.EFFECT.iterator();
 			while (re.hasNext()) {
@@ -244,6 +250,13 @@ public class RandomEvent {
 		effectList = effectList.replaceAll("\n", "").replaceAll(" ", ""); // 유저 필터링
 		String common_effectList = this.data.getString("ALL_EXCEPT").replaceAll("\n", "").replaceAll(" ", ""); // 공통 필터링
 		String all_effectList = effectList.concat("," + common_effectList).replaceAll(",,", ",").toLowerCase(); // 유저 + 공통 필터링
+		
+		// 개인사용자 설정이 없어서 기본값으로
+		if (all_effectList.equals(",")) {
+			valuable = Main.COMMON.potionFilter.get(eventName);
+			this.potionFilter.put(eventName, valuable);
+			return;
+		}
 		
 		// 전부 제외할 때
 		if (effectList.equals("*") || common_effectList.equals("*")) {
@@ -275,6 +288,13 @@ public class RandomEvent {
 		String common_enchantList = this.data.getString("ALL_BAN").replaceAll("\n", "").replaceAll(" ", "");
 		String all_enchantList = enchantList.concat("," + common_enchantList).replaceAll(",,", "").toLowerCase();
 		
+		// 개인 사용자 설정이 없으면 기본값으로 설정
+		if (all_enchantList.equals(",")) {
+			negativeEnchants = Main.COMMON.enchantBan.get(eventName);
+			this.enchantBan.put(eventName, negativeEnchants);
+			return;
+		}
+		
 		if (enchantList.equals("*") || common_enchantList.equals("*")) {
 			Iterator<Enchantment> re = Registry.ENCHANTMENT.iterator();
 			while (re.hasNext()) {
@@ -300,6 +320,13 @@ public class RandomEvent {
 		enchantList = enchantList.replaceAll("\n", "").replaceAll(" ", ""); // 유저 필터링
 		String common_enchantList = this.data.getString("ALL_EXCEPT").replaceAll("\n", "").replaceAll(" ", ""); // 공통 필터링
 		String all_enchantList = enchantList.concat("," + common_enchantList).replaceAll(",,", ",").toLowerCase(); // 유저 + 공통 필터링
+
+		// 개인 사용자 설정이 없으면 기본값으로 설정
+		if (all_enchantList.equals(",")) {
+			valuable = Main.COMMON.enchantFilter.get(eventName);
+			this.enchantFilter.put(eventName, valuable);
+			return;
+		}
 		
 		// 전부 제외할 때
 		if (enchantList.equals("*") || common_enchantList.equals("*")) {
@@ -333,6 +360,13 @@ public class RandomEvent {
 		String common_itemList = this.data.getString("ALL_BAN").replaceAll("\n", "").replaceAll(" ", "");
 		String all_itemList = itemList.concat("," + common_itemList).replaceAll(",,", "").toLowerCase();
 		
+		// 유저에게 설정된 item ban이 없으면 공통 item ban 설정으로 덮어씌우기
+		if (all_itemList.equals(",")) {
+			negativeItems = Main.COMMON.itemBan.get(eventName);
+			this.itemBan.put(eventName, negativeItems);
+			return;
+		}
+		
 		if (itemList.equals("*") || common_itemList.equals("*")) {
 			Material[] materials = Material.values();
 			for (Material m : materials) {
@@ -349,16 +383,6 @@ public class RandomEvent {
 			}
 		}
 		
-		// 유저에게 설정된 item ban이 없으면 공통 item ban 설정으로 덮어씌우기
-		if (itemList.equals("")) {
-			// 깊은 복사
-			HashMap<Material, Boolean> common_itemban = Main.COMMON.itemBan.get(eventName);
-			Set<Material> keys = common_itemban.keySet();
-			for (Material key : keys) {
-				negativeItems.put(key, common_itemban.get(key));
-			}
-		}
-		
 		this.itemBan.put(eventName, negativeItems);
 	}
 	
@@ -369,6 +393,13 @@ public class RandomEvent {
 		itemList = itemList.replaceAll("\n", "").replaceAll(" ", "");
 		String common_itemList = this.data.getString("ALL_EXCEPT").replaceAll("\n", "").replaceAll(" ", "");
 		String all_itemList = itemList.concat("," + common_itemList).replaceAll(",,", ",").toLowerCase();
+		
+		// 사용자 설정이 없으면 기본값 적용
+		if (all_itemList.equals(",")) {
+			valuable = Main.COMMON.itemFilter.get(eventName);
+			this.itemFilter.put(eventName, valuable);
+			return;
+		}
 		
 		// 전부 제외할 때
 		if (itemList.equals("*") || common_itemList.equals("*")) {
@@ -386,10 +417,6 @@ public class RandomEvent {
 		// 전체 아이템 중, userdata.yml에 적힌 아이템 리스트만 골라서 remove
 		for (String item : all_itemList.split(",")) {
 			valuable.remove(Material.matchMaterial(item));
-		}
-		
-		if (itemList.equals("")) {
-			
 		}
 		
 		this.itemFilter.put(eventName, valuable);
