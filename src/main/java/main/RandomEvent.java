@@ -1,17 +1,14 @@
 package main;
 
-import java.io.File;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Set;
 
-import org.bukkit.Keyed;
 import org.bukkit.Material;
 import org.bukkit.Registry;
 import org.bukkit.enchantments.Enchantment;
-import org.bukkit.entity.Player;
 import org.bukkit.potion.PotionEffectType;
 
 public class RandomEvent {
@@ -37,106 +34,11 @@ public class RandomEvent {
 		this.enchantFilter = new HashMap<String, HashMap<Enchantment, Boolean>>();
 		this.enchantBan = new HashMap<String, HashMap<Enchantment, Boolean>>();
 		
-		// 유저데이터 만들고 등록하고 끝
-		Set<String> item_names = Main.ITEM_FIELD.keySet();
-		Set<String> effect_names = Main.POTION_FIELD.keySet();
-		Set<String> enchant_names = Main.ENCHANT_FIELD.keySet();
-		int updated = 0;
+		// 유저 데이터 생성
+		this.createUserdata();
 		
-		if (!this.data.contains("Enable_Events")) {
-			this.data.set("Enable_Events", "*", "활성화 할 이벤트 목록");
-			updated++;
-		}
-		
-		if (!this.data.contains("ALL_EXCEPT")) {
-			this.data.set("ALL_EXCEPT", "", "모든 EXCEPT 이벤트에 적용");
-			updated++;
-		}
-		
-		if (!this.data.contains("ALL_BAN")) {
-			this.data.set("ALL_BAN", "", "모든 BAN 이벤트에 적용");
-			updated++;
-		}
-		
-		for (String name : item_names) {
-			if (!this.data.contains(name + "_EXCEPT")) {
-				this.data.set(name + "_EXCEPT", "", Main.ITEM_FIELD.get(name));
-				updated++;
-			}
-			
-			if (!this.data.contains(name + "_BAN")) {
-				this.data.set(name + "_BAN", "");
-				updated++;
-			}
-		}
-		
-		for (String name : effect_names) {
-			if (!this.data.contains(name + "_EXCEPT")) {
-				this.data.set(name + "_EXCEPT", "", Main.POTION_FIELD.get(name));
-				updated++;
-			}
-			
-			if (!this.data.contains(name + "_BAN")) {
-				this.data.set(name + "_BAN", "");
-				updated++;
-			}
-		}
-		
-		for (String name : enchant_names) {
-			if (!this.data.contains(name + "_EXCEPT")) {
-				this.data.set(name + "_EXCEPT", "", Main.ENCHANT_FIELD.get(name));
-				updated++;
-			}
-			
-			if (!this.data.contains(name + "_BAN")) {
-				this.data.set(name + "_BAN", "");
-				updated++;
-			}
-		}
-		
-		if (updated > 0) {
-			this.data.saveConfig();	
-		}
-
-		// 유저데이터에서 가져오기
-		String eventsString = this.data.getString("Enable_Events").replaceAll("\n", "").replaceAll(" ", "").toUpperCase();
-		
-		ArrayList<String> eventList;
-		if (eventsString.equals("*")) {
-			eventList = new ArrayList<String>();
-			eventList.addAll(item_names);
-			eventList.addAll(effect_names);
-			eventList.addAll(enchant_names);
-		}
-		else {
-			eventList = new ArrayList<String>(Arrays.asList(eventsString.split(",")));
-		}
-		
-		// 유저가 활성화하고자 하는 이벤트 리스트를 하나씩 순회
-		for (String name : eventList) {
-			// 유저가 설정한 아이템 이벤트가 존재하면
-			
-			String except = this.data.getString(name + "_EXCEPT");
-			String ban = this.data.getString(name + "_BAN");
-			
-			if (Main.ITEM_FIELD.get(name) != null) {				
-				this.setActivate(name, true); // 활성화
-				this.setItemFilter(name, except); // 아이템 필터링 업데이트
-				this.setItemBan(name, ban); // 아이템 밴 업데이트
-			}
-			// 유저가 설정한 포션효과 이벤트가 존재하면
-			else if (Main.POTION_FIELD.get(name) != null) {
-				this.setActivate(name, true); // 활성화
-				this.setEffectFilter(name, except); // 포션 필터링 업데이트
-				this.setEffectBan(name, ban); // 포션 밴 업데이트
-			}
-			// 유저가 설정한 인첸트 이벤트가 존재하면
-			else if (Main.ENCHANT_FIELD.get(name) != null) {
-				this.setActivate(name, true); // 활성화
-				this.setEnchantFilter(name, except); // 인첸트 필터링 업데이트
-				this.setEnchantBan(name, ban); // 인첸트 밴 업데이트
-			}
-		}
+		// 등록된 이벤트 불러오기
+		this.loadEvent();
 	}
 	
 	
@@ -145,11 +47,6 @@ public class RandomEvent {
 			return true;
 		}
 		return false;
-	}
-	
-	
-	public void setActivate(String eventName, boolean b) {
-		this.activated.put(eventName, b);
 	}
 	
 	
@@ -245,6 +142,11 @@ public class RandomEvent {
 	
 	public boolean isEnchantBan(String eventName, Enchantment enchant) {
 		return true;
+	}
+
+	
+	public void setActivate(String eventName, boolean b) {
+		this.activated.put(eventName, b);
 	}
 	
 	
@@ -456,5 +358,119 @@ public class RandomEvent {
 		}
 		
 		this.itemFilter.put(eventName, valuable);
+	}
+	
+
+	public void createUserdata() {
+		// 유저데이터 만들고 등록하고 끝
+		Set<String> item_names = Main.ITEM_FIELD.keySet();
+		Set<String> effect_names = Main.POTION_FIELD.keySet();
+		Set<String> enchant_names = Main.ENCHANT_FIELD.keySet();
+		int updated = 0;
+		
+		if (!this.data.contains("Enable_Events")) {
+			this.data.set("Enable_Events", "*");
+			updated++;
+		}
+		
+		if (!this.data.contains("ALL_EXCEPT")) {
+			this.data.set("ALL_EXCEPT", "");
+			updated++;
+		}
+		
+		if (!this.data.contains("ALL_BAN")) {
+			this.data.set("ALL_BAN", "");
+			updated++;
+		}
+		
+		// 아이템 이벤트
+		for (String name : item_names) {
+			if (!this.data.contains(name + "_EXCEPT")) {
+				this.data.set(name + "_EXCEPT", "");
+				updated++;
+			}
+			
+			if (!this.data.contains(name + "_BAN")) {
+				this.data.set(name + "_BAN", "");
+				updated++;
+			}
+		}
+		
+		// 포션효과 이벤트
+		for (String name : effect_names) {
+			if (!this.data.contains(name + "_EXCEPT")) {
+				this.data.set(name + "_EXCEPT", "");
+				updated++;
+			}
+			
+			if (!this.data.contains(name + "_BAN")) {
+				this.data.set(name + "_BAN", "");
+				updated++;
+			}
+		}
+		
+		// 인첸트 이벤트
+		for (String name : enchant_names) {
+			if (!this.data.contains(name + "_EXCEPT")) {
+				this.data.set(name + "_EXCEPT", "");
+				updated++;
+			}
+			
+			if (!this.data.contains(name + "_BAN")) {
+				this.data.set(name + "_BAN", "");
+				updated++;
+			}
+		}
+		
+		// 수정사항이 있으면 저장
+		if (updated > 0) {
+			this.data.saveConfig();	
+		}
+	}
+	
+	public void loadEvent() {
+		Set<String> item_names = Main.ITEM_FIELD.keySet();
+		Set<String> effect_names = Main.POTION_FIELD.keySet();
+		Set<String> enchant_names = Main.ENCHANT_FIELD.keySet();
+		
+		// 유저데이터에서 가져오기
+		String eventsString = this.data.getString("Enable_Events").replaceAll("\n", "").replaceAll(" ", "").toUpperCase();
+		
+		ArrayList<String> eventList;
+		if (eventsString.equals("*")) {
+			eventList = new ArrayList<String>();
+			eventList.addAll(item_names);
+			eventList.addAll(effect_names);
+			eventList.addAll(enchant_names);
+		}
+		else {
+			eventList = new ArrayList<String>(Arrays.asList(eventsString.split(",")));
+		}
+		
+		// 유저가 활성화하고자 하는 이벤트 리스트를 하나씩 순회
+		for (String name : eventList) {
+			// 유저가 설정한 아이템 이벤트가 존재하면
+			
+			String except = this.data.getString(name + "_EXCEPT");
+			String ban = this.data.getString(name + "_BAN");
+			
+			if (Main.ITEM_FIELD.get(name) != null) {				
+				this.setActivate(name, true); // 활성화
+				this.setItemFilter(name, except); // 아이템 필터링 업데이트
+				this.setItemBan(name, ban); // 아이템 밴 업데이트
+			}
+			// 유저가 설정한 포션효과 이벤트가 존재하면
+			else if (Main.POTION_FIELD.get(name) != null) {
+				this.setActivate(name, true); // 활성화
+				this.setEffectFilter(name, except); // 포션 필터링 업데이트
+				this.setEffectBan(name, ban); // 포션 밴 업데이트
+			}
+			// 유저가 설정한 인첸트 이벤트가 존재하면
+			else if (Main.ENCHANT_FIELD.get(name) != null) {
+				this.setActivate(name, true); // 활성화
+				this.setEnchantFilter(name, except); // 인첸트 필터링 업데이트
+				this.setEnchantBan(name, ban); // 인첸트 밴 업데이트
+			}
+		}
 	}
 }

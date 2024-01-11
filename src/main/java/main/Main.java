@@ -23,22 +23,22 @@ import org.bukkit.potion.PotionEffectType;
 
 public class Main extends JavaPlugin {
 	public static Plugin PLUGIN; // 해당 플러그인
+	public static SimpleConfigManager MANAGER;
+	public static SimpleConfig CONFIG;
 	public static HashMap<String, Listener> EVENTS; // 이벤트 목록 해시맵
 	public static HashMap<UUID, RandomEvent> REGISTED_PLAYER; // 플레이어에게 적용할 랜덤이벤트 해시맵
+
+	public static final HashMap<InventoryType, Boolean> DEACTIVATED_INVENTORY_TYPE = new HashMap<InventoryType, Boolean>(); // result슬롯 없는 인벤토리 해시맵
+	public static final HashMap<String, InventoryType> ACTIVATED_INVENTORY_TYPE = new HashMap<String, InventoryType>(); // 인벤토리 유형 해시맵
+	public static final HashMap<InventoryType, Integer> RESULT_SLOT = new HashMap<InventoryType, Integer>(); // 결과 슬롯 해시맵
+	public static final HashMap<String, Boolean> ITEM_FIELD = new HashMap<String, Boolean>(); // 아이템 관련 이벤트 명
+	public static final HashMap<String, Boolean> POTION_FIELD = new HashMap<String, Boolean>(); // 포션 관련 이벤트 명
+	public static final HashMap<String, Boolean> ENCHANT_FIELD = new HashMap<String, Boolean>(); // 인첸트 관련 이벤트 명
+	
 	public static RandomEvent DEFAULT; // 공통으로 적용 할 랜덤이벤트 해시맵
 	public static RandomEvent ENTITY; // 엔티티에게 적용 할 랜덤이벤트 해시맵
 	public static int MAX_EFFECT_COUNT = 5; // 돌고래에 의해 얻을 수 있는 최대버프 갯수
-	public static SimpleConfigManager MANAGER;
-	public static SimpleConfig CONFIG;
-
-	public static final HashMap<InventoryType, Boolean> DEACTIVATED_INVENTORY_TYPE = new HashMap<InventoryType, Boolean>();
-	public static final HashMap<String, InventoryType> ACTIVATED_INVENTORY_TYPE = new HashMap<String, InventoryType>(); // 인벤토리 유형 해시맵
-	public static final HashMap<InventoryType, Integer> RESULT_SLOT = new HashMap<InventoryType, Integer>(); // 결과 슬롯 해시맵
-	
-	public static final HashMap<String, String[]> ITEM_FIELD = new HashMap<String, String[]>(); // 아이템 관련 이벤트 명
-	public static final HashMap<String, String[]> POTION_FIELD = new HashMap<String, String[]>(); // 포션 관련 이벤트 명
-	public static final HashMap<String, String[]> ENCHANT_FIELD = new HashMap<String, String[]>(); // 인첸트 관련 이벤트 명
-	public static ArrayList<World> DISABLE_WORLD;
+	public static HashMap<String, World> DISABLE_WORLD; // 월드 제한 수
 	
 	// 플러그인 활성화 시,
 	@Override
@@ -57,46 +57,50 @@ public class Main extends JavaPlugin {
 //		ITEM_FIELD.put("GRINDSTONE", new String[] {"숫돌을 사용했을 때"});
 //		ITEM_FIELD.put("MERCHANT", new String[] {"상인에게서 물건을 구입했을 때"});
 		
-		ITEM_FIELD.put("PICKUP", new String[] {"아이템을 주웠을 때"});
+		// 인벤토리 클릭 관련
+		ITEM_FIELD.put("PICKUP", true);
 		
-		// POTION_FIELD로 이동
-		ITEM_FIELD.put("BREWING", new String[] {"물약 제조가 완료됐을 때"});
-		// ENCHANT_FIELD로 이동
-		ITEM_FIELD.put("ENCHANTING", new String[] {"마법부여가 완료됐을 때"});
-
-		POTION_FIELD.put("POTION", new String[] {"물약 효과를 받았을 때"});
-
-		ENCHANT_FIELD.put("ENCHANT", new String[] {"인첸트를 했을 때"});
-
-		boolean isPluginOn = loadConfigFile(); // config파일을 생성 및 불러오고 성공 시 true 반환
+		// 포션이펙트 관련
+		POTION_FIELD.put("POTION", true);
+		POTION_FIELD.put("BREWING", true);
 		
+		// 인첸트 관련
+		ENCHANT_FIELD.put("ENCHANT", true);
+		ENCHANT_FIELD.put("ENCHANTING", true);
+		
+		// config파일을 생성 및 불러오고 성공 시 true 반환
+		boolean isPluginOn = loadConfigFile(); 
 		if (!isPluginOn) {
 			return;
 		}
 		
 		// config 파일 불러오기 성공 시
 		PLUGIN = Bukkit.getPluginManager().getPlugin("RandomWorld"); // 플러그인 객체
+		
+		// 이벤트 해시맵에 저장
 		EVENTS = new HashMap<String, Listener>();
 		EVENTS.put("pickup", new PickupItem());
 		EVENTS.put("brew", new BrewPotion());
 		EVENTS.put("enchant", new EnchantItem());
 		EVENTS.put("inventoryclick", new CreateItem());
+		EVENTS.put("potion", new GivePotionEffect());
+		EVENTS.put("playerIO", new PlayerIO());
+		
+		// 서버 내 랜덤효과 쓰는 플레이어 등록
 		REGISTED_PLAYER = new HashMap<UUID, RandomEvent>();
 		Collection<? extends Player> players = Bukkit.getOnlinePlayers();
-
-		// 현재 접속 중인 플레이어들
 		for (Player p : players) {
 			RandomEvent re = new RandomEvent(p.getUniqueId().toString());
 			REGISTED_PLAYER.put(p.getUniqueId(), re);
 		}
 
-		// 1. 이벤트를 아무도 안쓰는 경우 언레지스트기능 구현
+		// 이벤트 등록
 		Bukkit.getPluginManager().registerEvents(EVENTS.get("pickup"), this);
 		Bukkit.getPluginManager().registerEvents(EVENTS.get("brew"), this);
 		Bukkit.getPluginManager().registerEvents(EVENTS.get("enchant"), this);
 		Bukkit.getPluginManager().registerEvents(EVENTS.get("inventoryclick"), this);
-		Bukkit.getPluginManager().registerEvents(new PlayerIO(), this);
-		Bukkit.getPluginManager().registerEvents(new GivePotionEffect(), this);
+		Bukkit.getPluginManager().registerEvents(EVENTS.get("potion"), this);
+		Bukkit.getPluginManager().registerEvents(EVENTS.get("playerIO"), this);
 	}
 	
 	@Override
@@ -185,12 +189,12 @@ public class Main extends JavaPlugin {
 		
 		// config파일 작성
 		if (!CONFIG.contains("Enable_Plugin")) {
-			CONFIG.set("Enable_Plugin", true, "플러그인 활성화 여부");
-			CONFIG.set("Enable_Entity", true, "유저 외 엔티티 랜덤 영향 여부");
-			CONFIG.set("Max_effect_count", 5, "돌고래로 받을 수 있는 최대효과 갯수");
-			CONFIG.set("Disable_World", "", "랜덤효과 비활성화 맵 목록");
-			CONFIG.set("DEACTIVATED", "", "건들지마시오");
-			CONFIG.set("ACTIVATED", "", "건들지마시오");
+			CONFIG.set("Enable_Plugin", true);
+			CONFIG.set("Enable_Entity", true);
+			CONFIG.set("Max_effect_count", 5);
+			CONFIG.set("Disable_World", "");
+			CONFIG.set("DEACTIVATED", "");
+			CONFIG.set("ACTIVATED", "");
 			CONFIG.saveConfig();
 		}
 		
@@ -232,7 +236,7 @@ public class Main extends JavaPlugin {
 					int slotID = Integer.parseInt(tuple[1]);
 					
 					invType = InventoryType.valueOf(name);
-					ITEM_FIELD.put(name, new String[] {""});
+					ITEM_FIELD.put(name, true);
 					ACTIVATED_INVENTORY_TYPE.put(name, invType);
 					RESULT_SLOT.put(invType, slotID);
 				} catch (IllegalArgumentException err) {
