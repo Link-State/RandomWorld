@@ -122,8 +122,10 @@ public class CreateItem extends RandomItem implements Listener {
 				
 				// 무작위로 선택한 아이템이 null이 아니고
 				if (material != null) {
+					
 					// 해당 인벤토리에서 결과로 나온 아이템은 무작위로 변경가능한 것인지 확인
 					if (!re.isItemBan(entity.getOpenInventory().getType().name(), stack.getType())) {
+						
 						// 커서에 있는 아이템이 null이 아니고 공기도 아닐 경우
 						if (e.getCursor() != null && e.getCursor().getType().equals(Material.AIR)) {
 							changeRandomItem(stack, material); // 무작위로 선택된 아이템으로 변경

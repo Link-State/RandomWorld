@@ -119,19 +119,19 @@ public class RandomEvent {
 			String except = this.data.getString(name + "_EXCEPT");
 			String ban = this.data.getString(name + "_BAN");
 			
-			if (Main.ITEM_FIELD.containsKey(name)) {
+			if (Main.ITEM_FIELD.get(name) != null) {				
 				this.setActivate(name, true); // 활성화
 				this.setItemFilter(name, except); // 아이템 필터링 업데이트
 				this.setItemBan(name, ban); // 아이템 밴 업데이트
 			}
 			// 유저가 설정한 포션효과 이벤트가 존재하면
-			else if (Main.POTION_FIELD.containsKey(name)) {
+			else if (Main.POTION_FIELD.get(name) != null) {
 				this.setActivate(name, true); // 활성화
 				this.setEffectFilter(name, except); // 포션 필터링 업데이트
 				this.setEffectBan(name, ban); // 포션 밴 업데이트
 			}
 			// 유저가 설정한 인첸트 이벤트가 존재하면
-			else if (Main.ENCHANT_FIELD.containsKey(name)) {
+			else if (Main.ENCHANT_FIELD.get(name) != null) {
 				this.setActivate(name, true); // 활성화
 				this.setEnchantFilter(name, except); // 인첸트 필터링 업데이트
 				this.setEnchantBan(name, ban); // 인첸트 밴 업데이트

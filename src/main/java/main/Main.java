@@ -201,6 +201,46 @@ public class Main extends JavaPlugin {
 	
 	private void loadSetting() {
 		
+		// 파일 불러오기	
+		String deactivated = CONFIG.getString("DEACTIVATED");
+		String activated = CONFIG.getString("ACTIVATED");
+		InventoryType invType;
+		
+		// result타입이 없는 인벤토리들을 파일에서 불러오기
+		if (!deactivated.isEmpty()) {
+			for (String key : deactivated.split(",")) {
+				try {
+					invType = InventoryType.valueOf(key);
+					DEACTIVATED_INVENTORY_TYPE.put(invType, true);
+				} catch (IllegalArgumentException err) {
+					System.out.println("[Plugin-RandomWorld] YOU NEED TO FIX 'DEACTIVATED' at config.yml\nThe wrong Inventory Name filled in.");
+				}
+			}	
+		}
+		
+		// result타입이 있는 인벤토리들을 파일에서 불러오기
+		if (!activated.isEmpty()) {
+			for (String key : activated.split(",")) {
+				
+				String[] tuple = key.split("@");
+				if (tuple.length != 2) {
+					continue;	
+				}
+				
+				try {
+					String name = tuple[0];
+					int slotID = Integer.parseInt(tuple[1]);
+					
+					invType = InventoryType.valueOf(name);
+					ITEM_FIELD.put(name, new String[] {""});
+					ACTIVATED_INVENTORY_TYPE.put(name, invType);
+					RESULT_SLOT.put(invType, slotID);
+				} catch (IllegalArgumentException err) {
+					System.out.println("YOU NEED TO FIX 'ACTIVATED' at config.yml\nThe wrong Inventory Name filled in.");
+				}
+			}
+		}
+
 		DEFAULT = new RandomEvent("DEFAULT"); // 공통 랜덤효과
 		ENTITY = null; // 엔티티 랜덤효과
 		MAX_EFFECT_COUNT = CONFIG.getInt("Max_effect_count");
@@ -211,41 +251,5 @@ public class Main extends JavaPlugin {
 		}
 		// DISABLE_WORLD = CONFIG.getString("Disable_World");
 		
-		
-		// 파일 불러오기	
-		String deactivated = CONFIG.getString("DEACTIVATED");
-		String activated = CONFIG.getString("ACTIVATED");
-		InventoryType invType;
-		
-		// result타입이 없는 인벤토리들을 파일에서 불러오기
-		for (String key : deactivated.split(",")) {
-			try {
-				invType = InventoryType.valueOf(key);
-				DEACTIVATED_INVENTORY_TYPE.put(invType, true);
-			} catch (IllegalArgumentException err) {
-				System.out.println("[Plugin-RandomWorld] YOU NEED TO FIX 'DEACTIVATED' at config.yml\nThe wrong Inventory Name filled in.");
-			}
-		}
-		
-		// result타입이 있는 인벤토리들을 파일에서 불러오기
-		for (String key : activated.split(",")) {
-			
-			String[] tuple = key.split("@");
-			if (tuple.length != 2) {
-				continue;	
-			}
-			
-			try {
-				String name = tuple[0];
-				int slotID = Integer.parseInt(tuple[1]);
-				
-				invType = InventoryType.valueOf(name);
-				ITEM_FIELD.put(key, new String[] {""});
-				ACTIVATED_INVENTORY_TYPE.put(name, invType);
-				RESULT_SLOT.put(invType, slotID);
-			} catch (IllegalArgumentException err) {
-				System.out.println("YOU NEED TO FIX 'ACTIVATED' at config.yml\nThe wrong Inventory Name filled in.");
-			}
-		}
 	}
 }
