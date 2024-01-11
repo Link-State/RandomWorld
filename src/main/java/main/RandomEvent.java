@@ -19,6 +19,7 @@ public class RandomEvent {
 	private HashMap<String, HashMap<Material, Boolean>> itemBan; // 바꾸지 않을 아이템 해시맵
 	private HashMap<String, HashMap<PotionEffectType, Boolean>> potionFilter; // 랜덤 결과로 나오지 않을 포션효과 해시맵
 	private HashMap<String, HashMap<PotionEffectType, Boolean>> potionBan; // 바꾸지 않을 포션효과 해시맵
+	private HashMap<String, HashMap<PotionEffectType, Integer>> potionMax; // 바꾸지 않을 포션효과 해시맵
 	private HashMap<String, HashMap<Enchantment, Boolean>> enchantFilter; // 랜덤 결과로 나오지 않을 인첸트효과 해시맵
 	private HashMap<String, HashMap<Enchantment, Boolean>> enchantBan; // 바꾸지 않을 인첸트효과 해시맵
 	
@@ -31,6 +32,7 @@ public class RandomEvent {
 		this.itemBan = new HashMap<String, HashMap<Material, Boolean>>();
 		this.potionFilter = new HashMap<String, HashMap<PotionEffectType, Boolean>>();
 		this.potionBan = new HashMap<String, HashMap<PotionEffectType, Boolean>>();
+		this.potionMax = new HashMap<String, HashMap<PotionEffectType, Integer>>();
 		this.enchantFilter = new HashMap<String, HashMap<Enchantment, Boolean>>();
 		this.enchantBan = new HashMap<String, HashMap<Enchantment, Boolean>>();
 		
@@ -180,7 +182,6 @@ public class RandomEvent {
 		this.potionBan.put(eventName, negativeEffects);
 	}
 
-	
 	public void setEffectFilter(String eventName, String effectList) {
 		// 전체 이펙트에서 거를 이펙트만 제거해서 this.potionFilter에 저장
 		HashMap<PotionEffectType, Boolean> valuable = new HashMap<PotionEffectType, Boolean>();
@@ -217,6 +218,10 @@ public class RandomEvent {
 		}
 		
 		this.potionFilter.put(eventName, valuable);
+	}
+	
+	public void setEffectMax(String eventName, int maxCount) {
+		//
 	}
 	
 	
@@ -383,20 +388,8 @@ public class RandomEvent {
 			updated++;
 		}
 		
-		// 아이템 이벤트
-		for (String name : item_names) {
-			if (!this.data.contains(name + "_EXCEPT")) {
-				this.data.set(name + "_EXCEPT", "");
-				updated++;
-			}
-			
-			if (!this.data.contains(name + "_BAN")) {
-				this.data.set(name + "_BAN", "");
-				updated++;
-			}
-		}
-		
 		// 포션효과 이벤트
+		// e.g) 신호기로부터 얻는 이펙트, 신호기에서 바꿀 이펙트, 최대 갯수
 		for (String name : effect_names) {
 			if (!this.data.contains(name + "_EXCEPT")) {
 				this.data.set(name + "_EXCEPT", "");
@@ -407,10 +400,28 @@ public class RandomEvent {
 				this.data.set(name + "_BAN", "");
 				updated++;
 			}
+			
+			if (!this.data.contains(name + "_MAX")) {
+				this.data.set(name + "_MAX", 5);
+				updated++;
+			}
 		}
 		
 		// 인첸트 이벤트
 		for (String name : enchant_names) {
+			if (!this.data.contains(name + "_EXCEPT")) {
+				this.data.set(name + "_EXCEPT", "");
+				updated++;
+			}
+			
+			if (!this.data.contains(name + "_BAN")) {
+				this.data.set(name + "_BAN", "");
+				updated++;
+			}
+		}
+		
+		// 아이템 이벤트
+		for (String name : item_names) {
 			if (!this.data.contains(name + "_EXCEPT")) {
 				this.data.set(name + "_EXCEPT", "");
 				updated++;
@@ -450,20 +461,23 @@ public class RandomEvent {
 		// 유저가 활성화하고자 하는 이벤트 리스트를 하나씩 순회
 		for (String name : eventList) {
 			// 유저가 설정한 아이템 이벤트가 존재하면
-			
 			String except = this.data.getString(name + "_EXCEPT");
 			String ban = this.data.getString(name + "_BAN");
 			
-			if (Main.ITEM_FIELD.get(name) != null) {				
+			if (Main.ITEM_FIELD.get(name) != null) {
+				
 				this.setActivate(name, true); // 활성화
 				this.setItemFilter(name, except); // 아이템 필터링 업데이트
 				this.setItemBan(name, ban); // 아이템 밴 업데이트
 			}
 			// 유저가 설정한 포션효과 이벤트가 존재하면
 			else if (Main.POTION_FIELD.get(name) != null) {
+				int max = this.data.getInt(name + "_MAX");
+				
 				this.setActivate(name, true); // 활성화
 				this.setEffectFilter(name, except); // 포션 필터링 업데이트
 				this.setEffectBan(name, ban); // 포션 밴 업데이트
+				this.setEffectMax(name, max); // 포션 최대 갯수 업데이트
 			}
 			// 유저가 설정한 인첸트 이벤트가 존재하면
 			else if (Main.ENCHANT_FIELD.get(name) != null) {

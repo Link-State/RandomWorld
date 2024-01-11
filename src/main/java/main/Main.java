@@ -16,6 +16,8 @@ import org.bukkit.command.CommandSender;
 import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.Player;
 import org.bukkit.event.Listener;
+import org.bukkit.event.entity.EntityPotionEffectEvent;
+import org.bukkit.event.entity.EntityPotionEffectEvent.Cause;
 import org.bukkit.event.inventory.InventoryType;
 import org.bukkit.plugin.Plugin;
 import org.bukkit.plugin.java.JavaPlugin;
@@ -32,12 +34,11 @@ public class Main extends JavaPlugin {
 	public static final HashMap<String, InventoryType> ACTIVATED_INVENTORY_TYPE = new HashMap<String, InventoryType>(); // 인벤토리 유형 해시맵
 	public static final HashMap<InventoryType, Integer> RESULT_SLOT = new HashMap<InventoryType, Integer>(); // 결과 슬롯 해시맵
 	public static final HashMap<String, Boolean> ITEM_FIELD = new HashMap<String, Boolean>(); // 아이템 관련 이벤트 명
-	public static final HashMap<String, Boolean> POTION_FIELD = new HashMap<String, Boolean>(); // 포션 관련 이벤트 명
+	public static final HashMap<String, Integer> POTION_FIELD = new HashMap<String, Integer>(); // 포션 관련 이벤트 명
 	public static final HashMap<String, Boolean> ENCHANT_FIELD = new HashMap<String, Boolean>(); // 인첸트 관련 이벤트 명
 	
 	public static RandomEvent DEFAULT; // 공통으로 적용 할 랜덤이벤트 해시맵
 	public static RandomEvent ENTITY; // 엔티티에게 적용 할 랜덤이벤트 해시맵
-	public static int MAX_EFFECT_COUNT = 5; // 돌고래에 의해 얻을 수 있는 최대버프 갯수
 	public static HashMap<String, World> DISABLE_WORLD; // 월드 제한 수
 	
 	// 플러그인 활성화 시,
@@ -57,16 +58,28 @@ public class Main extends JavaPlugin {
 //		ITEM_FIELD.put("GRINDSTONE", new String[] {"숫돌을 사용했을 때"});
 //		ITEM_FIELD.put("MERCHANT", new String[] {"상인에게서 물건을 구입했을 때"});
 		
-		// 인벤토리 클릭 관련
-		ITEM_FIELD.put("PICKUP", true);
-		
 		// 포션이펙트 관련
-		POTION_FIELD.put("POTION", true);
-		POTION_FIELD.put("BREWING", true);
+		Cause[] effect_causes = EntityPotionEffectEvent.Cause.values();
+		for (Cause cause : effect_causes) {
+			if (cause.equals(EntityPotionEffectEvent.Cause.PLUGIN) ||
+				cause.equals(EntityPotionEffectEvent.Cause.COMMAND) ||
+				cause.equals(EntityPotionEffectEvent.Cause.MILK) ||
+				cause.equals(EntityPotionEffectEvent.Cause.ILLUSION) ||
+				cause.equals(EntityPotionEffectEvent.Cause.EXPIRATION) ||
+				cause.equals(EntityPotionEffectEvent.Cause.DEATH) ||
+				cause.equals(EntityPotionEffectEvent.Cause.CONVERSION)) {
+				continue;
+			}
+			
+			POTION_FIELD.put(cause.name(), 5);
+		}
 		
 		// 인첸트 관련
 		ENCHANT_FIELD.put("ENCHANT", true);
 		ENCHANT_FIELD.put("ENCHANTING", true);
+		
+		// 인벤토리 클릭 관련
+		ITEM_FIELD.put("PICKUP", true);
 		
 		// config파일을 생성 및 불러오고 성공 시 true 반환
 		boolean isPluginOn = loadConfigFile(); 
@@ -191,7 +204,6 @@ public class Main extends JavaPlugin {
 		if (!CONFIG.contains("Enable_Plugin")) {
 			CONFIG.set("Enable_Plugin", true);
 			CONFIG.set("Enable_Entity", true);
-			CONFIG.set("Max_effect_count", 5);
 			CONFIG.set("Disable_World", "");
 			CONFIG.set("DEACTIVATED", "");
 			CONFIG.set("ACTIVATED", "");
@@ -247,7 +259,6 @@ public class Main extends JavaPlugin {
 
 		DEFAULT = new RandomEvent("DEFAULT"); // 공통 랜덤효과
 		ENTITY = null; // 엔티티 랜덤효과
-		MAX_EFFECT_COUNT = CONFIG.getInt("Max_effect_count");
 		
 		// 엔티티도 랜덤효과를 허용한 경우
 		if (CONFIG.getBoolean("Enable_Entity")) {
