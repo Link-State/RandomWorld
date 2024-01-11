@@ -16,19 +16,25 @@ import org.bukkit.command.CommandSender;
 import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.Player;
 import org.bukkit.event.Listener;
+import org.bukkit.event.inventory.InventoryType;
 import org.bukkit.plugin.Plugin;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.potion.PotionEffectType;
 
 public class Main extends JavaPlugin {
 	public static Plugin PLUGIN; // 해당 플러그인
-	public static HashMap<String, Listener> EVENTS; // 사용할 이벤트 해시맵
-	public static HashMap<UUID, RandomEvent> REGISTED_PLAYER; // 랜덤 아이템을 적용할 플레이어 해시맵
-	public static RandomEvent COMMON; // 공통으로 적용할 해시맵
-	public static RandomEvent ENTITY;
-	public static int MAX_EFFECT_COUNT = 5;
+	public static HashMap<String, Listener> EVENTS; // 이벤트 목록 해시맵
+	public static HashMap<UUID, RandomEvent> REGISTED_PLAYER; // 플레이어에게 적용할 랜덤이벤트 해시맵
+	public static RandomEvent DEFAULT; // 공통으로 적용 할 랜덤이벤트 해시맵
+	public static RandomEvent ENTITY; // 엔티티에게 적용 할 랜덤이벤트 해시맵
+	public static int MAX_EFFECT_COUNT = 5; // 돌고래에 의해 얻을 수 있는 최대버프 갯수
 	public static SimpleConfigManager MANAGER;
 	public static SimpleConfig CONFIG;
+
+	public static final HashMap<InventoryType, Boolean> DEACTIVATED_INVENTORY_TYPE = new HashMap<InventoryType, Boolean>();
+	public static final HashMap<String, InventoryType> ACTIVATED_INVENTORY_TYPE = new HashMap<String, InventoryType>(); // 인벤토리 유형 해시맵
+	public static final HashMap<InventoryType, Integer> RESULT_SLOT = new HashMap<InventoryType, Integer>(); // 결과 슬롯 해시맵
+	
 	public static final HashMap<String, String[]> ITEM_FIELD = new HashMap<String, String[]>(); // 아이템 관련 이벤트 명
 	public static final HashMap<String, String[]> POTION_FIELD = new HashMap<String, String[]>(); // 포션 관련 이벤트 명
 	public static final HashMap<String, String[]> ENCHANT_FIELD = new HashMap<String, String[]>(); // 인첸트 관련 이벤트 명
@@ -38,39 +44,29 @@ public class Main extends JavaPlugin {
 	@Override
 	public void onEnable() {
 		// 이벤트 이름:설명리스트 해시맵
+//		ITEM_FIELD.put("WORKBENCH", new String[] {"제작대를 사용했을 때"});
+//		ITEM_FIELD.put("CRAFTING",new String[] {"플레이어의 2x2 제작대를 사용했을 때"});
+//		ITEM_FIELD.put("FURNACE", new String[] {"화로를 사용했을 때"});
+//		ITEM_FIELD.put("BLAST_FURNACE", new String[] {"용광로를 사용했을 때"});
+//		ITEM_FIELD.put("SMOKER", new String[] {"훈연기를 사용했을 때"});
+//		ITEM_FIELD.put("STONECUTTER", new String[] {"석재 절단기를 사용했을 때"});
+//		ITEM_FIELD.put("SMITHING", new String[] {"대장장이 작업대를 사용했을 때"});
+//		ITEM_FIELD.put("CARTOGRAPHY", new String[] {"지도 제작대를 사용했을 때"});
+//		ITEM_FIELD.put("LOOM", new String[] {"베틀을 사용했을 때"});
+//		ITEM_FIELD.put("ANVIL", new String[] {"모루를 사용했을 때"});
+//		ITEM_FIELD.put("GRINDSTONE", new String[] {"숫돌을 사용했을 때"});
+//		ITEM_FIELD.put("MERCHANT", new String[] {"상인에게서 물건을 구입했을 때"});
+		
 		ITEM_FIELD.put("PICKUP", new String[] {"아이템을 주웠을 때"});
-		ITEM_FIELD.put("WORKBENCH", new String[] {"제작대를 사용했을 때"});
-		ITEM_FIELD.put("CRAFTING",new String[] {"플레이어의 2x2 제작대를 사용했을 때"});
-		ITEM_FIELD.put("FURNACE", new String[] {"화로를 사용했을 때"});
-		ITEM_FIELD.put("BLAST_FURNACE", new String[] {"용광로를 사용했을 때"});
-		ITEM_FIELD.put("SMOKER", new String[] {"훈연기를 사용했을 때"});
+		
+		// POTION_FIELD로 이동
 		ITEM_FIELD.put("BREWING", new String[] {"물약 제조가 완료됐을 때"});
-		ITEM_FIELD.put("STONECUTTER", new String[] {"석재 절단기를 사용했을 때"});
-		ITEM_FIELD.put("SMITHING", new String[] {"대장장이 작업대를 사용했을 때"});
-		ITEM_FIELD.put("CARTOGRAPHY", new String[] {"지도 제작대를 사용했을 때"});
-		ITEM_FIELD.put("LOOM", new String[] {"베틀을 사용했을 때"});
-		ITEM_FIELD.put("ANVIL", new String[] {"모루를 사용했을 때"});
+		// ENCHANT_FIELD로 이동
 		ITEM_FIELD.put("ENCHANTING", new String[] {"마법부여가 완료됐을 때"});
-		ITEM_FIELD.put("GRINDSTONE", new String[] {"숫돌을 사용했을 때"});
-		ITEM_FIELD.put("MERCHANT", new String[] {"상인에게서 물건을 구입했을 때"});
 
 		POTION_FIELD.put("POTION", new String[] {"물약 효과를 받았을 때"});
 
 		ENCHANT_FIELD.put("ENCHANT", new String[] {"인첸트를 했을 때"});
-		// 과정
-		// 1. 플러그인 켜짐
-		// 2. config.yml파일과 userdata폴더 체크 후 없으면 생성, 있으면 userdata의 유저들 static해시맵 변수로 불러오기 후 기본값은 null (키는 uuid, 값은 null)
-		// 3. 새로운 유저 입장 시, userdata폴더에 데이터 있는지 체크 후 없으면 새로 생성, 기본 값 저장 후 static변수에 등록, 있으면 불러와서 static변수에 등록
-		// 4. 유저 퇴장 시, 해시맵에서 값을 null로 변경
-		
-		
-		// userdata의 정보를 기반으로 RandomEvent객체 생성
-		// config파일에는 플러그인 활성화 여부
-		// userdata에는 적용할 이벤트, 이벤트 별 바뀌게하지 않을 아이템, 이벤트 별 바꾸지 않을 아이템
-		
-		// config파일, userdata폴더 체크
-		
-		// config에서 Enable_plugin이 false이면 플러그인 실행 안함
 
 		boolean isPluginOn = loadConfigFile(); // config파일을 생성 및 불러오고 성공 시 true 반환
 		
@@ -191,12 +187,21 @@ public class Main extends JavaPlugin {
 		if (!CONFIG.contains("Enable_Plugin")) {
 			CONFIG.set("Enable_Plugin", true, "플러그인 활성화 여부");
 			CONFIG.set("Enable_Entity", true, "유저 외 엔티티 랜덤 영향 여부");
-			CONFIG.set("Max_effect_count", 5, "거북이모자 또는 돌고래");
+			CONFIG.set("Max_effect_count", 5, "돌고래로 받을 수 있는 최대효과 갯수");
 			CONFIG.set("Disable_World", "", "랜덤효과 비활성화 맵 목록");
+			CONFIG.set("DEACTIVATED", "", "건들지마시오");
+			CONFIG.set("ACTIVATED", "", "건들지마시오");
 			CONFIG.saveConfig();
 		}
 		
-		COMMON = new RandomEvent("COMMON"); // 공통 랜덤효과
+		loadSetting();
+		
+		return CONFIG.getBoolean("Enable_Plugin");
+	}
+	
+	private void loadSetting() {
+		
+		DEFAULT = new RandomEvent("DEFAULT"); // 공통 랜덤효과
 		ENTITY = null; // 엔티티 랜덤효과
 		MAX_EFFECT_COUNT = CONFIG.getInt("Max_effect_count");
 		
@@ -207,6 +212,40 @@ public class Main extends JavaPlugin {
 		// DISABLE_WORLD = CONFIG.getString("Disable_World");
 		
 		
-		return CONFIG.getBoolean("Enable_Plugin");
+		// 파일 불러오기	
+		String deactivated = CONFIG.getString("DEACTIVATED");
+		String activated = CONFIG.getString("ACTIVATED");
+		InventoryType invType;
+		
+		// result타입이 없는 인벤토리들을 파일에서 불러오기
+		for (String key : deactivated.split(",")) {
+			try {
+				invType = InventoryType.valueOf(key);
+				DEACTIVATED_INVENTORY_TYPE.put(invType, true);
+			} catch (IllegalArgumentException err) {
+				System.out.println("[Plugin-RandomWorld] YOU NEED TO FIX 'DEACTIVATED' at config.yml\nThe wrong Inventory Name filled in.");
+			}
+		}
+		
+		// result타입이 있는 인벤토리들을 파일에서 불러오기
+		for (String key : activated.split(",")) {
+			
+			String[] tuple = key.split("@");
+			if (tuple.length != 2) {
+				continue;	
+			}
+			
+			try {
+				String name = tuple[0];
+				int slotID = Integer.parseInt(tuple[1]);
+				
+				invType = InventoryType.valueOf(name);
+				ITEM_FIELD.put(key, new String[] {""});
+				ACTIVATED_INVENTORY_TYPE.put(name, invType);
+				RESULT_SLOT.put(invType, slotID);
+			} catch (IllegalArgumentException err) {
+				System.out.println("YOU NEED TO FIX 'ACTIVATED' at config.yml\nThe wrong Inventory Name filled in.");
+			}
+		}
 	}
 }

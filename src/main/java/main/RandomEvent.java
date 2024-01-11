@@ -15,6 +15,7 @@ import org.bukkit.entity.Player;
 import org.bukkit.potion.PotionEffectType;
 
 public class RandomEvent {
+	private final String residentName;
 	private final SimpleConfig data; // 데이터
 	private HashMap<String, Boolean> activated; // 각 이벤트 별, 활성화여부 해시맵
 	private HashMap<String, HashMap<Material, Boolean>> itemFilter; // 랜덤 결과로 나오지 않을 아이템 해시맵
@@ -26,6 +27,7 @@ public class RandomEvent {
 	
 	// 생성자
 	public RandomEvent(String resident_name) {
+		this.residentName = resident_name;
 		this.data = Main.MANAGER.getNewConfig("/userdata/" + resident_name + ".yml");
 		this.activated = new HashMap<String, Boolean>();
 		this.itemFilter = new HashMap<String, HashMap<Material, Boolean>>();
@@ -39,28 +41,61 @@ public class RandomEvent {
 		Set<String> item_names = Main.ITEM_FIELD.keySet();
 		Set<String> effect_names = Main.POTION_FIELD.keySet();
 		Set<String> enchant_names = Main.ENCHANT_FIELD.keySet();
+		int updated = 0;
 		
 		if (!this.data.contains("Enable_Events")) {
 			this.data.set("Enable_Events", "*", "활성화 할 이벤트 목록");
+			updated++;
+		}
+		
+		if (!this.data.contains("ALL_EXCEPT")) {
 			this.data.set("ALL_EXCEPT", "", "모든 EXCEPT 이벤트에 적용");
+			updated++;
+		}
+		
+		if (!this.data.contains("ALL_BAN")) {
 			this.data.set("ALL_BAN", "", "모든 BAN 이벤트에 적용");
-			
-			for (String name : item_names) {
+			updated++;
+		}
+		
+		for (String name : item_names) {
+			if (!this.data.contains(name + "_EXCEPT")) {
 				this.data.set(name + "_EXCEPT", "", Main.ITEM_FIELD.get(name));
-				this.data.set(name + "_BAN", "");
+				updated++;
 			}
 			
-			for (String name : effect_names) {
+			if (!this.data.contains(name + "_BAN")) {
+				this.data.set(name + "_BAN", "");
+				updated++;
+			}
+		}
+		
+		for (String name : effect_names) {
+			if (!this.data.contains(name + "_EXCEPT")) {
 				this.data.set(name + "_EXCEPT", "", Main.POTION_FIELD.get(name));
-				this.data.set(name + "_BAN", "");
+				updated++;
 			}
 			
-			for (String name : enchant_names) {
+			if (!this.data.contains(name + "_BAN")) {
+				this.data.set(name + "_BAN", "");
+				updated++;
+			}
+		}
+		
+		for (String name : enchant_names) {
+			if (!this.data.contains(name + "_EXCEPT")) {
 				this.data.set(name + "_EXCEPT", "", Main.ENCHANT_FIELD.get(name));
-				this.data.set(name + "_BAN", "");
+				updated++;
 			}
 			
-			this.data.saveConfig();
+			if (!this.data.contains(name + "_BAN")) {
+				this.data.set(name + "_BAN", "");
+				updated++;
+			}
+		}
+		
+		if (updated > 0) {
+			this.data.saveConfig();	
 		}
 
 		// 유저데이터에서 가져오기
@@ -219,8 +254,9 @@ public class RandomEvent {
 		String common_effectList = this.data.getString("ALL_BAN").replaceAll("\n", "").replaceAll(" ", "");
 		String all_effectList = effectList.concat("," + common_effectList).replaceAll(",,", "").toLowerCase();
 		
-		if (all_effectList.equals(",")) {
-			negativeEffects = Main.COMMON.potionBan.get(eventName);
+		// 공통설정객체가 아닌 사용자설정객체이고, 사용자설정이 공란이면 공통설정(기본값) 적용
+		if (!this.residentName.equals("DEFAULT") && all_effectList.equals(",")) {
+			negativeEffects = Main.DEFAULT.potionBan.get(eventName);
 			this.potionBan.put(eventName, negativeEffects);
 			return;
 		}
@@ -251,9 +287,9 @@ public class RandomEvent {
 		String common_effectList = this.data.getString("ALL_EXCEPT").replaceAll("\n", "").replaceAll(" ", ""); // 공통 필터링
 		String all_effectList = effectList.concat("," + common_effectList).replaceAll(",,", ",").toLowerCase(); // 유저 + 공통 필터링
 		
-		// 개인사용자 설정이 없어서 기본값으로
-		if (all_effectList.equals(",")) {
-			valuable = Main.COMMON.potionFilter.get(eventName);
+		// 공통설정객체가 아닌 사용자성정객체이고, 개인사용자 설정이 없어서 기본값으로
+		if (!this.residentName.equals("DEFAULT") && all_effectList.equals(",")) {
+			valuable = Main.DEFAULT.potionFilter.get(eventName);
 			this.potionFilter.put(eventName, valuable);
 			return;
 		}
@@ -288,9 +324,9 @@ public class RandomEvent {
 		String common_enchantList = this.data.getString("ALL_BAN").replaceAll("\n", "").replaceAll(" ", "");
 		String all_enchantList = enchantList.concat("," + common_enchantList).replaceAll(",,", "").toLowerCase();
 		
-		// 개인 사용자 설정이 없으면 기본값으로 설정
-		if (all_enchantList.equals(",")) {
-			negativeEnchants = Main.COMMON.enchantBan.get(eventName);
+		// 공통설정객체가 아닌 사용자설정객체이고, 개인 사용자 설정이 없으면 기본값으로 설정
+		if (!this.residentName.equals("DEFAULT") && all_enchantList.equals(",")) {
+			negativeEnchants = Main.DEFAULT.enchantBan.get(eventName);
 			this.enchantBan.put(eventName, negativeEnchants);
 			return;
 		}
@@ -321,9 +357,9 @@ public class RandomEvent {
 		String common_enchantList = this.data.getString("ALL_EXCEPT").replaceAll("\n", "").replaceAll(" ", ""); // 공통 필터링
 		String all_enchantList = enchantList.concat("," + common_enchantList).replaceAll(",,", ",").toLowerCase(); // 유저 + 공통 필터링
 
-		// 개인 사용자 설정이 없으면 기본값으로 설정
-		if (all_enchantList.equals(",")) {
-			valuable = Main.COMMON.enchantFilter.get(eventName);
+		// 공통설정객체가 아닌 사용자설정객체이고, 개인 사용자 설정이 없으면 기본값으로 설정
+		if (!this.residentName.equals("DEFAULT") && all_enchantList.equals(",")) {
+			valuable = Main.DEFAULT.enchantFilter.get(eventName);
 			this.enchantFilter.put(eventName, valuable);
 			return;
 		}
@@ -360,9 +396,9 @@ public class RandomEvent {
 		String common_itemList = this.data.getString("ALL_BAN").replaceAll("\n", "").replaceAll(" ", "");
 		String all_itemList = itemList.concat("," + common_itemList).replaceAll(",,", "").toLowerCase();
 		
-		// 유저에게 설정된 item ban이 없으면 공통 item ban 설정으로 덮어씌우기
-		if (all_itemList.equals(",")) {
-			negativeItems = Main.COMMON.itemBan.get(eventName);
+		// 공통설정객체가 아닌 사용자설정객체이고, 유저에게 설정된 item ban이 없으면 공통 item ban 설정으로 덮어씌우기
+		if (!this.residentName.equals("DEFAULT") && all_itemList.equals(",")) {
+			negativeItems = Main.DEFAULT.itemBan.get(eventName);
 			this.itemBan.put(eventName, negativeItems);
 			return;
 		}
@@ -394,9 +430,9 @@ public class RandomEvent {
 		String common_itemList = this.data.getString("ALL_EXCEPT").replaceAll("\n", "").replaceAll(" ", "");
 		String all_itemList = itemList.concat("," + common_itemList).replaceAll(",,", ",").toLowerCase();
 		
-		// 사용자 설정이 없으면 기본값 적용
-		if (all_itemList.equals(",")) {
-			valuable = Main.COMMON.itemFilter.get(eventName);
+		// 공통설정객체가 아닌 사용자설정객체이고, 사용자 설정이 없으면 기본값 적용
+		if (!this.residentName.equals("DEFAULT") && all_itemList.equals(",")) {
+			valuable = Main.DEFAULT.itemFilter.get(eventName);
 			this.itemFilter.put(eventName, valuable);
 			return;
 		}

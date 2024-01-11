@@ -77,7 +77,7 @@ public class RandomItem {
 		int status = getItemStatus(stack);
 		if (status == 1 || status == 2) {
 			changeTag(stack, "changed");
-			System.out.println("[RandomItem.java-75] : " + stack.getType() + " => " + material);
+//			System.out.println("[RandomItem.java-75] : " + stack.getType() + " => " + material);
 			stack.setType(material);
 		}
 	}
