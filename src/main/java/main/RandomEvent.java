@@ -109,12 +109,33 @@ public class RandomEvent {
 		return keys[randIdx];
 	}
 	
+	public Enchantment getRandomEnchant(String eventName, Enchantment origin) {
+		// origin 인첸트가 ban list에 존재하면 return null
+		if (this.enchantBan.get(eventName) != null) {
+			if (this.enchantBan.get(eventName).get(origin) != null) {
+				return null;
+			}
+		}
+		
+		// 사용자 필터링에 맞게 인첸트 리턴
+		HashMap<Enchantment, Boolean> eventEnchants = this.enchantFilter.get(eventName);
+		if (eventEnchants == null || eventEnchants.size() <= 0) {
+			return null;
+		}
+		
+		Enchantment[] keys = eventEnchants.keySet().toArray(new Enchantment[0]);
+		int randIdx = (int)(Math.random() * keys.length);
+		
+		return keys[randIdx];
+	}
+	
 	
 	public Material getRandomItem(String eventName) {
 		HashMap<Material, Boolean> eventMaterials = this.itemFilter.get(eventName);
 		if (eventMaterials != null && eventMaterials.size() > 0) {
 			Material[] keys = this.itemFilter.get(eventName).keySet().toArray(new Material[0]);
 			int randIdx = (int)(Math.random() * keys.length);
+			
 			return keys[randIdx];
 		}
 		return null;
@@ -277,7 +298,7 @@ public class RandomEvent {
 		this.enchantBan.put(eventName, negativeEnchants);
 	}
 	
-
+	
 	public void setEnchantFilter(String eventName, String enchantList) {
 		// 전체 이펙트에서 거를 이펙트만 제거해서 this.potionFilter에 저장
 		HashMap<Enchantment, Boolean> valuable = new HashMap<Enchantment, Boolean>();
@@ -298,7 +319,7 @@ public class RandomEvent {
 			return;
 		}
 
-		// 포션 효과 해시맵 생성
+		// 인첸트 해시맵 생성
 		Iterator<Enchantment> re = Registry.ENCHANTMENT.iterator();
 		while (re.hasNext()) {
 			// key는 minecraft:인첸트명
@@ -307,7 +328,7 @@ public class RandomEvent {
 //			System.out.println(ppp.getKey());
 		}
 		
-		// 전체 포션효과 중, userdata에 적힌 포션효과만 골라서 remove
+		// 전체 인첸트 중, userdata에 적힌 인첸트만 골라서 remove
 		for (String enchant : all_enchantList.split(",")) {
 			if (enchant == null || enchant.isEmpty()) {
 				continue;
@@ -423,6 +444,8 @@ public class RandomEvent {
 		
 		// 포션효과 이벤트
 		// e.g) 신호기로부터 얻는 이펙트, 신호기에서 바꿀 이펙트, 최대 갯수
+
+		this.data.set("<Effect>",  "----------------------LINE----------------------");
 		for (String name : effect_names) {
 			if (!this.data.contains(name + "_EXCEPT")) {
 				this.data.set(name + "_EXCEPT", "");
@@ -440,6 +463,8 @@ public class RandomEvent {
 			}
 		}
 		
+		this.data.set("<Enchant>",  "----------------------LINE----------------------");
+		
 		// 인첸트 이벤트
 		for (String name : enchant_names) {
 			if (!this.data.contains(name + "_EXCEPT")) {
@@ -454,6 +479,7 @@ public class RandomEvent {
 		}
 		
 		// 아이템 이벤트
+		this.data.set("<Craft>",  "----------------------LINE----------------------");
 		for (String name : item_names) {
 			if (!this.data.contains(name + "_EXCEPT")) {
 				this.data.set(name + "_EXCEPT", "");

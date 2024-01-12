@@ -6,10 +6,12 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.UUID;
 
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
+import org.bukkit.Registry;
 import org.bukkit.World;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
@@ -73,10 +75,11 @@ public class Main extends JavaPlugin {
 			
 			POTION_FIELD.put(cause.name(), true);
 		}
+		POTION_FIELD.put("GET_EFFECT_ITEM",true);
 		
 		// 인첸트 관련
-		ENCHANT_FIELD.put("ENCHANT", true);
 		ENCHANT_FIELD.put("ENCHANTING", true);
+		ENCHANT_FIELD.put("GET_ENCHANT_ITEM", true);
 		
 		// 인벤토리 클릭 관련
 		ITEM_FIELD.put("PICKUP", true);

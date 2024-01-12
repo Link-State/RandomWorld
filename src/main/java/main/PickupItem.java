@@ -6,6 +6,11 @@ import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.entity.EntityPickupItemEvent;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.meta.ItemMeta;
+import org.bukkit.inventory.meta.PotionMeta;
+import org.bukkit.potion.PotionData;
+import org.bukkit.potion.PotionEffect;
+import org.bukkit.potion.PotionEffectType;
 
 public class PickupItem extends RandomItem implements Listener {
 	
@@ -38,6 +43,57 @@ public class PickupItem extends RandomItem implements Listener {
 		if (re.isItemBan("PICKUP", stack.getType())) {
 			return;
 		}
+		
+
+		// 일반 포션일 경우
+		// 투척 포션일 경우
+		// 잔류 포션일 경우
+		// 물약 화살일 경우
+		material = Material.POTION;
+		
+		if (material.equals(Material.POTION)) {
+			stack.setType(material); // 포션타입을 먼저 넣어야 밑에 코드에서 아이템메타를 포션메타로 변경 가능
+			
+			// 
+			ItemStack temp_stack = new ItemStack(material, stack.getAmount());
+			temp_stack.setItemMeta(stack.getItemMeta());
+			
+			PotionMeta potionmeta = (PotionMeta) temp_stack.getItemMeta();
+			
+			if (re.getActivate("GET_EFFECT_ITEM")) {
+				
+			}
+			
+			PotionEffectType effect_type = re.getRandomEffect("GET_EFFECT_ITEM");
+			if (effect_type == null) {
+				return;
+			}
+			
+			PotionEffect effect = new PotionEffect(effect_type, 1, 1);
+			
+			// PotionData는 deprecated됨!!!!
+			// PotionEffect 객체를 만들어서 넣어야함.
+//			potionmeta.addCustomEffect(null, false);
+		}
+
+		if (material.equals(Material.SPLASH_POTION)) {
+			
+		}
+		
+		if (material.equals(Material.LINGERING_POTION)) {
+			
+		}
+
+		if (material.equals(Material.TIPPED_ARROW)) {
+			
+		}
+		// PotionMeta.setBasePotionData or PotionMeta.setBasePotionType 
+		
+		// 인첸트북일 경우
+		// ItemStack.addEnchant()
+		
+		// 염소 뿔일 경우
+		// MusicInstrumentMeta = (MusicInstrumentMeta) getItemMeta
 
 		// 무작위로 선택된 아이템으로 변경
 		changeRandomItem(stack, material);
