@@ -5,6 +5,7 @@ import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.entity.EntityPotionEffectEvent;
+import org.bukkit.event.entity.EntityPotionEffectEvent.Cause;
 import org.bukkit.potion.PotionEffectType;
 import org.bukkit.potion.PotionEffect;
 
@@ -48,31 +49,30 @@ public class GivePotionEffect implements Listener {
 			re = Main.ENTITY;
 		}
 		
-		// 여기서부터 포션이펙트 세분화 할 것 ============================================================================
-		
 		// 해당 개체가 포션 랜덤효과를 허용하지 않았을 때
-		if (re == null || !re.getActivate("POTION")) {
+		Cause cause = e.getCause();
+		
+		if (re == null || !re.getActivate(cause.name())) {
 			return;
 		}
 		
 		PotionEffect origin_effect = e.getNewEffect(); // 원래 포션효과
-		PotionEffectType random_type = re.getRandomEffect("POTION", origin_effect.getType());
+		PotionEffectType random_type = re.getRandomEffect(cause.name(), origin_effect.getType());
 
 		// 특정 포션효과는 랜덤하게 바꾸는 것을 허용하지 않을 때,
 		if (random_type == null) {
 			return;
 		}
 		
-		e.setCancelled(true); // 이벤트 취소
-		// 특히 isCancel 이용하여 취소여부 이용하여 이벤트 취소할 것. (안그러면 버프 0초에서 안 지워짐)
-		
-		// 돌고래에 의해 받은 포션효과가 지정한 최대갯수에 도달했을 때,
-		if (e.getCause().equals(EntityPotionEffectEvent.Cause.DOLPHIN) &&
-			entity.getActivePotionEffects().size() >= 5) {
-			return;
+		// 거북이 모자 뺴고 나머지는 이벤트 취소
+		if (!cause.equals(Cause.TURTLE_HELMET)) {
+			e.setCancelled(true);
 		}
 		
-		/// 여기까지 포션이펙트 세분화 할 것 ============================================================================
+		// 받은 포션효과가 지정한 최대갯수에 도달했을 때,
+		if (entity.getActivePotionEffects().size() >= re.getPotionMax(cause.name())) {
+			return;
+		}
 		
 		PotionEffect random_effect = new PotionEffect(
 			random_type,

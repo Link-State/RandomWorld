@@ -19,7 +19,7 @@ public class RandomEvent {
 	private HashMap<String, HashMap<Material, Boolean>> itemBan; // 바꾸지 않을 아이템 해시맵
 	private HashMap<String, HashMap<PotionEffectType, Boolean>> potionFilter; // 랜덤 결과로 나오지 않을 포션효과 해시맵
 	private HashMap<String, HashMap<PotionEffectType, Boolean>> potionBan; // 바꾸지 않을 포션효과 해시맵
-	private HashMap<String, HashMap<PotionEffectType, Integer>> potionMax; // 바꾸지 않을 포션효과 해시맵
+	private HashMap<String, Integer> potionMax; // 바꾸지 않을 포션효과 해시맵
 	private HashMap<String, HashMap<Enchantment, Boolean>> enchantFilter; // 랜덤 결과로 나오지 않을 인첸트효과 해시맵
 	private HashMap<String, HashMap<Enchantment, Boolean>> enchantBan; // 바꾸지 않을 인첸트효과 해시맵
 	
@@ -32,7 +32,7 @@ public class RandomEvent {
 		this.itemBan = new HashMap<String, HashMap<Material, Boolean>>();
 		this.potionFilter = new HashMap<String, HashMap<PotionEffectType, Boolean>>();
 		this.potionBan = new HashMap<String, HashMap<PotionEffectType, Boolean>>();
-		this.potionMax = new HashMap<String, HashMap<PotionEffectType, Integer>>();
+		this.potionMax = new HashMap<String, Integer>();
 		this.enchantFilter = new HashMap<String, HashMap<Enchantment, Boolean>>();
 		this.enchantBan = new HashMap<String, HashMap<Enchantment, Boolean>>();
 		
@@ -45,10 +45,19 @@ public class RandomEvent {
 	
 	
 	public boolean getActivate(String eventName) {
-		if (this.activated.get(eventName) != null && this.activated.get(eventName)) {
+		Boolean activate = this.activated.get(eventName);
+		if (activate != null && activate) {
 			return true;
 		}
 		return false;
+	}
+	
+	public int getPotionMax(String eventName) {
+		Integer max = this.potionMax.get(eventName);
+		if (max != null) {
+			return max;
+		}
+		return -1;
 	}
 	
 	
@@ -173,6 +182,10 @@ public class RandomEvent {
 		}
 		
 		for (String effect : all_effectList.split(",")) {
+			if (effect == null || effect.isEmpty()) {
+				continue;
+			}
+			
 			PotionEffectType str2eft = Registry.EFFECT.match(effect);
 			if (str2eft != null) {
 				negativeEffects.put(str2eft, true);
@@ -211,6 +224,11 @@ public class RandomEvent {
 		
 		// 전체 포션효과 중, userdata에 적힌 포션효과만 골라서 remove
 		for (String effect : all_effectList.split(",")) {
+			// effect가 널도 아니고 빈 문자도 아니면
+			if (effect == null || effect.isEmpty()) {
+				continue;
+			}
+			
 			PotionEffectType key = Registry.EFFECT.match(effect);
 			if (key != null) {
 				valuable.remove(key);
@@ -221,7 +239,7 @@ public class RandomEvent {
 	}
 	
 	public void setEffectMax(String eventName, int maxCount) {
-		//
+		this.potionMax.put(eventName, maxCount);
 	}
 	
 	
@@ -246,6 +264,10 @@ public class RandomEvent {
 		}
 		
 		for (String enchant : all_enchantList.split(",")) {
+			if (enchant == null || enchant.isEmpty()) {
+				continue;
+			}
+			
 			Enchantment str2eht = Registry.ENCHANTMENT.match(enchant);
 			if (str2eht != null) {
 				negativeEnchants.put(str2eht, true);
@@ -287,6 +309,10 @@ public class RandomEvent {
 		
 		// 전체 포션효과 중, userdata에 적힌 포션효과만 골라서 remove
 		for (String enchant : all_enchantList.split(",")) {
+			if (enchant == null || enchant.isEmpty()) {
+				continue;
+			}
+			
 			Enchantment key = Registry.ENCHANTMENT.match(enchant);
 			if (key != null) {
 				valuable.remove(key);
@@ -320,6 +346,10 @@ public class RandomEvent {
 		}
 		
 		for (String item : all_itemList.split(",")) {
+			if (item == null || item.isEmpty()) {
+				continue;
+			}
+			
 			Material str2mtl = Material.matchMaterial(item);
 			if (str2mtl != null) {
 				negativeItems.put(str2mtl, true);
@@ -359,6 +389,9 @@ public class RandomEvent {
 		
 		// 전체 아이템 중, userdata.yml에 적힌 아이템 리스트만 골라서 remove
 		for (String item : all_itemList.split(",")) {
+			if (item == null || item.isEmpty()) {
+				continue;
+			}
 			valuable.remove(Material.matchMaterial(item));
 		}
 		

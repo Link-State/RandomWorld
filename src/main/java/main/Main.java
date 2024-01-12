@@ -34,7 +34,7 @@ public class Main extends JavaPlugin {
 	public static final HashMap<String, InventoryType> ACTIVATED_INVENTORY_TYPE = new HashMap<String, InventoryType>(); // 인벤토리 유형 해시맵
 	public static final HashMap<InventoryType, Integer> RESULT_SLOT = new HashMap<InventoryType, Integer>(); // 결과 슬롯 해시맵
 	public static final HashMap<String, Boolean> ITEM_FIELD = new HashMap<String, Boolean>(); // 아이템 관련 이벤트 명
-	public static final HashMap<String, Integer> POTION_FIELD = new HashMap<String, Integer>(); // 포션 관련 이벤트 명
+	public static final HashMap<String, Boolean> POTION_FIELD = new HashMap<String, Boolean>(); // 포션 관련 이벤트 명
 	public static final HashMap<String, Boolean> ENCHANT_FIELD = new HashMap<String, Boolean>(); // 인첸트 관련 이벤트 명
 	
 	public static RandomEvent DEFAULT; // 공통으로 적용 할 랜덤이벤트 해시맵
@@ -71,7 +71,7 @@ public class Main extends JavaPlugin {
 				continue;
 			}
 			
-			POTION_FIELD.put(cause.name(), 5);
+			POTION_FIELD.put(cause.name(), true);
 		}
 		
 		// 인첸트 관련
@@ -237,22 +237,33 @@ public class Main extends JavaPlugin {
 		// result타입이 있는 인벤토리들을 파일에서 불러오기
 		if (!activated.isEmpty()) {
 			for (String key : activated.split(",")) {
+				if (key == null || key.isEmpty()) {
+					continue;
+				}
 				
 				String[] tuple = key.split("@");
 				if (tuple.length != 2) {
 					continue;	
 				}
+
+				// 인벤토리 이름
+				String name = tuple[0];
+				if (name == null || name.isEmpty()) {
+					continue;
+				}
 				
 				try {
-					String name = tuple[0];
-					int slotID = Integer.parseInt(tuple[1]);
+					int slotID = Integer.parseInt(tuple[1]); // NumberFormatException
+					invType = InventoryType.valueOf(name); // IllegalArgumentException
 					
-					invType = InventoryType.valueOf(name);
 					ITEM_FIELD.put(name, true);
 					ACTIVATED_INVENTORY_TYPE.put(name, invType);
 					RESULT_SLOT.put(invType, slotID);
+					
+				} catch (NumberFormatException err) {
+					System.out.println("[Plugin-RandomWorld] YOU NEED TO FIX 'ACTIVATED' at config.yml\n" + name + "@");
 				} catch (IllegalArgumentException err) {
-					System.out.println("YOU NEED TO FIX 'ACTIVATED' at config.yml\nThe wrong Inventory Name filled in.");
+					System.out.println("[Plugin-RandomWorld] YOU NEED TO FIX 'ACTIVATED' at config.yml\nThe wrong Inventory Name filled in.");
 				}
 			}
 		}
