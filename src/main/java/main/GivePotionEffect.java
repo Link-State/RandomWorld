@@ -65,7 +65,8 @@ public class GivePotionEffect implements Listener {
 		}
 		
 		// 거북이 모자 뺴고 나머지는 이벤트 취소
-		if (!cause.equals(Cause.TURTLE_HELMET)) {
+		if (!cause.equals(Cause.TURTLE_HELMET) &&
+			!cause.equals(Cause.UNKNOWN)) {
 			e.setCancelled(true);
 		}
 		

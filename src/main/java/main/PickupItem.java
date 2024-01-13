@@ -1,16 +1,22 @@
 package main;
 
+import org.bukkit.Color;
 import org.bukkit.Material;
+import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.entity.EntityPickupItemEvent;
+import org.bukkit.inventory.ItemFlag;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.meta.EnchantmentStorageMeta;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.inventory.meta.PotionMeta;
+import org.bukkit.inventory.meta.SuspiciousStewMeta;
 import org.bukkit.potion.PotionData;
 import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
+import org.bukkit.potion.PotionType;
 
 public class PickupItem extends RandomItem implements Listener {
 	
@@ -44,60 +50,126 @@ public class PickupItem extends RandomItem implements Listener {
 			return;
 		}
 		
-
-		// 일반 포션일 경우
-		// 투척 포션일 경우
-		// 잔류 포션일 경우
-		// 물약 화살일 경우
-		material = Material.POTION;
+		ItemMeta item_meta = stack.getItemMeta(); // 랜덤할 아이템에 적용 할 메타 정보
 		
-		if (material.equals(Material.POTION)) {
-			stack.setType(material); // 포션타입을 먼저 넣어야 밑에 코드에서 아이템메타를 포션메타로 변경 가능
+		material = Material.SUSPICIOUS_STEW;
+		
+		// 특정 아이템 메타 확인용 ItemStack
+		ItemStack test_stack = new ItemStack(material, 1);
+		
+//		ItemMeta test_meta = test_stack.getItemMeta();
+//		SuspiciousStewMeta test_stew_meta = (SuspiciousStewMeta) test_meta;
+//		PotionEffect effe = new PotionEffect(PotionEffectType.ABSORPTION, 60, 1);
+//		test_stew_meta.addCustomEffect(effe, true);
+//		System.out.println(test_stew_meta);
+//		test_meta = test_stew_meta;
+//		System.out.println((SuspiciousStewMeta) test_meta);
+		
+		// 포션효과가 부여 가능한 아이템일 경우
+		if (test_stack.getItemMeta() instanceof PotionMeta) {
 			
-			// 
-			ItemStack temp_stack = new ItemStack(material, stack.getAmount());
-			temp_stack.setItemMeta(stack.getItemMeta());
-			
-			PotionMeta potionmeta = (PotionMeta) temp_stack.getItemMeta();
-			
-			if (re.getActivate("GET_EFFECT_ITEM")) {
-				
-			}
-			
+			// 랜덤아이템이 포션효과 관련 아이템일 경우 포션효과부여 허용여부 검사
 			PotionEffectType effect_type = re.getRandomEffect("GET_EFFECT_ITEM");
-			if (effect_type == null) {
-				return;
+			if (effect_type != null) {
+				item_meta = createPotionMeta(stack, material, effect_type);
+			}
+		}
+		// 수상한 스튜일 경우 
+		else if (test_stack.getItemMeta() instanceof SuspiciousStewMeta) {
+			
+			// 랜덤아이템이 포션효과 관련 아이템일 경우 포션효과부여 허용여부 검사
+			PotionEffectType effect_type = re.getRandomEffect("GET_EFFECT_ITEM");
+			if (effect_type != null) {
+				System.out.println("susanghan stew");
+				item_meta = createStewMeta(stack, material, effect_type);
 			}
 			
-			PotionEffect effect = new PotionEffect(effect_type, 1, 1);
+			stack.setType(material);
+			stack.setItemMeta(item_meta);
 			
-			// PotionData는 deprecated됨!!!!
-			// PotionEffect 객체를 만들어서 넣어야함.
-//			potionmeta.addCustomEffect(null, false);
+			return;
 		}
+		// 인첸트를 저장할 수 있는 아이템일 경우
+		else if (test_stack.getItemMeta() instanceof EnchantmentStorageMeta) {
 
-		if (material.equals(Material.SPLASH_POTION)) {
-			
+			// 랜덤아이템이 인첸트 관련 아이템일 경우 인첸트부여 허용여부 검사
+			Enchantment enchant_type = re.getRandomEnchant("GET_ENCHANT_ITEM");
+			if (enchant_type != null) {
+				item_meta = createEnchantMeta(stack, material, enchant_type);
+			}
 		}
-		
-		if (material.equals(Material.LINGERING_POTION)) {
-			
-		}
-
-		if (material.equals(Material.TIPPED_ARROW)) {
-			
-		}
-		// PotionMeta.setBasePotionData or PotionMeta.setBasePotionType 
-		
-		// 인첸트북일 경우
-		// ItemStack.addEnchant()
-		
 		// 염소 뿔일 경우
-		// MusicInstrumentMeta = (MusicInstrumentMeta) getItemMeta
+		else if (material.equals(Material.GOAT_HORN)) {
+			// MusicInstrumentMeta = (MusicInstrumentMeta) getItemMeta
+		}
+		// 수상한 모래/자갈일 경우
+		else if (material.equals(Material.SUSPICIOUS_GRAVEL) ||
+				material.equals(Material.SUSPICIOUS_SAND)) {
+		}
 
 		// 무작위로 선택된 아이템으로 변경
-		changeRandomItem(stack, material);
+		changeRandomItem(stack, material, item_meta);
 		
 		return;
+	}
+	
+	// 포션메타 생성
+	private PotionMeta createPotionMeta(ItemStack origin_stack, Material material, PotionEffectType type) {
+		ItemStack copy_stack = new ItemStack(origin_stack);
+		copy_stack.setType(material);
+		PotionMeta potion_meta = (PotionMeta) copy_stack.getItemMeta();
+		
+		// 지속시간 생성 (10초 ~ 8분)
+		int duration = ((int) (Math.random() * 47) + 1) * 200;
+		
+		// 중폭수준 생성 (1 or 2)
+		int amplifier = (int) (Math.random() + 1);
+		
+		// 포션색깔 생성
+		int red = (int) (Math.random() * 255);
+		int green = (int) (Math.random() * 255);
+		int blue = (int) (Math.random() * 255);
+		Color color = Color.fromRGB(red, green, blue);
+		
+		// 포션효과 객체 생성
+		PotionEffect effect = new PotionEffect(type, duration, amplifier);
+		
+		potion_meta.addCustomEffect(effect, true);
+		potion_meta.setColor(color);
+		
+		return potion_meta;
+	}
+	
+	// 수상한 스튜 메타
+	private SuspiciousStewMeta createStewMeta(ItemStack origin_stack, Material material, PotionEffectType type) {
+		ItemStack copy_stack = new ItemStack(origin_stack);
+		copy_stack.setType(material);
+		SuspiciousStewMeta stew_meta = (SuspiciousStewMeta) copy_stack.getItemMeta();
+		
+		// 지속시간 생성 (2초 ~ 10초)
+		int duration = ((int) (Math.random() * 7) + 1) * 20;
+		
+		// 포션효과 객체 생성
+		PotionEffect effect = new PotionEffect(type, duration, 2);
+		
+		stew_meta.addCustomEffect(effect, true);
+		
+		return stew_meta;
+	}
+	
+	// 저장용아이템 인첸트 메타 생성
+	private EnchantmentStorageMeta createEnchantMeta(ItemStack origin_stack, Material material, Enchantment ench) {
+		ItemStack copy_stack = new ItemStack(origin_stack);
+		copy_stack.setType(material);
+		EnchantmentStorageMeta enchant_meta = (EnchantmentStorageMeta) copy_stack.getItemMeta();
+		
+		// 인첸트 레벨 생성
+		int start = ench.getStartLevel();
+		int max = ench.getMaxLevel();
+		int level = (int) ((Math.random() * Math.abs(max - start)) + start);
+		
+		enchant_meta.addStoredEnchant(ench, level, true);
+		
+		return enchant_meta;
 	}
 }

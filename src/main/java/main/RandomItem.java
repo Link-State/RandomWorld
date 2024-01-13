@@ -3,6 +3,7 @@ package main;
 import org.bukkit.Material;
 import org.bukkit.NamespacedKey;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.meta.EnchantmentStorageMeta;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.persistence.PersistentDataContainer;
 import org.bukkit.persistence.PersistentDataType;
@@ -79,6 +80,22 @@ public class RandomItem {
 			changeTag(stack, "changed");
 //			System.out.println("[RandomItem.java-75] : " + stack.getType() + " => " + material);
 			stack.setType(material);
+		}
+	}
+	
+	// 아이템 랜덤화
+	public void changeRandomItem(ItemStack stack, Material material, ItemMeta meta) {
+		int status = getItemStatus(stack);
+		if (status == 1 || status == 2) {
+			changeTag(stack, "changed");
+//			System.out.println("[RandomItem.java-75] : " + stack.getType() + " => " + material);
+			
+			// 여기서 않됌.
+			if (meta instanceof EnchantmentStorageMeta) {
+				System.out.println((EnchantmentStorageMeta) meta);
+			}
+			stack.setType(material);
+			stack.setItemMeta(meta);
 		}
 	}
 }
