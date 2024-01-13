@@ -83,6 +83,7 @@ public class Main extends JavaPlugin {
 		
 		// 인벤토리 클릭 관련
 		ITEM_FIELD.put("PICKUP", true);
+		ITEM_FIELD.put("GET_BRUSHABLE_ITEM", true);
 		
 		// config파일을 생성 및 불러오고 성공 시 true 반환
 		boolean isPluginOn = loadConfigFile(); 

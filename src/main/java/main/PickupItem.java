@@ -7,6 +7,7 @@ import org.bukkit.Color;
 import org.bukkit.Material;
 import org.bukkit.MusicInstrument;
 import org.bukkit.Registry;
+import org.bukkit.block.BrushableBlock;
 import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
@@ -14,6 +15,7 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.entity.EntityPickupItemEvent;
 import org.bukkit.inventory.ItemFlag;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.meta.BlockStateMeta;
 import org.bukkit.inventory.meta.EnchantmentStorageMeta;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.inventory.meta.MusicInstrumentMeta;
@@ -66,22 +68,22 @@ public class PickupItem extends RandomItem implements Listener {
 		
 		ItemMeta item_meta = stack.getItemMeta(); // 랜덤할 아이템에 적용 할 메타 정보
 		
-		material = Material.GOAT_HORN;
-		
-		// 특정 아이템 메타 확인용 ItemStack
+		// 특정 아이템 메타 확인용 ItemStack, ItemMeta
 		ItemStack test_stack = new ItemStack(material, 1);
+		ItemMeta test_meta = test_stack.getItemMeta();
 		
 		// 포션효과가 부여 가능한 아이템일 경우
-		if (test_stack.getItemMeta() instanceof PotionMeta) {
+		if (test_meta instanceof PotionMeta) {
 			
 			// 랜덤아이템이 포션효과 관련 아이템일 경우 포션효과부여 허용여부 검사
 			PotionEffectType effect_type = re.getRandomEffect("GET_EFFECT_ITEM");
+			
 			if (effect_type != null) {
 				item_meta = createPotionMeta(stack, material, effect_type);
 			}
 		}
 		// 수상한 스튜일 경우 
-		else if (test_stack.getItemMeta() instanceof SuspiciousStewMeta) {
+		else if (test_meta instanceof SuspiciousStewMeta) {
 			
 			// 랜덤아이템이 포션효과 관련 아이템일 경우 포션효과부여 허용여부 검사
 			PotionEffectType effect_type = re.getRandomEffect("GET_EFFECT_ITEM");
@@ -91,21 +93,29 @@ public class PickupItem extends RandomItem implements Listener {
 			}
 		}
 		// 인첸트를 저장할 수 있는 아이템일 경우
-		else if (test_stack.getItemMeta() instanceof EnchantmentStorageMeta) {
+		else if (test_meta instanceof EnchantmentStorageMeta) {
 
 			// 랜덤아이템이 인첸트 관련 아이템일 경우 인첸트부여 허용여부 검사
 			Enchantment enchant_type = re.getRandomEnchant("GET_ENCHANT_ITEM");
+			
 			if (enchant_type != null) {
 				item_meta = createEnchantMeta(stack, material, enchant_type);
 			}
 		}
 		// 염소 뿔일 경우
-		else if (material.equals(Material.GOAT_HORN)) {
+		else if (test_meta instanceof MusicInstrumentMeta) {
 			item_meta = createHornMeta(stack, material);
 		}
-		// 수상한 모래/자갈일 경우
-		else if (material.equals(Material.SUSPICIOUS_GRAVEL) ||
-				material.equals(Material.SUSPICIOUS_SAND)) {
+		// 붓질이 가능한 블럭일 경우
+		else if (test_meta instanceof BlockStateMeta &&
+				((BlockStateMeta) test_meta).getBlockState() instanceof BrushableBlock) {
+			
+			// 랜덤아이템이 붓질가능한 아이템일 경우 붓질가능한 아이템에 대해 랜덤효과부여 여부 검사
+			Material brush = re.getRandomItem("GET_BRUSHABLE_ITEM");
+			
+			if (brush != null) {
+				item_meta = createBlockMeta(stack, material, brush);
+			}
 		}
 
 		// 무작위로 선택된 아이템으로 변경
@@ -185,5 +195,22 @@ public class PickupItem extends RandomItem implements Listener {
 		inst_meta.setInstrument(horn);
 		
 		return inst_meta;
+	}
+	
+	private BlockStateMeta createBlockMeta(ItemStack origin_stack, Material material, Material brush) {
+		ItemStack copy_stack = new ItemStack(origin_stack);
+		copy_stack.setType(material);
+		BlockStateMeta block_meta = (BlockStateMeta) copy_stack.getItemMeta();
+		BrushableBlock brushable = (BrushableBlock) block_meta.getBlockState();
+		
+		// 갯수 (1개 ~ 10개)
+		int count = ((int) (Math.random() * 10)) + 1;
+		
+		ItemStack hideItem = new ItemStack(brush, count);
+		
+		brushable.setItem(hideItem);
+		block_meta.setBlockState(brushable);
+		
+		return block_meta;
 	}
 }
