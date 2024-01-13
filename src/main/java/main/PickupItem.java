@@ -1,7 +1,12 @@
 package main;
 
+import java.util.ArrayList;
+import java.util.Iterator;
+
 import org.bukkit.Color;
 import org.bukkit.Material;
+import org.bukkit.MusicInstrument;
+import org.bukkit.Registry;
 import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
@@ -11,6 +16,7 @@ import org.bukkit.inventory.ItemFlag;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.EnchantmentStorageMeta;
 import org.bukkit.inventory.meta.ItemMeta;
+import org.bukkit.inventory.meta.MusicInstrumentMeta;
 import org.bukkit.inventory.meta.PotionMeta;
 import org.bukkit.inventory.meta.SuspiciousStewMeta;
 import org.bukkit.potion.PotionData;
@@ -19,6 +25,14 @@ import org.bukkit.potion.PotionEffectType;
 import org.bukkit.potion.PotionType;
 
 public class PickupItem extends RandomItem implements Listener {
+	private final ArrayList<MusicInstrument> horns = new ArrayList<MusicInstrument>();
+	
+	public PickupItem() {
+		Iterator<MusicInstrument> horns_iter = Registry.INSTRUMENT.iterator();
+		while (horns_iter.hasNext()) {
+			horns.add(horns_iter.next());
+		}
+	}
 	
 	// 아이템을 주웠을 때
 	@EventHandler
@@ -52,7 +66,7 @@ public class PickupItem extends RandomItem implements Listener {
 		
 		ItemMeta item_meta = stack.getItemMeta(); // 랜덤할 아이템에 적용 할 메타 정보
 		
-		material = Material.ENCHANTED_BOOK;
+		material = Material.GOAT_HORN;
 		
 		// 특정 아이템 메타 확인용 ItemStack
 		ItemStack test_stack = new ItemStack(material, 1);
@@ -87,7 +101,7 @@ public class PickupItem extends RandomItem implements Listener {
 		}
 		// 염소 뿔일 경우
 		else if (material.equals(Material.GOAT_HORN)) {
-			// MusicInstrumentMeta = (MusicInstrumentMeta) getItemMeta
+			item_meta = createHornMeta(stack, material);
 		}
 		// 수상한 모래/자갈일 경우
 		else if (material.equals(Material.SUSPICIOUS_GRAVEL) ||
@@ -158,5 +172,18 @@ public class PickupItem extends RandomItem implements Listener {
 		enchant_meta.addStoredEnchant(ench, level, true);
 		
 		return enchant_meta;
+	}
+	
+	private MusicInstrumentMeta createHornMeta(ItemStack origin_stack, Material material) {
+		ItemStack copy_stack = new ItemStack(origin_stack);
+		copy_stack.setType(material);
+		MusicInstrumentMeta inst_meta = (MusicInstrumentMeta) copy_stack.getItemMeta();
+		
+		int randIdx = (int) (Math.random() * horns.size());
+		MusicInstrument horn = horns.get(randIdx);
+		
+		inst_meta.setInstrument(horn);
+		
+		return inst_meta;
 	}
 }
