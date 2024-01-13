@@ -94,6 +94,7 @@ public class RandomItem {
 			if (meta instanceof EnchantmentStorageMeta) {
 				System.out.println((EnchantmentStorageMeta) meta);
 			}
+			
 			stack.setType(material);
 			stack.setItemMeta(meta);
 		}

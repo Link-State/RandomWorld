@@ -52,18 +52,10 @@ public class PickupItem extends RandomItem implements Listener {
 		
 		ItemMeta item_meta = stack.getItemMeta(); // 랜덤할 아이템에 적용 할 메타 정보
 		
-		material = Material.SUSPICIOUS_STEW;
+		material = Material.ENCHANTED_BOOK;
 		
 		// 특정 아이템 메타 확인용 ItemStack
 		ItemStack test_stack = new ItemStack(material, 1);
-		
-//		ItemMeta test_meta = test_stack.getItemMeta();
-//		SuspiciousStewMeta test_stew_meta = (SuspiciousStewMeta) test_meta;
-//		PotionEffect effe = new PotionEffect(PotionEffectType.ABSORPTION, 60, 1);
-//		test_stew_meta.addCustomEffect(effe, true);
-//		System.out.println(test_stew_meta);
-//		test_meta = test_stew_meta;
-//		System.out.println((SuspiciousStewMeta) test_meta);
 		
 		// 포션효과가 부여 가능한 아이템일 경우
 		if (test_stack.getItemMeta() instanceof PotionMeta) {
@@ -79,15 +71,10 @@ public class PickupItem extends RandomItem implements Listener {
 			
 			// 랜덤아이템이 포션효과 관련 아이템일 경우 포션효과부여 허용여부 검사
 			PotionEffectType effect_type = re.getRandomEffect("GET_EFFECT_ITEM");
+			
 			if (effect_type != null) {
-				System.out.println("susanghan stew");
 				item_meta = createStewMeta(stack, material, effect_type);
 			}
-			
-			stack.setType(material);
-			stack.setItemMeta(item_meta);
-			
-			return;
 		}
 		// 인첸트를 저장할 수 있는 아이템일 경우
 		else if (test_stack.getItemMeta() instanceof EnchantmentStorageMeta) {
@@ -151,7 +138,7 @@ public class PickupItem extends RandomItem implements Listener {
 		
 		// 포션효과 객체 생성
 		PotionEffect effect = new PotionEffect(type, duration, 2);
-		
+
 		stew_meta.addCustomEffect(effect, true);
 		
 		return stew_meta;
