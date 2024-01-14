@@ -76,6 +76,7 @@ public class Main extends JavaPlugin {
 			POTION_FIELD.put(cause.name(), true);
 		}
 		POTION_FIELD.put("GET_EFFECT_ITEM",true);
+		POTION_FIELD.put("BREWING", true);
 		
 		// 인첸트 관련
 		ENCHANT_FIELD.put("ENCHANTING", true);

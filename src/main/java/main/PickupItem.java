@@ -13,7 +13,6 @@ import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.entity.EntityPickupItemEvent;
-import org.bukkit.inventory.ItemFlag;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.BlockStateMeta;
 import org.bukkit.inventory.meta.EnchantmentStorageMeta;
@@ -21,10 +20,8 @@ import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.inventory.meta.MusicInstrumentMeta;
 import org.bukkit.inventory.meta.PotionMeta;
 import org.bukkit.inventory.meta.SuspiciousStewMeta;
-import org.bukkit.potion.PotionData;
 import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
-import org.bukkit.potion.PotionType;
 
 public class PickupItem extends RandomItem implements Listener {
 	private final ArrayList<MusicInstrument> horns = new ArrayList<MusicInstrument>();
@@ -66,7 +63,8 @@ public class PickupItem extends RandomItem implements Listener {
 			return;
 		}
 		
-		ItemMeta item_meta = stack.getItemMeta(); // 랜덤할 아이템에 적용 할 메타 정보
+		// 랜덤한 아이템에 적용 할 메타 정보 (특정 아이템일 경우 메타데이터 덮어씌우기 용도)
+		ItemMeta item_meta = stack.getItemMeta();
 		
 		// 특정 아이템 메타 확인용 ItemStack, ItemMeta
 		ItemStack test_stack = new ItemStack(material, 1);
@@ -122,95 +120,5 @@ public class PickupItem extends RandomItem implements Listener {
 		changeRandomItem(stack, material, item_meta);
 		
 		return;
-	}
-	
-	// 포션메타 생성
-	private PotionMeta createPotionMeta(ItemStack origin_stack, Material material, PotionEffectType type) {
-		ItemStack copy_stack = new ItemStack(origin_stack);
-		copy_stack.setType(material);
-		PotionMeta potion_meta = (PotionMeta) copy_stack.getItemMeta();
-		
-		// 지속시간 생성 (10초 ~ 8분)
-		int duration = ((int) (Math.random() * 47) + 1) * 200;
-		
-		// 중폭수준 생성 (1 or 2)
-		int amplifier = (int) (Math.random() + 1);
-		
-		// 포션색깔 생성
-		int red = (int) (Math.random() * 255);
-		int green = (int) (Math.random() * 255);
-		int blue = (int) (Math.random() * 255);
-		Color color = Color.fromRGB(red, green, blue);
-		
-		// 포션효과 객체 생성
-		PotionEffect effect = new PotionEffect(type, duration, amplifier);
-		
-		potion_meta.addCustomEffect(effect, true);
-		potion_meta.setColor(color);
-		
-		return potion_meta;
-	}
-	
-	// 수상한 스튜 메타
-	private SuspiciousStewMeta createStewMeta(ItemStack origin_stack, Material material, PotionEffectType type) {
-		ItemStack copy_stack = new ItemStack(origin_stack);
-		copy_stack.setType(material);
-		SuspiciousStewMeta stew_meta = (SuspiciousStewMeta) copy_stack.getItemMeta();
-		
-		// 지속시간 생성 (2초 ~ 10초)
-		int duration = ((int) (Math.random() * 7) + 1) * 20;
-		
-		// 포션효과 객체 생성
-		PotionEffect effect = new PotionEffect(type, duration, 2);
-
-		stew_meta.addCustomEffect(effect, true);
-		
-		return stew_meta;
-	}
-	
-	// 저장용아이템 인첸트 메타 생성
-	private EnchantmentStorageMeta createEnchantMeta(ItemStack origin_stack, Material material, Enchantment ench) {
-		ItemStack copy_stack = new ItemStack(origin_stack);
-		copy_stack.setType(material);
-		EnchantmentStorageMeta enchant_meta = (EnchantmentStorageMeta) copy_stack.getItemMeta();
-		
-		// 인첸트 레벨 생성
-		int start = ench.getStartLevel();
-		int max = ench.getMaxLevel();
-		int level = (int) ((Math.random() * Math.abs(max - start)) + start);
-		
-		enchant_meta.addStoredEnchant(ench, level, true);
-		
-		return enchant_meta;
-	}
-	
-	private MusicInstrumentMeta createHornMeta(ItemStack origin_stack, Material material) {
-		ItemStack copy_stack = new ItemStack(origin_stack);
-		copy_stack.setType(material);
-		MusicInstrumentMeta inst_meta = (MusicInstrumentMeta) copy_stack.getItemMeta();
-		
-		int randIdx = (int) (Math.random() * horns.size());
-		MusicInstrument horn = horns.get(randIdx);
-		
-		inst_meta.setInstrument(horn);
-		
-		return inst_meta;
-	}
-	
-	private BlockStateMeta createBlockMeta(ItemStack origin_stack, Material material, Material brush) {
-		ItemStack copy_stack = new ItemStack(origin_stack);
-		copy_stack.setType(material);
-		BlockStateMeta block_meta = (BlockStateMeta) copy_stack.getItemMeta();
-		BrushableBlock brushable = (BrushableBlock) block_meta.getBlockState();
-		
-		// 갯수 (1개 ~ 10개)
-		int count = ((int) (Math.random() * 10)) + 1;
-		
-		ItemStack hideItem = new ItemStack(brush, count);
-		
-		brushable.setItem(hideItem);
-		block_meta.setBlockState(brushable);
-		
-		return block_meta;
 	}
 }
