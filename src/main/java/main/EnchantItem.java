@@ -19,9 +19,11 @@ public class EnchantItem extends RandomItem implements Listener {
 			return;
 		}
 		
-		Map<Enchantment, Integer> origins = e.getEnchantsToAdd();	
+		
+		Map<Enchantment, Integer> origins = e.getEnchantsToAdd(); // 인첸트 테이블에서 추가된 인첸트 목록
 		ArrayList<Enchantment> origin_keys = new ArrayList<Enchantment>(origins.keySet().stream().toList());
 		
+		// 인첸트 테이블에서 얻은 각각의 인첸트에 대해 변환 시도
 		for (Enchantment key : origin_keys) {
 			Enchantment enchant = re.getRandomEnchant("ENCHANTING", key); // 마인크래프트 인게임 중 무작위 인첸트 1개를 선택
 			
@@ -30,6 +32,7 @@ public class EnchantItem extends RandomItem implements Listener {
 				continue;
 			}
 			
+			// 인첸트 적용
 			origins.put(enchant, origins.get(key));
 			origins.remove(key);
 		}

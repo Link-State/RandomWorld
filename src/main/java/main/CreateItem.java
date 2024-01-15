@@ -3,6 +3,7 @@ package main;
 import java.util.Set;
 
 import org.bukkit.Material;
+import org.bukkit.entity.EntityType;
 import org.bukkit.entity.HumanEntity;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
@@ -102,7 +103,7 @@ public class CreateItem extends RandomItem implements Listener {
 		if (entity instanceof Player) {
 			re = Main.REGISTED_PLAYER.get(entity.getUniqueId());
 		} else {
-			re = Main.ENTITY;
+			re = Main.REGISTED_ENTITY.get(entity.getType());
 		}
 		
 		// 양조기 인벤토리일 경우
@@ -128,12 +129,13 @@ public class CreateItem extends RandomItem implements Listener {
 				return;
 			}
 			
+			// 포션효과 랜덤변환
 			changeRandomPotion(re, "BREWING", stack);
-			
 			return;
 		}
 		
-		// result 슬롯이 없는 인벤토리일 경우,
+		
+		// result 슬롯이 없는 인벤토리일 경우, (슬롯이 있는, 처음보는 인벤토리일 경우 기록 및 Main의 static 변수에 등록)
 		if (!hasResultSlot(e.getView())) {
 			return;
 		}
@@ -147,9 +149,6 @@ public class CreateItem extends RandomItem implements Listener {
 			
 			// 커서에 있는 아이템이 공기일 경우 무작위로 선택된 아이템으로 변경
 			if (e.getCursor() != null && e.getCursor().getType().equals(Material.AIR)) {
-				
-				Material material = re.getRandomItem(invType.name()); // 무작위 아이템 1개 선택
-				
 				changeRandomItem(re, invType.name(), stack);
 				return;
 			}
@@ -233,9 +232,17 @@ public class CreateItem extends RandomItem implements Listener {
 			Main.DEFAULT.setItemFilter(inv_type.name(), "");
 			Main.DEFAULT.setItemBan(inv_type.name(), "");
 			
-			Main.ENTITY.setActivate(inv_type.name(), true);
-			Main.ENTITY.setItemFilter(inv_type.name(), "");
-			Main.ENTITY.setItemBan(inv_type.name(), "");
+			// entity에 대해서
+			Set<EntityType> entity_keys = Main.REGISTED_ENTITY.keySet();
+			for (EntityType key : entity_keys) {
+				if (!key.isAlive() || key.equals(EntityType.PLAYER)) {
+					continue;
+				}
+				
+				Main.REGISTED_ENTITY.get(key).setActivate(inv_type.name(), true);
+				Main.REGISTED_ENTITY.get(key).setItemFilter(inv_type.name(), "");
+				Main.REGISTED_ENTITY.get(key).setItemBan(inv_type.name(), "");
+			}
 			
 			Main.ITEM_FIELD.put(inv_type.name(), true);
 			Main.ACTIVATED_INVENTORY_TYPE.put(inv_type.name(), inv_type);

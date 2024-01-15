@@ -16,6 +16,8 @@ import org.bukkit.World;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
 import org.bukkit.enchantments.Enchantment;
+import org.bukkit.entity.EntityType;
+import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
 import org.bukkit.event.Listener;
 import org.bukkit.event.entity.EntityPotionEffectEvent;
@@ -41,7 +43,7 @@ public class Main extends JavaPlugin {
 	public static final HashMap<String, Boolean> ENCHANT_FIELD = new HashMap<String, Boolean>(); // 인첸트 관련 이벤트 명
 	
 	public static RandomEvent DEFAULT; // 공통으로 적용 할 랜덤이벤트 해시맵
-	public static RandomEvent ENTITY; // 엔티티에게 적용 할 랜덤이벤트 해시맵
+	public static HashMap<EntityType, RandomEvent> REGISTED_ENTITY; // 엔티티에게 적용 할 랜덤이벤트 해시맵
 	public static HashMap<String, World> DISABLE_WORLD; // 월드 제한 수
 	
 	// 플러그인 활성화 시,
@@ -125,8 +127,9 @@ public class Main extends JavaPlugin {
 	@Override
 	public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
 //		 먼저 plugin.yml 작성
-//		/randomworld enable
-//		/randomworld disable
+//		/randomworld * enable
+//		/randomworld * disable
+//		/randomworld <이름> 
 //		/randomworld <이벤트 리스트> - userdata 있는 유저는 제외
 //		/randomworld <아이템 리스트> - userdata 있는 유저는 제외
 //		/randomworld <이벤트> <아이템 리스트> - userdata 있는 유저는 제외
@@ -275,11 +278,22 @@ public class Main extends JavaPlugin {
 		}
 
 		DEFAULT = new RandomEvent("DEFAULT"); // 공통 랜덤효과
-		ENTITY = null; // 엔티티 랜덤효과
+		REGISTED_ENTITY = new HashMap<EntityType, RandomEvent>(); // 엔티티 랜덤효과
 		
 		// 엔티티도 랜덤효과를 허용한 경우
 		if (CONFIG.getBoolean("Enable_Entity")) {
-			ENTITY = new RandomEvent("ENTITY");
+			// 각각의 엔티티에 대해 생성
+//			ENTITY = new RandomEvent("ENTITY");
+			EntityType[] entities = EntityType.values();
+			
+			for (EntityType entity : entities) {
+				if (!entity.isAlive() || entity.equals(EntityType.PLAYER)) {
+					continue;
+				}
+				
+				RandomEvent re = new RandomEvent(entity.name());
+				REGISTED_ENTITY.put(entity, re);
+			}
 		}
 		// DISABLE_WORLD = CONFIG.getString("Disable_World");
 		

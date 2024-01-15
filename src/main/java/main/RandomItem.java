@@ -1,7 +1,6 @@
 package main;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 
@@ -126,7 +125,7 @@ public class RandomItem {
 			return;
 		}
 		
-		material = Material.LINGERING_POTION;
+		material = Material.SUSPICIOUS_STEW;
 		
 		// 랜덤한 아이템에 적용 할 메타 정보 (특정 아이템일 경우 메타데이터 덮어씌우기 용도)
 		ItemMeta item_meta = stack.getItemMeta();
@@ -140,13 +139,11 @@ public class RandomItem {
 			stack.setType(material);
 			prepareItem(stack);
 			changeRandomPotion(re, "GET_EFFECT_ITEM", stack);
-			
 			return;
 		}
 		else if (test_meta instanceof SuspiciousStewMeta) {
 			stack.setType(material);
 			changeRandomStew(re, "GET_EFFECT_ITEM", stack);
-			
 			return;
 		}
 		// 인첸트를 저장할 수 있는 아이템일 경우
@@ -201,7 +198,7 @@ public class RandomItem {
 		
 		PotionMeta potion_meta = (PotionMeta) stack.getItemMeta();
 		
-		// 랜덤결과가 포션인 경우,
+		// 랜덤 아이템 결과가 포션인 경우,
 		if (potion_meta.getBasePotionType().equals(PotionType.UNCRAFTABLE)) {
 			
 			// 랜덤 포션효과 하나를 저장
@@ -217,6 +214,7 @@ public class RandomItem {
 		else {
 			List<PotionEffect> base_effects = potion_meta.getBasePotionType().getPotionEffects();
 			ArrayList<PotionEffect> new_effects = new ArrayList<PotionEffect>();
+			Color color = null;
 			
 			// 각 포션마다 각각의 효과들에 대해 변환을 허용하는지 유무를 검사
 			for (PotionEffect effect : base_effects) {
@@ -229,6 +227,13 @@ public class RandomItem {
 				// 변환을 허용하는 경우, 기존효과에서 타입만 바꾼 후, 임시 저장
 				PotionEffect new_effect = new PotionEffect(random_effect, effect.getDuration(), effect.getAmplifier(), effect.isAmbient(), effect.hasIcon());
 				new_effects.add(new_effect);
+				
+				// 색깔 섞기
+				if (color == null) {
+					color = random_effect.getColor();
+				} else {
+					color.mixColors(random_effect.getColor());
+				}
 			}
 			
 			// 포션효과가 없는 물약일 때, (어색한물약, 평범한물약, 등)
@@ -238,6 +243,7 @@ public class RandomItem {
 			
 			// 기존효과를 수정해야하므로 베이스포션 없애기
 			potion_meta.setBasePotionType(PotionType.UNCRAFTABLE);
+			potion_meta.setColor(color);
 			
 			// 임시저장된 랜덤포션효과들을 메타정보에 적용
 			for (PotionEffect new_effect : new_effects) {
@@ -245,7 +251,7 @@ public class RandomItem {
 			}
 		}
 
-//		stack.setItemMeta(potion_meta);
+		stack.setItemMeta(potion_meta);
 		
 		changeTag(stack, "changed");
 	}
@@ -278,13 +284,9 @@ public class RandomItem {
 		
 		addRandomEffect(stew_meta, random_effect);
 		
-//		stack.setItemMeta(stew_meta);
+		stack.setItemMeta(stew_meta);
 		
 		changeTag(stack, "changed");
-	}
-	
-	public void changeRandomEnchant(RandomEvent re, String eventName, ItemStack stack) {
-		
 	}
 
 	
@@ -297,17 +299,11 @@ public class RandomItem {
 		// 중폭수준 생성 (1 or 2)
 		int amplifier = (int) (Math.random() + 1);
 		
-		// 포션색깔 생성
-		int red = (int) (Math.random() * 255);
-		int green = (int) (Math.random() * 255);
-		int blue = (int) (Math.random() * 255);
-		Color color = Color.fromRGB(red, green, blue);
-		
 		// 포션효과 객체 생성
 		PotionEffect effect = new PotionEffect(type, duration, amplifier);
 		
 		origin_meta.addCustomEffect(effect, true);
-		origin_meta.setColor(color);
+		origin_meta.setColor(type.getColor());
 		
 		return origin_meta;
 	}

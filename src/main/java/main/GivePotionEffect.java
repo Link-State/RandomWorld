@@ -46,7 +46,7 @@ public class GivePotionEffect implements Listener {
 		}
 		// 플레이어가 아닐 경우
 		else {
-			re = Main.ENTITY;
+			re = Main.REGISTED_ENTITY.get(entity.getType());
 		}
 		
 		// 해당 개체가 포션 랜덤효과를 허용하지 않았을 때
@@ -57,10 +57,16 @@ public class GivePotionEffect implements Listener {
 		}
 		
 		PotionEffect origin_effect = e.getNewEffect(); // 원래 포션효과
-		PotionEffectType random_type = re.getRandomEffect(cause.name(), origin_effect.getType());
+		PotionEffectType random_type = re.getRandomEffect(cause.name());
+		
+		// 해당 포션 효과를 랜덤하게 바꾸는 것을 허용하지 않을 때,
+		if (re.isEffectBan(cause.name(), origin_effect.getType())) {
+			return;
+		}
 
-		// 특정 포션효과는 랜덤하게 바꾸는 것을 허용하지 않을 때,
+		// 특정 포션효과를 랜덤하게 바꿀만한 효과가 없을 때,
 		if (random_type == null) {
+			e.setCancelled(true);
 			return;
 		}
 		
