@@ -128,16 +128,15 @@ public class Main extends JavaPlugin {
 	public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
 //		 먼저 plugin.yml 작성
 		
-//		/randomworld <이름 여러 개 | *> enable | disable
+//		자동 완성 하기
+//		https://www.spigotmc.org/threads/tab-complete.160308/
 		
-//		/randomworld <이벤트 리스트> - userdata 있는 유저는 제외
-//		/randomworld <아이템 리스트> - userdata 있는 유저는 제외
-//		/randomworld <이벤트> <아이템 리스트> - userdata 있는 유저는 제외
-//		/randomworld <플레이어 이름> <이벤트 리스트> - userdata 생성
-//		/randomworld <플레이어 이름> <이벤트> <아이템 리스트> - userdata 생성
-//		/randomworld reset <플레이어 이름> - userdata 삭제
-//		/randomworld reset * - userdata 모두 삭제
-//		/random setting
+//		/randomworld <> <이름 여러 개 | *> <enable | disable>
+		
+//		/randomworld <item | potion | enchant> <user | entity> <플레이어 이름 여러 개 | *>  <설정 여러 개 | *> <설정... | *>
+		
+//		/randomworld setting
+		
 		return super.onCommand(sender, command, label, args);
 	}
 	
@@ -307,6 +306,11 @@ public class Main extends JavaPlugin {
 		
 		String[] worlds = worlds_str.split(",");
 		for (String world_str : worlds) {
+			
+			if (world_str == null) {
+				continue;
+			}
+			
 			World world = Bukkit.getWorld(world_str);
 			
 			if (world == null) {
