@@ -10,8 +10,10 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.inventory.InventoryAction;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.event.inventory.InventoryType;
+import org.bukkit.event.inventory.InventoryType.SlotType;
 import org.bukkit.inventory.InventoryView;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.meta.PotionMeta;
 
 // 
 public class CreateItem extends RandomItem implements Listener {
@@ -91,53 +93,69 @@ public class CreateItem extends RandomItem implements Listener {
 	@EventHandler
 	// 인벤토리를 클릭했을 때
 	public void inventoryClick(InventoryClickEvent e) {
+
+		ItemStack stack = e.getCurrentItem(); // 현재 클릭한 아이템
+		InventoryType invType = e.getView().getType(); // 인벤토리 타입
+		RandomEvent re;
+		HumanEntity entity = e.getWhoClicked();
+		
+		if (entity instanceof Player) {
+			re = Main.REGISTED_PLAYER.get(entity.getUniqueId());
+		} else {
+			re = Main.ENTITY;
+		}
+		
+		// 양조기 인벤토리일 경우
+		if (invType.equals(InventoryType.BREWING)) {
+			
+			// 클릭한 슬롯이 양조기 제작 슬롯일 경우
+			if (!e.getSlotType().equals(SlotType.CRAFTING)) {
+				return;
+			}
+
+			// 클릭한 슬롯이 포션 결과 슬롯인 경우
+			if (e.getRawSlot() < 0 || e.getRawSlot() > 2) {
+				return;
+			}
+
+			// 클릭이 일어난 직후 커서에 있는 아이템이 null인 경우
+			if (e.getCursor() == null) {
+				return;
+			}
+			
+			// 포션이 아닐 경우
+			if (!(stack.getItemMeta() instanceof PotionMeta)) {
+				return;
+			}
+			
+			changeRandomPotion(re, "BREWING", stack);
+			
+			return;
+		}
 		
 		// result 슬롯이 없는 인벤토리일 경우,
 		if (!hasResultSlot(e.getView())) {
 			return;
 		}
 		
-		// 랜덤효과를 받을 개체를 선택
-		RandomEvent re;
-		HumanEntity entity = e.getWhoClicked();
-		if (entity instanceof Player) {
-			re = Main.REGISTED_PLAYER.get(entity.getUniqueId());
-		} else {
-			re = Main.ENTITY;
+		if (re == null || !re.getActivate(invType.name())) {
+			return;
 		}
-
-		InventoryType invType = e.getView().getType(); // 인벤토리 타입
 		
 		// 클릭한 슬롯이 결과 슬롯일 경우
 		if (e.getSlotType().equals(InventoryType.SlotType.RESULT)) {
 			
-			// 랜덤아이템 효과를 받고, 해당 인벤토리에 대해 랜덤효과를 받는 경우,
-			if (re == null || !re.getActivate(invType.name())) {
-				return;
-			}
-
-			ItemStack stack = e.getCurrentItem(); // 현재 클릭한 아이템
-			Material material = re.getRandomItem(invType.name()); // 마크 인게임 아이템 중 무작위로 1개 선택
-			
-			// 무작위로 선택한 아이템이 null이 아니고
-			if (material == null) {
-				return;
-			}
-			
-			// 해당 인벤토리에서 결과로 나온 아이템은 무작위로 변경가능한 것인지 확인
-			if (re.isItemBan(invType.name(), stack.getType())) {
-				return;
-			}
-			
 			// 커서에 있는 아이템이 공기일 경우 무작위로 선택된 아이템으로 변경
 			if (e.getCursor() != null && e.getCursor().getType().equals(Material.AIR)) {
-				changeRandomItem(stack, material);
-			}
-			// 그것이 아니라면 클릭한 아이템을 랜덤화예정 태그 부여
-			else {
-				prepareItem(e.getCurrentItem());
+				
+				Material material = re.getRandomItem(invType.name()); // 무작위 아이템 1개 선택
+				
+				changeRandomItem(re, invType.name(), stack);
+				return;
 			}
 			
+			// 그것이 아니라면 클릭한 아이템을 랜덤화예정 태그 부여
+			prepareItem(e.getCurrentItem());
 			return;
 		}
 		

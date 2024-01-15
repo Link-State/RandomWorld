@@ -162,18 +162,27 @@ public class RandomEvent {
 	
 	
 	public boolean isItemBan(String eventName, Material material) {
-		if (this.itemBan.get(eventName).get(material) != null) {
+		HashMap<Material, Boolean> event_item_ban = this.itemBan.get(eventName);
+		if (event_item_ban != null && event_item_ban.get(material) != null) {
 			return true;
 		}
 		return false;
 	}
 	
 	public boolean isEffectBan(String eventName, PotionEffectType effect) {
-		return true;
+		HashMap<PotionEffectType, Boolean> event_potion_ban = this.potionBan.get(eventName);
+		if (event_potion_ban != null && event_potion_ban.get(effect) != null) {
+			return true;
+		}
+		return false;
 	}
 	
 	public boolean isEnchantBan(String eventName, Enchantment enchant) {
-		return true;
+		HashMap<Enchantment, Boolean> event_enchant_ban = this.enchantBan.get(eventName);
+		if (event_enchant_ban != null && event_enchant_ban.get(enchant) != null) {
+			return true;
+		}
+		return false;
 	}
 
 	
@@ -445,7 +454,7 @@ public class RandomEvent {
 		// 포션효과 이벤트
 		// e.g) 신호기로부터 얻는 이펙트, 신호기에서 바꿀 이펙트, 최대 갯수
 
-		this.data.set("<Effect>",  "----------------------LINE----------------------");
+		this.data.set("<Effect>",  "----------------------<Efffect>----------------------");
 		for (String name : effect_names) {
 			if (!this.data.contains(name + "_EXCEPT")) {
 				this.data.set(name + "_EXCEPT", "");
@@ -463,7 +472,7 @@ public class RandomEvent {
 			}
 		}
 		
-		this.data.set("<Enchant>",  "----------------------LINE----------------------");
+		this.data.set("<Enchant>",  "----------------------<Enchant>----------------------");
 		
 		// 인첸트 이벤트
 		for (String name : enchant_names) {
@@ -479,7 +488,7 @@ public class RandomEvent {
 		}
 		
 		// 아이템 이벤트
-		this.data.set("<Craft>",  "----------------------LINE----------------------");
+		this.data.set("<Craft>",  "----------------------<Craft>----------------------");
 		for (String name : item_names) {
 			if (!this.data.contains(name + "_EXCEPT")) {
 				this.data.set(name + "_EXCEPT", "");

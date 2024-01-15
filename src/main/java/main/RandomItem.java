@@ -1,9 +1,15 @@
 package main;
 
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.List;
+
 import org.bukkit.Color;
 import org.bukkit.Material;
 import org.bukkit.MusicInstrument;
 import org.bukkit.NamespacedKey;
+import org.bukkit.Registry;
 import org.bukkit.block.BrushableBlock;
 import org.bukkit.enchantments.Enchantment;
 import org.bukkit.inventory.ItemStack;
@@ -17,12 +23,14 @@ import org.bukkit.persistence.PersistentDataContainer;
 import org.bukkit.persistence.PersistentDataType;
 import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
+import org.bukkit.potion.PotionType;
 
 
 // 아이템 랜덤화 관련 클래스
 public class RandomItem {
 	// 아이템 태그에 사용될 키
 	public static final NamespacedKey KEY = new NamespacedKey(Main.PLUGIN, "randomStatus");
+	private final ArrayList<MusicInstrument> horns = new ArrayList<MusicInstrument>();
 
 	/**
 	 * -ITEM STATUS-
@@ -32,31 +40,38 @@ public class RandomItem {
 	 * 3 - CHANGED
 	 **/
 	
+	// 생성자
+	public RandomItem() {
+		Iterator<MusicInstrument> horns_iter = Registry.INSTRUMENT.iterator();
+		while (horns_iter.hasNext()) {
+			horns.add(horns_iter.next());
+		}
+	}
+	
 	// 아이템 상태를 반환하는 함수
 	public int getItemStatus(ItemStack stack) {
 		
-		// 스택이 null이 아닌 경우
-		if (stack != null) {
-			// 공기가 아닌 경우
-			if (!stack.getType().isAir()) {
-				ItemMeta meta = stack.getItemMeta();
-				// 메타 정보가 없는 경우
-				if (meta != null) {
-					PersistentDataContainer tag = meta.getPersistentDataContainer(); // 
-					
-					// 해당 아이템의 태그에 번호가 부여되어있으면
-					if (tag.has(KEY, PersistentDataType.STRING)) {
-						if (tag.get(KEY, PersistentDataType.STRING).equals("ready")) {
-							return 2;
-						} else if (tag.get(KEY, PersistentDataType.STRING).equals("changed")) {
-							return 3;
-						}
-					} else {
-						return 1;
-					}
-				}
-			}
+		// 스택이 null, 공기, 메타정보가 null일 경우
+		if (stack == null || stack.getType().isAir() || stack.getItemMeta() == null) {
+			return 0;	
 		}
+		
+		ItemMeta meta = stack.getItemMeta();
+		PersistentDataContainer tag = meta.getPersistentDataContainer(); // 
+		
+		// 해당 아이템의 태그에 번호가 부여되어있으면
+		if (!tag.has(KEY, PersistentDataType.STRING)) {
+			return 1;
+		}
+
+		if (tag.get(KEY, PersistentDataType.STRING).equals("ready")) {
+			return 2;
+		}
+		
+		if (tag.get(KEY, PersistentDataType.STRING).equals("changed")) {
+			return 3;
+		}
+		
 		return 0;
 	}
 	
@@ -77,48 +92,68 @@ public class RandomItem {
 	public void prepareItem(ItemStack stack) {
 		int status = getItemStatus(stack); // 해당 아이템의 태그 상태
 		
-		// 태그가 부여되어있지 않은 아이템일 경우
-		if (status == 1) {
-			changeTag(stack, "ready");
+		// 태그가 부여된 아이템일 경우
+		if (status != 1) {
+			return;
 		}
+		
+		changeTag(stack, "ready");
 	}
 	
 	// 아이템 랜덤화
-	public void changeRandomItem(ItemStack stack, Material material, RandomEvent re) {
-		// 
+	public void changeRandomItem(RandomEvent re, String eventName, ItemStack stack) {
+		
+		// 해당 아이템이 바뀔 수 있는 상태일 때,
+		int status = getItemStatus(stack);
+		if (status != 1 && status != 2) {
+			return;
+		}
+		
+		// 해당 플레이어에게 해방 이벤트가 적용 되어있는지 확인
+		if (re == null || !re.getActivate(eventName)) {
+			return;
+		}
+		
+		// 아이템 관련 이벤트가 아닐 경우
+		if (Main.ITEM_FIELD.get(eventName) == null) {
+			return;
+		}
+
+		Material material = re.getRandomItem(eventName, stack.getType()); // 무작위 아이템 1개 선택
+		
+		// 변경한 아이템이 null이거나 config에서 밴 된(필터링 처리 된) 아이템일 경우
+		if (material == null) {
+			return;
+		}
+		
+		material = Material.LINGERING_POTION;
 		
 		// 랜덤한 아이템에 적용 할 메타 정보 (특정 아이템일 경우 메타데이터 덮어씌우기 용도)
 		ItemMeta item_meta = stack.getItemMeta();
 		
+		// 특정 아이템 메타정보 확인용 ItemStack / ItemMeta
 		ItemStack test_stack = new ItemStack(material, 1);
 		ItemMeta test_meta = test_stack.getItemMeta();
 		
 		// 포션효과가 부여 가능한 아이템일 경우
 		if (test_meta instanceof PotionMeta) {
+			stack.setType(material);
+			prepareItem(stack);
+			changeRandomPotion(re, "GET_EFFECT_ITEM", stack);
 			
-			// 랜덤아이템이 포션효과 관련 아이템일 경우 포션효과부여 허용여부 검사
-			PotionEffectType effect_type = re.getRandomEffect("GET_EFFECT_ITEM");
-			
-			if (effect_type != null) {
-				item_meta = createPotionMeta(stack, material, effect_type);
-			}
+			return;
 		}
-		// 수상한 스튜일 경우 
 		else if (test_meta instanceof SuspiciousStewMeta) {
+			stack.setType(material);
+			changeRandomStew(re, "GET_EFFECT_ITEM", stack);
 			
-			// 랜덤아이템이 포션효과 관련 아이템일 경우 포션효과부여 허용여부 검사
-			PotionEffectType effect_type = re.getRandomEffect("GET_EFFECT_ITEM");
-			
-			if (effect_type != null) {
-				item_meta = createStewMeta(stack, material, effect_type);
-			}
+			return;
 		}
 		// 인첸트를 저장할 수 있는 아이템일 경우
 		else if (test_meta instanceof EnchantmentStorageMeta) {
-
+			
 			// 랜덤아이템이 인첸트 관련 아이템일 경우 인첸트부여 허용여부 검사
 			Enchantment enchant_type = re.getRandomEnchant("GET_ENCHANT_ITEM");
-			
 			if (enchant_type != null) {
 				item_meta = createEnchantMeta(stack, material, enchant_type);
 			}
@@ -127,7 +162,7 @@ public class RandomItem {
 		else if (test_meta instanceof MusicInstrumentMeta) {
 			item_meta = createHornMeta(stack, material);
 		}
-		// 붓질이 가능한 블럭일 경우
+		// 발굴 가능한 블럭일 경우
 		else if (test_meta instanceof BlockStateMeta &&
 				((BlockStateMeta) test_meta).getBlockState() instanceof BrushableBlock) {
 			
@@ -139,37 +174,122 @@ public class RandomItem {
 			}
 		}
 		
-		int status = getItemStatus(stack);
-		if (status == 1 || status == 2) {
-			changeTag(stack, "changed");
-//			System.out.println("[RandomItem.java-75] : " + stack.getType() + " => " + material);
-			stack.setType(material);
-		}
+		stack.setType(material);
+		stack.setItemMeta(item_meta);
+		
+		changeTag(stack, "changed");
 	}
 	
-	// 아이템 랜덤화
-//	public void changeRandomItem(ItemStack stack, Material material, ItemMeta meta) {
-//		int status = getItemStatus(stack);
-//		if (status == 1 || status == 2) {
-//			changeTag(stack, "changed");
-////			System.out.println("[RandomItem.java-75] : " + stack.getType() + " => " + material);
-//			
-//			// 여기서 않됌.
-//			if (meta instanceof EnchantmentStorageMeta) {
-//				System.out.println((EnchantmentStorageMeta) meta);
-//			}
-//			
-//			stack.setType(material);
-//			stack.setItemMeta(meta);
-//		}
-//	}
 	
+	// 포션 랜덤화
+	public void changeRandomPotion(RandomEvent re, String eventName, ItemStack stack) {
+		
+		// 해당 아이템이 바뀔 수 있는 상태일 때,
+		if (getItemStatus(stack) != 2) {
+			return;
+		}
+		
+		// 해당 플레이어에게 해방 이벤트가 적용 되어있는지 확인
+		if (re == null || !re.getActivate(eventName)) {
+			return;
+		}
+		
+		// 아이템 관련 이벤트가 아닐 경우
+		if (Main.POTION_FIELD.get(eventName) == null) {
+			return;
+		}
+		
+		PotionMeta potion_meta = (PotionMeta) stack.getItemMeta();
+		
+		// 랜덤결과가 포션인 경우,
+		if (potion_meta.getBasePotionType().equals(PotionType.UNCRAFTABLE)) {
+			
+			// 랜덤 포션효과 하나를 저장
+			PotionEffectType random_effect = re.getRandomEffect(eventName);
+			if (random_effect == null) {
+				return;
+			}
+			
+			// 랜덤효과를 포션에 적용
+			addRandomEffect(potion_meta, random_effect);
+		}
+		// 양조기 등, 포션을 제작한 경우
+		else {
+			List<PotionEffect> base_effects = potion_meta.getBasePotionType().getPotionEffects();
+			ArrayList<PotionEffect> new_effects = new ArrayList<PotionEffect>();
+			
+			// 각 포션마다 각각의 효과들에 대해 변환을 허용하는지 유무를 검사
+			for (PotionEffect effect : base_effects) {
+				// 하나라도 변환을 허용하지 않는 경우 랜덤변환 안함
+				PotionEffectType random_effect = re.getRandomEffect(eventName, effect.getType());
+				if (random_effect == null) {
+					return;
+				}
+				
+				// 변환을 허용하는 경우, 기존효과에서 타입만 바꾼 후, 임시 저장
+				PotionEffect new_effect = new PotionEffect(random_effect, effect.getDuration(), effect.getAmplifier(), effect.isAmbient(), effect.hasIcon());
+				new_effects.add(new_effect);
+			}
+			
+			// 포션효과가 없는 물약일 때, (어색한물약, 평범한물약, 등)
+			if (new_effects.size() <= 0) {
+				return;
+			}
+			
+			// 기존효과를 수정해야하므로 베이스포션 없애기
+			potion_meta.setBasePotionType(PotionType.UNCRAFTABLE);
+			
+			// 임시저장된 랜덤포션효과들을 메타정보에 적용
+			for (PotionEffect new_effect : new_effects) {
+				potion_meta.addCustomEffect(new_effect, true);
+			}
+		}
 
+//		stack.setItemMeta(potion_meta);
+		
+		changeTag(stack, "changed");
+	}
+	
+	
+	public void changeRandomStew(RandomEvent re, String eventName, ItemStack stack) {
+		
+		// 해당 아이템이 바뀔 수 있는 상태일 때,
+		int status = getItemStatus(stack);
+		if (status != 1 && status != 2) {
+			return;
+		}
+		
+		// 해당 플레이어에게 해방 이벤트가 적용 되어있는지 확인
+		if (re == null || !re.getActivate(eventName)) {
+			return;
+		}
+		
+		// 포션 관련 이벤트가 아닐 경우
+		if (Main.POTION_FIELD.get(eventName) == null) {
+			return;
+		}
+		
+		SuspiciousStewMeta stew_meta = (SuspiciousStewMeta) stack.getItemMeta();
+		
+		PotionEffectType random_effect = re.getRandomEffect(eventName);
+		if (random_effect == null) {
+			return;
+		}
+		
+		addRandomEffect(stew_meta, random_effect);
+		
+//		stack.setItemMeta(stew_meta);
+		
+		changeTag(stack, "changed");
+	}
+	
+	public void changeRandomEnchant(RandomEvent re, String eventName, ItemStack stack) {
+		
+	}
+
+	
 	// 포션메타 생성
-	private PotionMeta createPotionMeta(ItemStack origin_stack, Material material, PotionEffectType type) {
-		ItemStack copy_stack = new ItemStack(origin_stack);
-		copy_stack.setType(material);
-		PotionMeta potion_meta = (PotionMeta) copy_stack.getItemMeta();
+	private PotionMeta addRandomEffect(PotionMeta origin_meta, PotionEffectType type) {
 		
 		// 지속시간 생성 (10초 ~ 8분)
 		int duration = ((int) (Math.random() * 47) + 1) * 200;
@@ -186,27 +306,24 @@ public class RandomItem {
 		// 포션효과 객체 생성
 		PotionEffect effect = new PotionEffect(type, duration, amplifier);
 		
-		potion_meta.addCustomEffect(effect, true);
-		potion_meta.setColor(color);
+		origin_meta.addCustomEffect(effect, true);
+		origin_meta.setColor(color);
 		
-		return potion_meta;
+		return origin_meta;
 	}
 	
 	// 수상한 스튜 메타
-	private SuspiciousStewMeta createStewMeta(ItemStack origin_stack, Material material, PotionEffectType type) {
-		ItemStack copy_stack = new ItemStack(origin_stack);
-		copy_stack.setType(material);
-		SuspiciousStewMeta stew_meta = (SuspiciousStewMeta) copy_stack.getItemMeta();
+	private SuspiciousStewMeta addRandomEffect(SuspiciousStewMeta origin_meta, PotionEffectType type) {
 		
 		// 지속시간 생성 (2초 ~ 10초)
 		int duration = ((int) (Math.random() * 7) + 1) * 20;
 		
 		// 포션효과 객체 생성
-		PotionEffect effect = new PotionEffect(type, duration, 2);
+		PotionEffect effect = new PotionEffect(type, duration, 1);
 
-		stew_meta.addCustomEffect(effect, true);
+		origin_meta.addCustomEffect(effect, true);
 		
-		return stew_meta;
+		return origin_meta;
 	}
 	
 	// 저장용아이템 인첸트 메타 생성
