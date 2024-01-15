@@ -95,11 +95,17 @@ public class CreateItem extends RandomItem implements Listener {
 	// 인벤토리를 클릭했을 때
 	public void inventoryClick(InventoryClickEvent e) {
 
+		HumanEntity entity = e.getWhoClicked();
+
+		// 해당 월드 밴일 때
+		if (Main.DISABLE_WORLD.get(entity.getWorld()) != null) {
+			return;
+		}
+		
 		ItemStack stack = e.getCurrentItem(); // 현재 클릭한 아이템
 		InventoryType invType = e.getView().getType(); // 인벤토리 타입
+
 		RandomEvent re;
-		HumanEntity entity = e.getWhoClicked();
-		
 		if (entity instanceof Player) {
 			re = Main.REGISTED_PLAYER.get(entity.getUniqueId());
 		} else {

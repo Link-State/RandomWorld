@@ -44,7 +44,7 @@ public class Main extends JavaPlugin {
 	
 	public static RandomEvent DEFAULT; // 공통으로 적용 할 랜덤이벤트 해시맵
 	public static HashMap<EntityType, RandomEvent> REGISTED_ENTITY; // 엔티티에게 적용 할 랜덤이벤트 해시맵
-	public static HashMap<String, World> DISABLE_WORLD; // 월드 제한 수
+	public static HashMap<World, Boolean> DISABLE_WORLD; // 월드 제한 수
 	
 	// 플러그인 활성화 시,
 	@Override
@@ -127,9 +127,9 @@ public class Main extends JavaPlugin {
 	@Override
 	public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
 //		 먼저 plugin.yml 작성
-//		/randomworld * enable
-//		/randomworld * disable
-//		/randomworld <이름> 
+		
+//		/randomworld <이름 여러 개 | *> enable | disable
+		
 //		/randomworld <이벤트 리스트> - userdata 있는 유저는 제외
 //		/randomworld <아이템 리스트> - userdata 있는 유저는 제외
 //		/randomworld <이벤트> <아이템 리스트> - userdata 있는 유저는 제외
@@ -137,6 +137,7 @@ public class Main extends JavaPlugin {
 //		/randomworld <플레이어 이름> <이벤트> <아이템 리스트> - userdata 생성
 //		/randomworld reset <플레이어 이름> - userdata 삭제
 //		/randomworld reset * - userdata 모두 삭제
+//		/random setting
 		return super.onCommand(sender, command, label, args);
 	}
 	
@@ -279,23 +280,41 @@ public class Main extends JavaPlugin {
 
 		DEFAULT = new RandomEvent("DEFAULT"); // 공통 랜덤효과
 		REGISTED_ENTITY = new HashMap<EntityType, RandomEvent>(); // 엔티티 랜덤효과
+		DISABLE_WORLD = new HashMap<World, Boolean>();
 		
 		// 엔티티도 랜덤효과를 허용한 경우
 		if (CONFIG.getBoolean("Enable_Entity")) {
-			// 각각의 엔티티에 대해 생성
-//			ENTITY = new RandomEvent("ENTITY");
-			EntityType[] entities = EntityType.values();
 			
+			// 각각의 엔티티에 대해 랜덤이벤트 객체 생성
+			EntityType[] entities = EntityType.values();
 			for (EntityType entity : entities) {
+				// 플레이어를 제외한 살아있는 엔티티 중에서
 				if (!entity.isAlive() || entity.equals(EntityType.PLAYER)) {
 					continue;
 				}
 				
+				// 등록
 				RandomEvent re = new RandomEvent(entity.name());
 				REGISTED_ENTITY.put(entity, re);
 			}
 		}
-		// DISABLE_WORLD = CONFIG.getString("Disable_World");
+		
+		// 월드 밴
+		String worlds_str = CONFIG.getString("Disable_World").replaceAll(" ", "").replaceAll("\n", "");
+		if (worlds_str.isEmpty()) {
+			return;
+		}
+		
+		String[] worlds = worlds_str.split(",");
+		for (String world_str : worlds) {
+			World world = Bukkit.getWorld(world_str);
+			
+			if (world == null) {
+				continue;
+			}
+			
+			DISABLE_WORLD.put(world, true);
+		}
 		
 	}
 }

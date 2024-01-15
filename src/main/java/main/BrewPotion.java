@@ -11,6 +11,12 @@ public class BrewPotion extends RandomItem implements Listener {
 	
 	@EventHandler
 	public void brewPotion(BrewEvent e) {
+
+		// 해당 월드 밴일 때
+		if (Main.DISABLE_WORLD.get(e.getBlock().getWorld()) != null) {
+			return;
+		}
+
 		// 양조된 아이템 목록
 		List<ItemStack> potions = e.getResults();
 		

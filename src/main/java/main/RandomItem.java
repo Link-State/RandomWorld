@@ -125,8 +125,6 @@ public class RandomItem {
 			return;
 		}
 		
-		material = Material.SUSPICIOUS_STEW;
-		
 		// 랜덤한 아이템에 적용 할 메타 정보 (특정 아이템일 경우 메타데이터 덮어씌우기 용도)
 		ItemMeta item_meta = stack.getItemMeta();
 		

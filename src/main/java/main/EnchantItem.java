@@ -12,6 +12,12 @@ public class EnchantItem extends RandomItem implements Listener {
 	@EventHandler
 	// 아이템을 인첸트할 때
 	public void enchantItem(EnchantItemEvent e) {
+
+		// 해당 월드 밴일 때
+		if (Main.DISABLE_WORLD.get(e.getEnchanter().getWorld()) != null) {
+			return;
+		}
+		
 		RandomEvent re = Main.REGISTED_PLAYER.get(e.getEnchanter().getUniqueId()); // 랜덤효과를 받는 유저목록에서 해당유저 가져옴 
 		
 		// 랜덤효과를 허용하지 않았거나 인첸트 테이블로 인한 랜덤효과를 허용하지 않았을 경우

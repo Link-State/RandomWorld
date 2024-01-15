@@ -26,6 +26,11 @@ public class GivePotionEffect implements Listener {
 			return;
 		}
 		
+		// 해당 월드 밴일 때
+		if (Main.DISABLE_WORLD.get(e.getEntity().getWorld()) != null) {
+			return;
+		}
+		
 		// 포션효과가 사라졌을 때,
 		if (e.getNewEffect() == null) {
 			return;
