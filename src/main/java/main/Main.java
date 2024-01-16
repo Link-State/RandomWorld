@@ -1,32 +1,22 @@
 package main;
 
 import java.io.File;
-import java.lang.reflect.Field;
-import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.UUID;
 
 import org.bukkit.Bukkit;
-import org.bukkit.Material;
-import org.bukkit.Registry;
 import org.bukkit.World;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
-import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.EntityType;
-import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
 import org.bukkit.event.Listener;
 import org.bukkit.event.entity.EntityPotionEffectEvent;
 import org.bukkit.event.entity.EntityPotionEffectEvent.Cause;
 import org.bukkit.event.inventory.InventoryType;
-import org.bukkit.inventory.ItemStack;
 import org.bukkit.plugin.Plugin;
 import org.bukkit.plugin.java.JavaPlugin;
-import org.bukkit.potion.PotionEffectType;
 
 public class Main extends JavaPlugin {
 	public static Plugin PLUGIN; // 해당 플러그인
@@ -122,6 +112,11 @@ public class Main extends JavaPlugin {
 		Bukkit.getPluginManager().registerEvents(EVENTS.get("inventoryclick"), this);
 		Bukkit.getPluginManager().registerEvents(EVENTS.get("potion"), this);
 		Bukkit.getPluginManager().registerEvents(EVENTS.get("playerIO"), this);
+
+		// 명령어 등록
+		this.getCommand("randomworld").setTabCompleter(new RandomWorldCommand());
+		
+		
 	}
 	
 	@Override
@@ -131,64 +126,13 @@ public class Main extends JavaPlugin {
 //		자동 완성 하기
 //		https://www.spigotmc.org/threads/tab-complete.160308/
 		
-//		/randomworld <> <이름 여러 개 | *> <enable | disable>
+//		/randomworld <user | entity> <이름> <설정 이름> <enable | disable>
 		
-//		/randomworld <item | potion | enchant> <user | entity> <플레이어 이름 여러 개 | *>  <설정 여러 개 | *> <설정... | *>
+//		/randomworld <item | potion | enchant> <user | entity> <플레이어 이름> <설정 이름> <설정... | *>
 		
 //		/randomworld setting
-		
-		return super.onCommand(sender, command, label, args);
-	}
-	
-	
-	// 플러그인 온 오프
-	private void switchPlugin(boolean b) {
-		return;
-	}
-	
-	
-	// 이벤트 필터링 적용
-	private void applyEvents(String list) {
-		// 해당 리스트가 비었으면 전체 등록
-		if (list.isEmpty()) {
-			
-		}
-		// 그렇지않다면 일부 등록
-		else {
-			String[] events = CONFIG.getString("Enable_Events").replaceAll(" ", "").replaceAll(",+", ",").toUpperCase().split(",");
-			for (String e : events) {
-				if (
-						e.equals("WORKBENCH") ||
-						e.equals("CRAFTING") ||
-						e.equals("FURNACE") ||
-						e.equals("BLAST_FURNACE") ||
-						e.equals("SMOKER") ||
-						e.equals("STONECUTTER") ||
-						e.equals("SMITHING") ||
-						e.equals("CARTOGRAPHY") ||
-						e.equals("LOOM") ||
-						e.equals("ANVIL") ||
-						e.equals("GRINDSTONE") ||
-						e.equals("MERCHANT")
-					) {
-					// <hashMap>
-					// EVENTS.get("InvClick").
-					// 	Crafting : item1, item2, ...
-					// 	Furnace : item1, item2, ...
-					// ...
-					// 인벤토리 클릭 이벤트
-				} else if (e.equalsIgnoreCase("PICKUP")) {
-					// 줍기 이벤트
-				} else if (e.equalsIgnoreCase("BREWING")) {
-					// 양조 이벤트
-				} else if (e.equalsIgnoreCase("ENCHANTING")) {
-					// 인첸트 이벤트
-				} else {
-					
-				}
-			}
-		}
-		return;
+		System.out.println(label + " / " + args.length);
+		return true;
 	}
 	
 	
