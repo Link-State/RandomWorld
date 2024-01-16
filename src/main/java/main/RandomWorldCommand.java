@@ -5,6 +5,8 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
+import java.util.UUID;
+
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.OfflinePlayer;
@@ -19,8 +21,9 @@ import org.bukkit.potion.PotionEffectType;
 import org.bukkit.util.StringUtil;
 
 public class RandomWorldCommand implements TabCompleter {
-	private final ArrayList<String> COMMANDS1 = new ArrayList<String>(Arrays.asList("modify", "setting"));
+	private final ArrayList<String> COMMANDS1 = new ArrayList<String>(Arrays.asList("modify", "setting", "permission"));
 	private final ArrayList<String> TARGET = new ArrayList<String>(Arrays.asList("user", "entity"));
+	private final ArrayList<String> PERMISSION_OPTION = new ArrayList<String>(Arrays.asList("add", "remove"));
 	private final ArrayList<String> PLAYERS = new ArrayList<String>();
 	private final ArrayList<String> ENTITIES = new ArrayList<String>();
 	private final ArrayList<String> SETTINGS = new ArrayList<String>();
@@ -129,14 +132,24 @@ public class RandomWorldCommand implements TabCompleter {
 				if (args[0].equals("modify")) {
 					StringUtil.copyPartialMatches(args[1], TARGET, completions);
 				}
+				else if (args[0].equals("permission")) {
+					StringUtil.copyPartialMatches(args[1], PERMISSION_OPTION, completions);
+				}
 				break;
 			}
 			case 3 : {
-				if (args[1].equals("user")) {
-					StringUtil.copyPartialMatches(args[2], PLAYERS, completions);
+				if (args[0].equals("modify")) {
+					if (args[1].equals("user")) {
+						StringUtil.copyPartialMatches(args[2], PLAYERS, completions);
+					}
+					else if (args[1].equals("entity")) {
+						StringUtil.copyPartialMatches(args[2], ENTITIES, completions);
+					}
 				}
-				else if (args[1].equals("entity")) {
-					StringUtil.copyPartialMatches(args[2], ENTITIES, completions);
+				else if (args[0].equals("permission")) {
+					if (PERMISSION_OPTION.indexOf(args[1]) >= 0) {
+						StringUtil.copyPartialMatches(args[2], PLAYERS, completions);	
+					}
 				}
 				break;
 			}
@@ -175,53 +188,88 @@ public class RandomWorldCommand implements TabCompleter {
 	}
 	
 	
-	// 플러그인 온 오프
-	private void switchPlugin(boolean b) {	
-		return;
+	/*
+	 * Permission Rank
+	 * 
+	 * 0 - not this plugin user
+	 * 1 - user
+	 * 2 - admin
+	 * 3 - super
+	 * 4 - op
+	 * 
+	 */
+	// 플레이어 권한 수준 반환
+	public static int getRank(UUID uuid) {
+		// cmd창에서 오류남
+		OfflinePlayer p = Bukkit.getPlayer(uuid);
+		
+		// OP 유저
+		if (p.isOp()) {
+			return 4;
+		}
+
+		RandomEvent re = Main.REGISTED_PLAYER.get(uuid);
+		
+		// 해당 플러그인 이용자가 아님
+		if (re == null) {
+			return 0;
+		}
+		
+		// 슈퍼 유저
+		if (re.isSuper()) {
+			return 3;
+		}
+		
+		if (re.isAdmin()) {
+			return 2;
+		}
+		
+		// 일반 유저
+		return 1;
+	}
+	public static int getRank(String name) {
+		Player p = Bukkit.getPlayer(name);
+		if (p != null) {
+			return getRank(p.getUniqueId());
+		}
+		
+		ArrayList<OfflinePlayer> offline_players = new ArrayList<OfflinePlayer>(Arrays.asList(Bukkit.getOfflinePlayers()));
+		
+		for (OfflinePlayer offline_player : offline_players) {
+			if (offline_player.getName().equals(name)) {
+				return getRank(offline_player.getUniqueId());
+			}
+		}
+		
+		return 0;
+	}
+	public static int getRank(Player player) {
+		return getRank(player.getUniqueId());
+	}
+	
+	
+	// 설정 GUI창 열기
+	public static boolean openSettingGUI(int rank) {
+		// 인벤토리 만들고
+		// 해당플레이어에게 열고
+		// 클릭이벤트 클래스 생성, CreateItem의 클릭 이벤트랑 구분하기
+		
+		// 설정창0 : 플레이어/엔티티/공통 선택 (해당 플레이어가 op 또는 super일 경우에만 활성화)
+		// 설정창1 : (플레이어/엔티티 선택 시) 플레이어/엔티티 선택 (해당 플레이어가 op 또는 super일 경우에만 활성화)
+		// 설정창2 : 아이템/포션/인첸트 선택 (뒤로가기 버튼) (해당 플레이어가 Admin일 경우에만 활성화)
+		// 설정창3 : 이벤트(e.g : PICKUP_BAN) 아이콘 선택 (뒤로가기 버튼, 이전/다음페이지 버튼)
+		// 설정창4 : 책 GUI open, 각 라인하나 당 옵션 하나 (open시 엔티티 설정 불러오기)
+		// 설정창5 : 책 닫을 시, 저장 및 적용 여부 창 (강제종료 시 저장안함)
+		
+		return false;
 	}
 	
 	
 	// 이벤트 필터링 적용
-	private void applyEvents(String list) {
-		// 해당 리스트가 비었으면 전체 등록
-		if (list.isEmpty()) {
-			
-		}
-		// 그렇지않다면 일부 등록
-		else {
-			String[] events = Main.CONFIG.getString("Enable_Events").replaceAll(" ", "").replaceAll(",+", ",").toUpperCase().split(",");
-			for (String e : events) {
-				if (
-						e.equals("WORKBENCH") ||
-						e.equals("CRAFTING") ||
-						e.equals("FURNACE") ||
-						e.equals("BLAST_FURNACE") ||
-						e.equals("SMOKER") ||
-						e.equals("STONECUTTER") ||
-						e.equals("SMITHING") ||
-						e.equals("CARTOGRAPHY") ||
-						e.equals("LOOM") ||
-						e.equals("ANVIL") ||
-						e.equals("GRINDSTONE") ||
-						e.equals("MERCHANT")
-					) {
-					// <hashMap>
-					// EVENTS.get("InvClick").
-					// 	Crafting : item1, item2, ...
-					// 	Furnace : item1, item2, ...
-					// ...
-					// 인벤토리 클릭 이벤트
-				} else if (e.equalsIgnoreCase("PICKUP")) {
-					// 줍기 이벤트
-				} else if (e.equalsIgnoreCase("BREWING")) {
-					// 양조 이벤트
-				} else if (e.equalsIgnoreCase("ENCHANTING")) {
-					// 인첸트 이벤트
-				} else {
-					
-				}
-			}
-		}
-		return;
+	public static boolean setEvents(String entityType, String entityName, String eventName, ArrayList<String> fields) {
+		// fields의 길이가 0이면 이벤트 공란으로 설정
+		System.out.println("test");
+		
+		return false;
 	}
 }

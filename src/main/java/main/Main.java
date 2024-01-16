@@ -1,6 +1,8 @@
 package main;
 
 import java.io.File;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.UUID;
@@ -113,26 +115,97 @@ public class Main extends JavaPlugin {
 		Bukkit.getPluginManager().registerEvents(EVENTS.get("potion"), this);
 		Bukkit.getPluginManager().registerEvents(EVENTS.get("playerIO"), this);
 
-		// 명령어 등록
+		// 명령어 자동완성 등록
 		this.getCommand("randomworld").setTabCompleter(new RandomWorldCommand());
-		
-		
 	}
+	
 	
 	@Override
 	public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
-//		 먼저 plugin.yml 작성
-		
-//		자동 완성 하기
-//		https://www.spigotmc.org/threads/tab-complete.160308/
-		
-//		/randomworld <user | entity> <이름> <설정 이름> <enable | disable>
-		
-//		/randomworld <item | potion | enchant> <user | entity> <플레이어 이름> <설정 이름> <설정... | *>
-		
+//		/randomworld modify <user | entity> <이름> <설정 이름> <설정... | *>
 //		/randomworld setting
-		System.out.println(label + " / " + args.length);
-		return true;
+//		/randomworld permission <이름>
+		
+		if (args[0].equals("test")) {
+			System.out.println(RandomWorldCommand.getRank("Link_State"));
+			return true;
+		}
+
+		if (!label.equals("randomworld")) {
+			return false;
+		}
+
+		boolean isSuccess = false;
+		
+		switch (args.length) {
+			case 1 : {
+				// 설정 GUI창 열기 명령어
+				if (args[0].equals("setting")) {
+					// 명령어 실행자가 플레이어가 아니면 실행하지 않음
+					if (!(sender instanceof Player)) {
+						break;
+					}
+					
+					// 권한 검사 (op이거나, config.yml에 목록에 있거나)
+					
+					
+					isSuccess = RandomWorldCommand.openSettingGUI(1);
+				}
+				break;
+			}
+			case 3 : {
+				// 권한 설정
+				if (args[0].equals("permission")) {
+					// 권한 검사 (op이거나, config.yml에 목록에 있거나)
+					
+					
+					String player_name = args[2]; // 권한 수정 할 유저 이름
+					
+					// 해당 유저 권한 추가
+					if (args[1].equals("add")) {
+						
+					}
+					// 해당 유저 권한 삭제
+					else if (args[1].equals("remove")) {
+						
+					}
+				}
+				break;
+			}
+			default : {
+				if (args.length >= 4) {
+					// 해당 이벤트를 설정
+					if (args[0].equals("modify")) {
+						// 권한 검사 (op이거나, config.yml에 목록에 있거나)
+						
+						
+						String entityType = args[1];
+						String entityName = args[2];
+						String eventName = args[3];
+						ArrayList<String> settings = null;
+						
+						// modify 명령어길이가 4이면 해당 이벤트를 공란으로 설정
+						if (args.length == 4) {
+							settings = new ArrayList<String>();
+						}
+						// modify 명령어길이가 5 이상일 때
+						else {
+							settings = new ArrayList<String>(Arrays.asList(args));
+							settings.remove(1); // modify 삭제
+							settings.remove(1); // entity | player 삭제
+							settings.remove(1); // 엔티티 이름 삭제
+							settings.remove(1); // 이벤트명 삭제
+						}
+						
+						// 변경
+						isSuccess = RandomWorldCommand.setEvents(entityType, entityName, eventName, settings);
+					}
+				}
+				break;
+			}
+		}
+		
+		return isSuccess;
 	}
 	
 	
@@ -167,6 +240,7 @@ public class Main extends JavaPlugin {
 		
 		return CONFIG.getBoolean("Enable_Plugin");
 	}
+	
 	
 	private void loadSetting() {
 		
@@ -255,6 +329,7 @@ public class Main extends JavaPlugin {
 				continue;
 			}
 			
+			// 월드 이름으로 월드 객체 가져오기
 			World world = Bukkit.getWorld(world_str);
 			
 			if (world == null) {
