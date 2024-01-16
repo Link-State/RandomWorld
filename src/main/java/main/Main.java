@@ -8,6 +8,7 @@ import java.util.HashMap;
 import java.util.UUID;
 
 import org.bukkit.Bukkit;
+import org.bukkit.ChatColor;
 import org.bukkit.World;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
@@ -24,8 +25,10 @@ public class Main extends JavaPlugin {
 	public static Plugin PLUGIN; // 해당 플러그인
 	public static SimpleConfigManager MANAGER;
 	public static SimpleConfig CONFIG;
+	public static SimpleConfig LANGUAGE;
 	public static HashMap<String, Listener> EVENTS; // 이벤트 목록 해시맵
 	public static HashMap<UUID, RandomEvent> REGISTED_PLAYER; // 플레이어에게 적용할 랜덤이벤트 해시맵
+	public static HashMap<Integer, String> LANGUAGE_DATA;
 
 	public static final HashMap<InventoryType, Boolean> DEACTIVATED_INVENTORY_TYPE = new HashMap<InventoryType, Boolean>(); // result슬롯 없는 인벤토리 해시맵
 	public static final HashMap<String, InventoryType> ACTIVATED_INVENTORY_TYPE = new HashMap<String, InventoryType>(); // 인벤토리 유형 해시맵
@@ -98,6 +101,7 @@ public class Main extends JavaPlugin {
 		EVENTS.put("inventoryclick", new CreateItem());
 		EVENTS.put("potion", new GivePotionEffect());
 		EVENTS.put("playerIO", new PlayerIO());
+		EVENTS.put("gui", new InventoryGUI_Listener());
 		
 		// 서버 내 랜덤효과 쓰는 플레이어 등록
 		REGISTED_PLAYER = new HashMap<UUID, RandomEvent>();
@@ -114,6 +118,7 @@ public class Main extends JavaPlugin {
 		Bukkit.getPluginManager().registerEvents(EVENTS.get("inventoryclick"), this);
 		Bukkit.getPluginManager().registerEvents(EVENTS.get("potion"), this);
 		Bukkit.getPluginManager().registerEvents(EVENTS.get("playerIO"), this);
+		Bukkit.getPluginManager().registerEvents(EVENTS.get("playerIO"), this);
 
 		// 명령어 자동완성 등록
 		this.getCommand("randomworld").setTabCompleter(new RandomWorldCommand());
@@ -124,9 +129,9 @@ public class Main extends JavaPlugin {
 	public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
 //		/randomworld modify <user | entity> <이름> <설정 이름> <설정... | *>
 //		/randomworld setting
-//		/randomworld permission <이름>
+//		/randomworld permission <add | remove> <이름>
 		
-		if (args[0].equals("test")) {
+		if (args[0].equals("Link-State:test")) {
 			System.out.println(RandomWorldCommand.getRank("Link_State"));
 			return true;
 		}
@@ -146,10 +151,18 @@ public class Main extends JavaPlugin {
 						break;
 					}
 					
+					Player p = (Player) sender;
+					
 					// 권한 검사 (op이거나, config.yml에 목록에 있거나)
+					int rank = RandomWorldCommand.getRank(p);
 					
+					// 일반유저 또는 유저가 아닌 경우
+					if (rank <= 1) {
+						p.sendMessage(ChatColor.GREEN + "[RandomWorld] : " + ChatColor.RED + "권한이 없습니다.");
+						break;
+					}
 					
-					isSuccess = RandomWorldCommand.openSettingGUI(1);
+					isSuccess = RandomWorldCommand.openSettingGUI(p, rank);
 				}
 				break;
 			}
@@ -223,6 +236,7 @@ public class Main extends JavaPlugin {
 			}
 		}
 		
+		
 		MANAGER = new SimpleConfigManager(this);
 		CONFIG = MANAGER.getNewConfig("config.yml"); // config 파일
 		
@@ -231,12 +245,15 @@ public class Main extends JavaPlugin {
 			CONFIG.set("Enable_Plugin", true);
 			CONFIG.set("Enable_Entity", true);
 			CONFIG.set("Disable_World", "");
+			CONFIG.set("Language", "ko-kr");
 			CONFIG.set("DEACTIVATED", "");
 			CONFIG.set("ACTIVATED", "");
 			CONFIG.saveConfig();
 		}
 		
 		loadSetting();
+		
+//		loadLanguage();
 		
 		return CONFIG.getBoolean("Enable_Plugin");
 	}
@@ -339,5 +356,50 @@ public class Main extends JavaPlugin {
 			DISABLE_WORLD.put(world, true);
 		}
 		
+	}
+	
+	// 언어정보 가져오기
+	private void loadLanguage() {
+		String country = CONFIG.getString("Language").replaceAll(" ", "").replaceAll("\n", "");
+		if (country.isEmpty()) {
+			country = "ko_kr";
+		}
+
+		File default_lang = new File(this.getDataFolder() + File.separator + "lang" + File.separator + country + ".yml");
+		File korean = new File(this.getDataFolder() + File.separator + "lang" + File.separator + "ko_kr.yml");
+		File english = new File(this.getDataFolder() + File.separator + "lang" + File.separator + "en_us.yml");
+		
+		// 적용하려는 언어 파일이 없는 경우
+		if (!default_lang.exists()) {
+			default_lang = korean;
+		}
+		
+		// 한국어 파일이 없는 경우 생성
+		if (!korean.exists()) {
+			SimpleConfig korean_yml = MANAGER.getNewConfig(File.separator + "lang" + File.separator + "ko_kr.yml");
+			
+			// 한국어 생성
+			
+		}
+
+		// 영어 파일이 없는 경우 생성
+		SimpleConfig english_yml;
+		if (!english.exists()) {
+			english_yml = MANAGER.getNewConfig(File.separator + "lang" + File.separator + "en_us.yml");
+			
+			// 영어 생성
+			
+		}
+		
+		LANGUAGE = MANAGER.getNewConfig(File.separator + default_lang + ".yml"); // config 파일
+		LANGUAGE_DATA = new HashMap<Integer, String>();
+		int number_of_lines = LANGUAGE.getInt("number_of_lines"); // 총 갯수
+		
+		for (int line = 0; line < number_of_lines; line++) {
+			// hash맵으로 가져오기
+			// 만약 없는게 있다면 english_yml로 가져오기
+			// 그래도 없으면 ... 어쩌지?
+			
+		}
 	}
 }

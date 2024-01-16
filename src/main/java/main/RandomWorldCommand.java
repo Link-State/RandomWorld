@@ -17,6 +17,7 @@ import org.bukkit.command.TabCompleter;
 import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.EntityType;
 import org.bukkit.entity.Player;
+import org.bukkit.inventory.Inventory;
 import org.bukkit.potion.PotionEffectType;
 import org.bukkit.util.StringUtil;
 
@@ -202,6 +203,9 @@ public class RandomWorldCommand implements TabCompleter {
 	public static int getRank(UUID uuid) {
 		// cmd창에서 오류남
 		OfflinePlayer p = Bukkit.getPlayer(uuid);
+		if (p == null) {
+			p = Bukkit.getOfflinePlayer(uuid);
+		}
 		
 		// OP 유저
 		if (p.isOp()) {
@@ -249,7 +253,7 @@ public class RandomWorldCommand implements TabCompleter {
 	
 	
 	// 설정 GUI창 열기
-	public static boolean openSettingGUI(int rank) {
+	public static boolean openSettingGUI(Player player, int rank) {
 		// 인벤토리 만들고
 		// 해당플레이어에게 열고
 		// 클릭이벤트 클래스 생성, CreateItem의 클릭 이벤트랑 구분하기
@@ -260,6 +264,30 @@ public class RandomWorldCommand implements TabCompleter {
 		// 설정창3 : 이벤트(e.g : PICKUP_BAN) 아이콘 선택 (뒤로가기 버튼, 이전/다음페이지 버튼)
 		// 설정창4 : 책 GUI open, 각 라인하나 당 옵션 하나 (open시 엔티티 설정 불러오기)
 		// 설정창5 : 책 닫을 시, 저장 및 적용 여부 창 (강제종료 시 저장안함)
+		
+		Inventory select_entity_type;
+		Inventory select_entity;
+		Inventory select_event_type;
+		Inventory select_event;
+		Inventory book;
+		Inventory select_setting_save;
+		
+		InventoryGUI gui = new InventoryGUI(player);
+		
+		
+		switch (rank) {
+			// admin
+			case 2 : {
+				gui.openEventTypeSelect();
+				break;
+			}
+			// op 또는 super
+			case 3 :
+			case 4 : {
+				gui.openEntityTypeSelect();
+				break;
+			}
+		}
 		
 		return false;
 	}

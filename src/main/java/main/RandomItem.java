@@ -294,8 +294,8 @@ public class RandomItem {
 		// 지속시간 생성 (10초 ~ 8분)
 		int duration = ((int) (Math.random() * 47) + 1) * 200;
 		
-		// 중폭수준 생성 (1 or 2)
-		int amplifier = (int) (Math.random() + 1);
+		// 중폭수준 생성 (0 or 1 or 2)
+		int amplifier = (int) (Math.random() * 2);
 		
 		// 포션효과 객체 생성
 		PotionEffect effect = new PotionEffect(type, duration, amplifier);

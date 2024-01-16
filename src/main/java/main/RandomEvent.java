@@ -71,6 +71,7 @@ public class RandomEvent {
 	public PotionEffectType getRandomEffect(String eventName) {
 		// 사용자 필터링에 맞게 포션효과 리턴
 		HashMap<PotionEffectType, Boolean> eventEffects = this.potionFilter.get(eventName);
+		
 		if (eventEffects == null || eventEffects.size() <= 0) {
 			return null;
 		}
@@ -274,6 +275,7 @@ public class RandomEvent {
 			}
 			
 			PotionEffectType key = Registry.EFFECT.match(effect);
+			
 			if (key != null) {
 				valuable.remove(key);
 			}
@@ -330,6 +332,11 @@ public class RandomEvent {
 		String common_enchantList = this.DATA.getString("ALL_EXCEPT").replaceAll("\n", "").replaceAll(" ", ""); // 공통 필터링
 		String all_enchantList = enchantList.concat("," + common_enchantList).replaceAll(",,", ",").toLowerCase(); // 유저 + 공통 필터링
 
+		// 공통설정객체가 아닌 사용자설정객체이고, 개인 사용자 설정이 없으면 기본값으로 설정
+		if (!this.RESIDENT_NAME.equals("DEFAULT") && enchantList.equals("-")) {
+			// 이 코드를 이용하기
+		}
+		
 		// 공통설정객체가 아닌 사용자설정객체이고, 개인 사용자 설정이 없으면 기본값으로 설정
 		if (!this.RESIDENT_NAME.equals("DEFAULT") && all_enchantList.equals(",")) {
 			valuable = Main.DEFAULT.enchantFilter.get(eventName);
