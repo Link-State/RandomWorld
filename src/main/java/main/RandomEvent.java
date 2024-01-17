@@ -210,14 +210,23 @@ public class RandomEvent {
 		HashMap<PotionEffectType, Boolean> negativeEffects = new HashMap<PotionEffectType, Boolean>();
 		effectList = effectList.replaceAll("\n", "").replaceAll(" ", "");
 		String common_effectList = this.DATA.getString("ALL_BAN").replaceAll("\n", "").replaceAll(" ", "");
-		String all_effectList = effectList.concat("," + common_effectList).replaceAll(",,", "").toLowerCase();
+		String all_effectList;
 		
-		// 공통설정객체가 아닌 사용자설정객체이고, 사용자설정이 공란이면 공통설정(기본값) 적용
-		if (!this.RESIDENT_NAME.equals("DEFAULT") && all_effectList.equals(",")) {
-			negativeEffects = Main.DEFAULT.potionBan.get(eventName);
-			this.potionBan.put(eventName, negativeEffects);
-			return;
+		// 공통설정객체가 아닌 사용자설정객체이고
+		if (!this.RESIDENT_NAME.equals("DEFAULT")) {
+			// 
+			if (effectList.equals("-")) {
+				effectList = Main.DEFAULT.DATA.getString(eventName + "_BAN").replaceAll("\n", "").replaceAll(" ", "");
+			}
+			
+			// 사용자설정이 공란이면 공통설정(기본값) 적용
+			if (common_effectList.equals("-")) {
+				common_effectList = Main.DEFAULT.DATA.getString("ALL_BAN").replaceAll("\n", "").replaceAll(" ", "");
+			}
 		}
+
+		all_effectList = effectList.concat("," + common_effectList).replaceAll(",,", ",").toLowerCase();
+		
 		
 		if (effectList.equals("*") || common_effectList.equals("*")) {
 			Iterator<PotionEffectType> re = Registry.EFFECT.iterator();
@@ -246,14 +255,21 @@ public class RandomEvent {
 		
 		effectList = effectList.replaceAll("\n", "").replaceAll(" ", ""); // 유저 필터링
 		String common_effectList = this.DATA.getString("ALL_EXCEPT").replaceAll("\n", "").replaceAll(" ", ""); // 공통 필터링
-		String all_effectList = effectList.concat("," + common_effectList).replaceAll(",,", ",").toLowerCase(); // 유저 + 공통 필터링
+		String all_effectList; // 유저 + 공통 필터링
 		
 		// 공통설정객체가 아닌 사용자성정객체이고, 개인사용자 설정이 없어서 기본값으로
-		if (!this.RESIDENT_NAME.equals("DEFAULT") && all_effectList.equals(",")) {
-			valuable = Main.DEFAULT.potionFilter.get(eventName);
-			this.potionFilter.put(eventName, valuable);
-			return;
+		if (!this.RESIDENT_NAME.equals("DEFAULT")) {
+			// 
+			if (effectList.equals("-")) {
+				effectList = Main.DEFAULT.DATA.getString(eventName + "_EXCEPT").replaceAll("\n", "").replaceAll(" ", "");
+			}
+			// 사용자설정이 공란이면 공통설정(기본값) 적용
+			if (common_effectList.equals("-")) {
+				common_effectList = Main.DEFAULT.DATA.getString("ALL_EXCEPT").replaceAll("\n", "").replaceAll(" ", "");
+			}
 		}
+
+		all_effectList = effectList.concat("," + common_effectList).replaceAll(",,", ",").toLowerCase();
 		
 		// 전부 제외할 때
 		if (effectList.equals("*") || common_effectList.equals("*")) {
@@ -285,6 +301,14 @@ public class RandomEvent {
 	}
 	
 	public void setEffectMax(String eventName, int maxCount) {
+
+		// 공통설정객체가 아닌 사용자성정객체이고, 개인사용자 설정이 없어서 기본값으로
+		if (!this.RESIDENT_NAME.equals("DEFAULT") && maxCount == -1) {
+			int default_max = Main.DEFAULT.potionMax.get(eventName);
+			this.potionMax.put(eventName, default_max);
+			return;
+		}
+		
 		this.potionMax.put(eventName, maxCount);
 	}
 	
@@ -293,14 +317,19 @@ public class RandomEvent {
 		HashMap<Enchantment, Boolean> negativeEnchants = new HashMap<Enchantment, Boolean>();
 		enchantList = enchantList.replaceAll("\n", "").replaceAll(" ", "");
 		String common_enchantList = this.DATA.getString("ALL_BAN").replaceAll("\n", "").replaceAll(" ", "");
-		String all_enchantList = enchantList.concat("," + common_enchantList).replaceAll(",,", "").toLowerCase();
+		String all_enchantList;
 		
 		// 공통설정객체가 아닌 사용자설정객체이고, 개인 사용자 설정이 없으면 기본값으로 설정
-		if (!this.RESIDENT_NAME.equals("DEFAULT") && all_enchantList.equals(",")) {
-			negativeEnchants = Main.DEFAULT.enchantBan.get(eventName);
-			this.enchantBan.put(eventName, negativeEnchants);
-			return;
+		if (!this.RESIDENT_NAME.equals("DEFAULT")) {
+			if (enchantList.equals("-")) {
+				enchantList = Main.DEFAULT.DATA.getString(eventName + "_BAN").replaceAll("\n", "").replaceAll(" ", "");
+			}
+			if (common_enchantList.equals("-")) {
+				common_enchantList = Main.DEFAULT.DATA.getString("ALL_BAN").replaceAll("\n", "").replaceAll(" ", "");
+			}
 		}
+		
+		all_enchantList = enchantList.concat("," + common_enchantList).replaceAll(",,", "").toLowerCase();
 		
 		if (enchantList.equals("*") || common_enchantList.equals("*")) {
 			Iterator<Enchantment> re = Registry.ENCHANTMENT.iterator();
@@ -330,19 +359,19 @@ public class RandomEvent {
 		
 		enchantList = enchantList.replaceAll("\n", "").replaceAll(" ", ""); // 유저 필터링
 		String common_enchantList = this.DATA.getString("ALL_EXCEPT").replaceAll("\n", "").replaceAll(" ", ""); // 공통 필터링
-		String all_enchantList = enchantList.concat("," + common_enchantList).replaceAll(",,", ",").toLowerCase(); // 유저 + 공통 필터링
-
-		// 공통설정객체가 아닌 사용자설정객체이고, 개인 사용자 설정이 없으면 기본값으로 설정
-		if (!this.RESIDENT_NAME.equals("DEFAULT") && enchantList.equals("-")) {
-			// 이 코드를 이용하기
-		}
+		String all_enchantList; // 유저 + 공통 필터링
 		
 		// 공통설정객체가 아닌 사용자설정객체이고, 개인 사용자 설정이 없으면 기본값으로 설정
-		if (!this.RESIDENT_NAME.equals("DEFAULT") && all_enchantList.equals(",")) {
-			valuable = Main.DEFAULT.enchantFilter.get(eventName);
-			this.enchantFilter.put(eventName, valuable);
-			return;
+		if (!this.RESIDENT_NAME.equals("DEFAULT")) {
+			if (enchantList.equals("-")) {
+				enchantList = Main.DEFAULT.DATA.getString(eventName + "_EXCEPT").replaceAll("\n", "").replaceAll(" ", "");
+			}
+			if (common_enchantList.equals("-")) {
+				common_enchantList = Main.DEFAULT.DATA.getString("ALL_EXCEPT").replaceAll("\n", "").replaceAll(" ", "");
+			}
 		}
+		
+		all_enchantList = enchantList.concat("," + common_enchantList).replaceAll(",,", ",").toLowerCase();
 		
 		// 전부 제외할 때
 		if (enchantList.equals("*") || common_enchantList.equals("*")) {
@@ -378,14 +407,19 @@ public class RandomEvent {
 		HashMap<Material, Boolean> negativeItems = new HashMap<Material, Boolean>();
 		itemList = itemList.replaceAll("\n", "").replaceAll(" ", "");
 		String common_itemList = this.DATA.getString("ALL_BAN").replaceAll("\n", "").replaceAll(" ", "");
-		String all_itemList = itemList.concat("," + common_itemList).replaceAll(",,", "").toLowerCase();
+		String all_itemList;
 		
 		// 공통설정객체가 아닌 사용자설정객체이고, 유저에게 설정된 item ban이 없으면 공통 item ban 설정으로 덮어씌우기
-		if (!this.RESIDENT_NAME.equals("DEFAULT") && all_itemList.equals(",")) {
-			negativeItems = Main.DEFAULT.itemBan.get(eventName);
-			this.itemBan.put(eventName, negativeItems);
-			return;
+		if (!this.RESIDENT_NAME.equals("DEFAULT")) {
+			if (itemList.equals("-")) {
+				itemList = Main.DEFAULT.DATA.getString(eventName + "_BAN").replaceAll("\n", "").replaceAll(" ", "");
+			}
+			if (common_itemList.equals("-")) {
+				common_itemList = Main.DEFAULT.DATA.getString("ALL_BAN").replaceAll("\n", "").replaceAll(" ", "");
+			}
 		}
+		
+		all_itemList = itemList.concat("," + common_itemList).replaceAll(",,", "").toLowerCase();
 		
 		if (itemList.equals("*") || common_itemList.equals("*")) {
 			Material[] materials = Material.values();
@@ -416,20 +450,25 @@ public class RandomEvent {
 		
 		itemList = itemList.replaceAll("\n", "").replaceAll(" ", "");
 		String common_itemList = this.DATA.getString("ALL_EXCEPT").replaceAll("\n", "").replaceAll(" ", "");
-		String all_itemList = itemList.concat("," + common_itemList).replaceAll(",,", ",").toLowerCase();
+		String all_itemList;
 		
 		// 공통설정객체가 아닌 사용자설정객체이고, 사용자 설정이 없으면 기본값 적용
-		if (!this.RESIDENT_NAME.equals("DEFAULT") && all_itemList.equals(",")) {
-			valuable = Main.DEFAULT.itemFilter.get(eventName);
-			this.itemFilter.put(eventName, valuable);
-			return;
+		if (!this.RESIDENT_NAME.equals("DEFAULT")) {
+			if (itemList.equals("-")) {
+				itemList = Main.DEFAULT.DATA.getString(eventName + "_EXCEPT").replaceAll("\n", "").replaceAll(" ", "");
+			}
+			if (common_itemList.equals("-")) {
+				common_itemList = Main.DEFAULT.DATA.getString("ALL_EXCEPT").replaceAll("\n", "").replaceAll(" ", "");
+			}
 		}
+		
+		all_itemList = itemList.concat("," + common_itemList).replaceAll(",,", ",").toLowerCase();
 		
 		// 전부 제외할 때
 		if (itemList.equals("*") || common_itemList.equals("*")) {
 			return;
 		}
-
+		
 		// 사용 가능한 아이템만 판별 - 이 코드는 자주 호출하지 않는 것이 좋음
 		Material[] materials = Material.values();
 		for (Material m : materials) {
@@ -457,6 +496,16 @@ public class RandomEvent {
 		Set<String> enchant_names = Main.ENCHANT_FIELD.keySet();
 		int updated = 0;
 		
+		// 개인유저는 공통에서 덮어씌우는 것을 기본 값
+		String default_value = "-";
+		int default_max = -1;
+		
+		// 공통설정일 경우 기본값을
+		if (this.RESIDENT_NAME.equals("DEFAULT")) {
+			default_value = "";
+			default_max = 5;
+		}
+		
 		if (!this.DATA.contains("Enable_Events")) {
 			this.DATA.set("Enable_Events", "*");
 			updated++;
@@ -473,12 +522,12 @@ public class RandomEvent {
 		}
 		
 		if (!this.DATA.contains("ALL_EXCEPT")) {
-			this.DATA.set("ALL_EXCEPT", "");
+			this.DATA.set("ALL_EXCEPT", default_value);
 			updated++;
 		}
 		
 		if (!this.DATA.contains("ALL_BAN")) {
-			this.DATA.set("ALL_BAN", "");
+			this.DATA.set("ALL_BAN", default_value);
 			updated++;
 		}
 		
@@ -488,17 +537,17 @@ public class RandomEvent {
 		this.DATA.set("<Effect>",  "----------------------<Efffect>----------------------");
 		for (String name : effect_names) {
 			if (!this.DATA.contains(name + "_EXCEPT")) {
-				this.DATA.set(name + "_EXCEPT", "");
+				this.DATA.set(name + "_EXCEPT", default_value);
 				updated++;
 			}
 			
 			if (!this.DATA.contains(name + "_BAN")) {
-				this.DATA.set(name + "_BAN", "");
+				this.DATA.set(name + "_BAN", default_value);
 				updated++;
 			}
 			
 			if (!this.DATA.contains(name + "_MAX")) {
-				this.DATA.set(name + "_MAX", 5);
+				this.DATA.set(name + "_MAX", default_max);
 				updated++;
 			}
 		}
@@ -508,12 +557,12 @@ public class RandomEvent {
 		// 인첸트 이벤트
 		for (String name : enchant_names) {
 			if (!this.DATA.contains(name + "_EXCEPT")) {
-				this.DATA.set(name + "_EXCEPT", "");
+				this.DATA.set(name + "_EXCEPT", default_value);
 				updated++;
 			}
 			
 			if (!this.DATA.contains(name + "_BAN")) {
-				this.DATA.set(name + "_BAN", "");
+				this.DATA.set(name + "_BAN", default_value);
 				updated++;
 			}
 		}
@@ -522,12 +571,12 @@ public class RandomEvent {
 		this.DATA.set("<Craft>",  "----------------------<Craft>----------------------");
 		for (String name : item_names) {
 			if (!this.DATA.contains(name + "_EXCEPT")) {
-				this.DATA.set(name + "_EXCEPT", "");
+				this.DATA.set(name + "_EXCEPT", default_value);
 				updated++;
 			}
 			
 			if (!this.DATA.contains(name + "_BAN")) {
-				this.DATA.set(name + "_BAN", "");
+				this.DATA.set(name + "_BAN", default_value);
 				updated++;
 			}
 		}

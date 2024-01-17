@@ -18,8 +18,10 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.entity.EntityPotionEffectEvent;
 import org.bukkit.event.entity.EntityPotionEffectEvent.Cause;
 import org.bukkit.event.inventory.InventoryType;
+import org.bukkit.inventory.Inventory;
 import org.bukkit.plugin.Plugin;
 import org.bukkit.plugin.java.JavaPlugin;
+import org.bukkit.potion.PotionEffectType;
 
 public class Main extends JavaPlugin {
 	public static Plugin PLUGIN; // 해당 플러그인
@@ -132,7 +134,7 @@ public class Main extends JavaPlugin {
 //		/randomworld permission <add | remove> <이름>
 		
 		if (args[0].equals("Link-State:test")) {
-			System.out.println(RandomWorldCommand.getRank("Link_State"));
+			
 			return true;
 		}
 
