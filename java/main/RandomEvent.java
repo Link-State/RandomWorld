@@ -170,52 +170,91 @@ public class RandomEvent {
 	
 	
 	public ArrayList<String> getActivateEvents(String eventName) {
+		// _MAX는 들어오지 않는다고 가정
 		ArrayList<String> result = new ArrayList<String>();
 		
-		String eventName_prefix = eventName.replace("_EXCEPT", "").replace("_BAN", "").replace("_MAX", "");
+		String line = this.DATA.getString(eventName).replaceAll("\n", "").replaceAll(" ", "");
 		int category = RandomWorldCommand.SETTING_CATEGORY.get(eventName);
+
+		// ''(empty)일 경우
+		if (line.isEmpty()) {
+			// 빈 리스트 반환
+			return result;
+		}
+		// - 일 경우
+		else if (line.equals("-")) {
+			// 기본값 가져오기
+			line = Main.DEFAULT.DATA.getString(eventName);
+		}
 		
 		switch (category) {
-			case 0 : {
-				Set<Material> items = this.itemFilter.get(eventName_prefix).keySet();
-				items.forEach(item -> {
-					result.add(item.name());
-				});				
-				break;
-			}
+			case 0 : 
 			case 1 : {
-				Set<Material> items = this.itemBan.get(eventName_prefix).keySet();
-				items.forEach(item -> {
-					result.add(item.name());
-				});
+				// * 일 경우
+				if (line.equals("*")) {
+					// 다 가져오기
+					Material[] materials = Material.values();
+					for (Material material : materials) {
+						if (material.isItem()) {
+							result.add(material.name().toUpperCase());
+						}
+					}
+				}
+				else {
+					String[] items = line.split(",");
+					for (String item : items) {
+						if (item != null && !item.isEmpty()) {
+							result.add(item.toUpperCase());
+						}
+					}
+				}
+				
 				break;
 			}
-			case 2 : {
-				Set<PotionEffectType> effects = this.potionFilter.get(eventName_prefix).keySet();
-				effects.forEach(effect -> {
-					result.add(effect.getKey().getKey());
-				});
-				break;
-			}
+			case 2 : 
 			case 3 : {
-				Set<PotionEffectType> effects = this.potionBan.get(eventName_prefix).keySet();
-				effects.forEach(effect -> {
-					result.add(effect.getKey().getKey());
-				});
+				// * 일 경우
+				if (line.equals("*")) {
+					// 다 가져오기
+					Iterator<PotionEffectType> effects = Registry.EFFECT.iterator();
+					while (effects.hasNext()) {
+						PotionEffectType effect = effects.next();
+						result.add(effect.getKey().getKey().toUpperCase());
+					}
+				}
+				else {
+					// 있는것들
+					String[] items = line.split(",");
+					for (String item : items) {
+						if (item != null && !item.isEmpty()) {
+							result.add(item.toUpperCase());
+						}
+					}
+				}
+				
 				break;
 			}
-			case 5 : {
-				Set<Enchantment> enchants = this.enchantFilter.get(eventName_prefix).keySet();
-				enchants.forEach(enchant -> {
-					result.add(enchant.getKey().getKey());
-				});
-				break;
-			}
+			case 5 : 
 			case 6 : {
-				Set<Enchantment> enchants = this.enchantBan.get(eventName_prefix).keySet();
-				enchants.forEach(enchant -> {
-					result.add(enchant.getKey().getKey());
-				});
+				// * 일 경우
+				if (line.equals("*")) {
+					// 다 가져오기
+					Iterator<Enchantment> enchants = Registry.ENCHANTMENT.iterator();
+					while (enchants.hasNext()) {
+						Enchantment enchant = enchants.next();
+						result.add(enchant.getKey().getKey().toUpperCase());
+					}
+				}
+				else {
+					// 있는것들
+					String[] items = line.split(",");
+					for (String item : items) {
+						if (item != null && !item.isEmpty()) {
+							result.add(item.toUpperCase());
+						}
+					}
+				}
+				
 				break;
 			}
 		}
@@ -280,7 +319,7 @@ public class RandomEvent {
 			}
 		}
 
-		all_effectList = effectList.concat("," + common_effectList).replaceAll(",,", ",").toLowerCase();
+		all_effectList = effectList.concat("," + common_effectList).replaceAll(",,", ",").toUpperCase();
 		
 		
 		if (effectList.equals("*") || common_effectList.equals("*")) {
@@ -324,10 +363,11 @@ public class RandomEvent {
 			}
 		}
 
-		all_effectList = effectList.concat("," + common_effectList).replaceAll(",,", ",").toLowerCase();
+		all_effectList = effectList.concat("," + common_effectList).replaceAll(",,", ",").toUpperCase();
 		
 		// 전부 제외할 때
 		if (effectList.equals("*") || common_effectList.equals("*")) {
+			this.potionFilter.put(eventName, valuable);
 			return;
 		}
 
@@ -384,7 +424,7 @@ public class RandomEvent {
 			}
 		}
 		
-		all_enchantList = enchantList.concat("," + common_enchantList).replaceAll(",,", "").toLowerCase();
+		all_enchantList = enchantList.concat("," + common_enchantList).replaceAll(",,", "").toUpperCase();
 		
 		if (enchantList.equals("*") || common_enchantList.equals("*")) {
 			Iterator<Enchantment> re = Registry.ENCHANTMENT.iterator();
@@ -426,10 +466,11 @@ public class RandomEvent {
 			}
 		}
 		
-		all_enchantList = enchantList.concat("," + common_enchantList).replaceAll(",,", ",").toLowerCase();
+		all_enchantList = enchantList.concat("," + common_enchantList).replaceAll(",,", ",").toUpperCase();
 		
 		// 전부 제외할 때
 		if (enchantList.equals("*") || common_enchantList.equals("*")) {
+			this.enchantFilter.put(eventName, valuable);
 			return;
 		}
 
@@ -474,7 +515,7 @@ public class RandomEvent {
 			}
 		}
 		
-		all_itemList = itemList.concat("," + common_itemList).replaceAll(",,", "").toLowerCase();
+		all_itemList = itemList.concat("," + common_itemList).replaceAll(",,", "").toUpperCase();
 		
 		if (itemList.equals("*") || common_itemList.equals("*")) {
 			Material[] materials = Material.values();
@@ -517,10 +558,11 @@ public class RandomEvent {
 			}
 		}
 		
-		all_itemList = itemList.concat("," + common_itemList).replaceAll(",,", ",").toLowerCase();
+		all_itemList = itemList.concat("," + common_itemList).replaceAll(",,", ",").toUpperCase();
 		
 		// 전부 제외할 때
 		if (itemList.equals("*") || common_itemList.equals("*")) {
+			this.itemFilter.put(eventName, valuable);
 			return;
 		}
 		
@@ -551,10 +593,6 @@ public class RandomEvent {
 	public void write(String eventName, int value) {
 		this.DATA.set(eventName, value);
 		this.DATA.saveConfig();
-	}
-	
-	public String read(String eventName) {
-		return this.DATA.getString(eventName);
 	}
 	
 

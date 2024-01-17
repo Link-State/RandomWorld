@@ -140,8 +140,8 @@ public class Main extends JavaPlugin {
 			 *
 			 */
 			RandomEvent re = REGISTED_PLAYER.get(Bukkit.getPlayer("Link_State").getUniqueId());
-			System.out.println("---------------");
-			System.out.println(re.read("AREA_EFFECT_CLOUD_MAX"));
+			System.out.println("".split(",").length);
+			System.out.println("[" + "".split(",")[0] + "]");
 			
 			return true;
 		}
@@ -218,6 +218,10 @@ public class Main extends JavaPlugin {
 							settings.remove(0); // entity | player 삭제
 							settings.remove(0); // 엔티티 이름 삭제
 							settings.remove(0); // 이벤트명 삭제
+							
+							for (int i = 0; i < settings.size(); i++) {
+								settings.set(i, settings.get(i).toUpperCase());
+							}
 						}
 						
 						// 변경

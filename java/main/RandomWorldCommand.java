@@ -32,9 +32,9 @@ public class RandomWorldCommand implements TabCompleter {
 	private final ArrayList<String> ENTITIES = new ArrayList<String>();
 	private final ArrayList<String> SETTINGS = new ArrayList<String>();
 	public static final HashMap<String, Integer> SETTING_CATEGORY = new HashMap<String, Integer>();
-	private final ArrayList<String> ITEMS = new ArrayList<String>();
-	private final ArrayList<String> POTIONS = new ArrayList<String>();
-	private final ArrayList<String> ENCHANTS = new ArrayList<String>();
+	public static final ArrayList<String> ITEMS = new ArrayList<String>();
+	public static final ArrayList<String> POTIONS = new ArrayList<String>();
+	public static final ArrayList<String> ENCHANTS = new ArrayList<String>();
 	
 	/* 
 	 * SETTING_CATEGORY
@@ -114,15 +114,15 @@ public class RandomWorldCommand implements TabCompleter {
 			if (!material.isItem()) {
 				continue;
 			}
-			ITEMS.add(material.name());
+			ITEMS.add(material.name().toUpperCase());
 		}
 		
 		while (effects.hasNext()) {
-			POTIONS.add(effects.next().getKey().getKey());
+			POTIONS.add(effects.next().getKey().getKey().toUpperCase());
 		}
 		
 		while (enchantments.hasNext()) {
-			ENCHANTS.add(enchantments.next().getKey().getKey());
+			ENCHANTS.add(enchantments.next().getKey().getKey().toUpperCase());
 		}
 	}
 	
@@ -355,40 +355,109 @@ public class RandomWorldCommand implements TabCompleter {
 			return false;
 		}
 		
-		String file_context = "";
-		if (fields.size() > 0) {
-			for (String name : fields) {
-				file_context += name + " ";
+		
+		
+		// _MAX인 경우, add나 remove가 안되고 set으로만 할 수 있도록.
+		if (category == 4) {
+			if (!cmd_option.equals("set")) {
+				sender.sendMessage(ChatColor.GREEN + "[RandomWorld] : " + ChatColor.RED + "해당 이벤트는 set 명령만 허용됩니다.");
+				return false;
 			}
-			file_context = file_context.trim().replaceAll(" ", ", ");
+			
+			int max_value = -1;
+			if (fields.size() >= 1) {
+				try {
+					max_value = Integer.parseInt(fields.get(0));
+				}
+				catch (NumberFormatException err) {
+					sender.sendMessage(ChatColor.GREEN + "[RandomWorld] : " + ChatColor.RED + "해당 이벤트는 정수값만 허용됩니다.");
+					return false;
+				}
+			}
+			re.write(eventName, max_value);
+			re.setEffectMax(eventName_prefix, max_value);
+			sender.sendMessage(ChatColor.GREEN + "[RandomWorld] : " + ChatColor.AQUA + "수정이 완료되었습니다.");
+			return true;
 		}
 		
 		
-		if (cmd_option.equals("add")) {
-			ArrayList<String> origin_list = re.getActivateEvents(eventName);
-
-
-			System.out.println(fields + " - " + origin_list);
-			
-			fields.removeAll(origin_list);
-
-			System.out.println(fields);
-			
-			return false;
-			// 차집합
-			// add_set - origin_set
+		
+		// 
+		ArrayList<String> default_list = Main.DEFAULT.getActivateEvents(eventName);
+		Set<String> default_set = new HashSet<String>(default_list);
+		ArrayList<String> origin_list = re.getActivateEvents(eventName);
+		Set<String> origin_set = new HashSet<String>(origin_list);
+		ArrayList<String> apply = null;
+		Set<String> apply_set = null;
+		ArrayList<String> event_type = null;
+		
+		switch(category) {
+			case 0 :
+			case 1 :
+			{
+				event_type = ITEMS;
+				break;
+			}
+			case 2:
+			case 3: {
+				event_type = POTIONS;
+				break;
+			}
+			case 5:
+			case 6: {
+				event_type = ENCHANTS;
+				break;
+			}
 		}
-		else if (cmd_option.equals("remove")) {
-			
+
+		if (fields.size() == 1 && fields.get(0).equals("*")) {
+			apply = new ArrayList<String>(event_type);
 		}
-		else if (cmd_option.equals("set")) {
-			
+		else if (fields.size() == 1 && fields.get(0).equals("-")) {
+			// 공통값 가져오기
+			apply = new ArrayList<String>(default_list);
 		}
 		else {
+			apply = new ArrayList<String>(fields);
+		}
+		
+		apply_set = new HashSet<String>(apply);
+		
+		// 
+		if (cmd_option.equals("add")) {
+			apply_set.addAll(origin_set);
+			apply = new ArrayList<String>(apply_set);
+		}
+		else if (cmd_option.equals("remove")) {
+			origin_set.removeAll(apply_set);
+			apply = new ArrayList<String>(origin_set);
+			apply_set = new HashSet<String>(apply);
+			origin_set = new HashSet<String>(origin_list);
+		}
+		else if (!cmd_option.equals("set")) {
 			sender.sendMessage(ChatColor.GREEN + "[RandomWorld] : " + ChatColor.RED + "/randomworld <add | remove | set> <entity | user> <target_name> <event_name> <values...>");
 			return false;
 		}
 		
+		// origin_set과 apply와 내용물이 같은 경우
+		if (origin_set.equals(apply_set)) {
+			sender.sendMessage(ChatColor.GREEN + "[RandomWorld] : " + ChatColor.YELLOW + "변경사항이 없습니다.");
+			return false;
+		}
+
+		String file_context = "";
+		if (default_set.equals(apply_set)) {
+			file_context = "-";
+		}
+		else if (apply.size() >= event_type.size()) {
+			file_context = "*";
+		}
+		else if (apply.size() <= 0) {
+			file_context = "";
+		}
+		else {
+			file_context = String.join(", ", apply);
+		}
 		
 		// 파일 및 해시값 수정
 		switch (category) {
@@ -410,21 +479,6 @@ public class RandomWorldCommand implements TabCompleter {
 			case 3 : {
 				re.write(eventName, file_context);
 				re.setEffectBan(eventName_prefix, file_context);
-				break;
-			}
-			case 4 : {
-				int max_value = -1;
-				
-				try {
-					max_value = Integer.parseInt(file_context);	
-				}
-				catch (NumberFormatException err) {
-					sender.sendMessage(ChatColor.GREEN + "[RandomWorld] : " + ChatColor.RED + "해당 이벤트는 정수값만 허용합니다.");
-					return false;
-				}
-				
-				re.write(eventName, max_value);
-				re.setEffectMax(eventName_prefix, max_value);
 				break;
 			}
 			case 5 : {
