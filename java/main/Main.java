@@ -129,11 +129,19 @@ public class Main extends JavaPlugin {
 	
 	@Override
 	public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
-//		/randomworld modify <user | entity> <이름> <설정 이름> <설정... | *>
+//		/randomworld <add | remove | set> <user | entity> <이름> <설정 이름> <설정... | *>
 //		/randomworld setting
 //		/randomworld permission <add | remove> <이름>
 		
 		if (args[0].equals("Link-State:test")) {
+			/*
+			 * 
+			 * TEST-CODE
+			 *
+			 */
+			RandomEvent re = REGISTED_PLAYER.get(Bukkit.getPlayer("Link_State").getUniqueId());
+			System.out.println("---------------");
+			System.out.println(re.read("AREA_EFFECT_CLOUD_MAX"));
 			
 			return true;
 		}
@@ -190,10 +198,10 @@ public class Main extends JavaPlugin {
 			default : {
 				if (args.length >= 4) {
 					// 해당 이벤트를 설정
-					if (args[0].equals("modify")) {
+					if (args[0].equals("add") || args[0].equals("remove") || args[0].equals("set")) {
 						// 권한 검사 (op이거나, config.yml에 목록에 있거나)
 						
-						
+						String cmd_option = args[0];
 						String entityType = args[1];
 						String entityName = args[2];
 						String eventName = args[3];
@@ -206,14 +214,14 @@ public class Main extends JavaPlugin {
 						// modify 명령어길이가 5 이상일 때
 						else {
 							settings = new ArrayList<String>(Arrays.asList(args));
-							settings.remove(1); // modify 삭제
-							settings.remove(1); // entity | player 삭제
-							settings.remove(1); // 엔티티 이름 삭제
-							settings.remove(1); // 이벤트명 삭제
+							settings.remove(0); // add|remove|set 삭제
+							settings.remove(0); // entity | player 삭제
+							settings.remove(0); // 엔티티 이름 삭제
+							settings.remove(0); // 이벤트명 삭제
 						}
 						
 						// 변경
-						isSuccess = RandomWorldCommand.setEvents(entityType, entityName, eventName, settings);
+						isSuccess = RandomWorldCommand.setEvents(sender, cmd_option, entityType, entityName, eventName, settings);
 					}
 				}
 				break;

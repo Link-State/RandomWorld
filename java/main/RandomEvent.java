@@ -169,6 +169,61 @@ public class RandomEvent {
 	}
 	
 	
+	public ArrayList<String> getActivateEvents(String eventName) {
+		ArrayList<String> result = new ArrayList<String>();
+		
+		String eventName_prefix = eventName.replace("_EXCEPT", "").replace("_BAN", "").replace("_MAX", "");
+		int category = RandomWorldCommand.SETTING_CATEGORY.get(eventName);
+		
+		switch (category) {
+			case 0 : {
+				Set<Material> items = this.itemFilter.get(eventName_prefix).keySet();
+				items.forEach(item -> {
+					result.add(item.name());
+				});				
+				break;
+			}
+			case 1 : {
+				Set<Material> items = this.itemBan.get(eventName_prefix).keySet();
+				items.forEach(item -> {
+					result.add(item.name());
+				});
+				break;
+			}
+			case 2 : {
+				Set<PotionEffectType> effects = this.potionFilter.get(eventName_prefix).keySet();
+				effects.forEach(effect -> {
+					result.add(effect.getKey().getKey());
+				});
+				break;
+			}
+			case 3 : {
+				Set<PotionEffectType> effects = this.potionBan.get(eventName_prefix).keySet();
+				effects.forEach(effect -> {
+					result.add(effect.getKey().getKey());
+				});
+				break;
+			}
+			case 5 : {
+				Set<Enchantment> enchants = this.enchantFilter.get(eventName_prefix).keySet();
+				enchants.forEach(enchant -> {
+					result.add(enchant.getKey().getKey());
+				});
+				break;
+			}
+			case 6 : {
+				Set<Enchantment> enchants = this.enchantBan.get(eventName_prefix).keySet();
+				enchants.forEach(enchant -> {
+					result.add(enchant.getKey().getKey());
+				});
+				break;
+			}
+		}
+		
+		return result;
+	}
+	
+	
 	public boolean isItemBan(String eventName, Material material) {
 		HashMap<Material, Boolean> event_item_ban = this.itemBan.get(eventName);
 		if (event_item_ban != null && event_item_ban.get(material) != null) {
@@ -486,6 +541,20 @@ public class RandomEvent {
 		}
 		
 		this.itemFilter.put(eventName, valuable);
+	}
+	
+	
+	public void write(String eventName, String file_context) {
+		this.DATA.set(eventName, file_context);
+		this.DATA.saveConfig();
+	}
+	public void write(String eventName, int value) {
+		this.DATA.set(eventName, value);
+		this.DATA.saveConfig();
+	}
+	
+	public String read(String eventName) {
+		return this.DATA.getString(eventName);
 	}
 	
 

@@ -3,11 +3,14 @@ package main;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Set;
 import java.util.UUID;
 
 import org.bukkit.Bukkit;
+import org.bukkit.ChatColor;
 import org.bukkit.Material;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.Registry;
@@ -22,13 +25,13 @@ import org.bukkit.potion.PotionEffectType;
 import org.bukkit.util.StringUtil;
 
 public class RandomWorldCommand implements TabCompleter {
-	private final ArrayList<String> COMMANDS1 = new ArrayList<String>(Arrays.asList("modify", "setting", "permission"));
+	private final ArrayList<String> COMMANDS1 = new ArrayList<String>(Arrays.asList("add", "remove", "set", "setting", "permission"));
 	private final ArrayList<String> TARGET = new ArrayList<String>(Arrays.asList("user", "entity"));
 	private final ArrayList<String> PERMISSION_OPTION = new ArrayList<String>(Arrays.asList("add", "remove"));
 	private final ArrayList<String> PLAYERS = new ArrayList<String>();
 	private final ArrayList<String> ENTITIES = new ArrayList<String>();
 	private final ArrayList<String> SETTINGS = new ArrayList<String>();
-	private final HashMap<String, Integer> SETTING_CATEGORY = new HashMap<String, Integer>();
+	public static final HashMap<String, Integer> SETTING_CATEGORY = new HashMap<String, Integer>();
 	private final ArrayList<String> ITEMS = new ArrayList<String>();
 	private final ArrayList<String> POTIONS = new ArrayList<String>();
 	private final ArrayList<String> ENCHANTS = new ArrayList<String>();
@@ -36,9 +39,13 @@ public class RandomWorldCommand implements TabCompleter {
 	/* 
 	 * SETTING_CATEGORY
 	 *  
-	 * 0 - ITEM FIELD
-	 * 1 - POTION FIELD
-	 * 2 - ENCHANT FIELD
+	 * 0 - ITEM EXCEPT FIELD
+	 * 1 - ITEM BAN FIELD
+	 * 2 - POTION EXCEPT FIELD
+	 * 3 - POTION BAN FIELD
+	 * 4 - POTION MAX FIELD
+	 * 5 - ENCHANT EXCEPT FIELD
+	 * 6 - ENCHANT BAN FIELD
 	 * 
 	 */
 	
@@ -75,9 +82,9 @@ public class RandomWorldCommand implements TabCompleter {
 			SETTINGS.add(field_name + "_EXCEPT");
 			SETTINGS.add(field_name + "_BAN");
 			SETTINGS.add(field_name + "_MAX");
-			SETTING_CATEGORY.put(field_name + "_EXCEPT", 1);
-			SETTING_CATEGORY.put(field_name + "_BAN", 1);
-			SETTING_CATEGORY.put(field_name + "_MAX", 1);
+			SETTING_CATEGORY.put(field_name + "_EXCEPT", 2);
+			SETTING_CATEGORY.put(field_name + "_BAN", 3);
+			SETTING_CATEGORY.put(field_name + "_MAX", 4);
 		}
 		
 		keys = Main.ENCHANT_FIELD.keySet().stream().sorted().iterator();
@@ -85,8 +92,8 @@ public class RandomWorldCommand implements TabCompleter {
 			String field_name = keys.next();
 			SETTINGS.add(field_name + "_EXCEPT");
 			SETTINGS.add(field_name + "_BAN");
-			SETTING_CATEGORY.put(field_name + "_EXCEPT", 2);
-			SETTING_CATEGORY.put(field_name + "_BAN", 2);
+			SETTING_CATEGORY.put(field_name + "_EXCEPT", 5);
+			SETTING_CATEGORY.put(field_name + "_BAN", 6);
 		}
 		
 		keys = Main.ITEM_FIELD.keySet().stream().sorted().iterator();
@@ -95,7 +102,7 @@ public class RandomWorldCommand implements TabCompleter {
 			SETTINGS.add(field_name + "_EXCEPT");
 			SETTINGS.add(field_name + "_BAN");
 			SETTING_CATEGORY.put(field_name + "_EXCEPT", 0);
-			SETTING_CATEGORY.put(field_name + "_BAN", 0);
+			SETTING_CATEGORY.put(field_name + "_BAN", 1);
 		}
 
 		Iterator<Material> materials = Registry.MATERIAL.iterator();
@@ -130,7 +137,7 @@ public class RandomWorldCommand implements TabCompleter {
 				break;
 			}
 			case 2 : {
-				if (args[0].equals("modify")) {
+				if (args[0].equals("add") || args[0].equals("remove") || args[0].equals("set")) {
 					StringUtil.copyPartialMatches(args[1], TARGET, completions);
 				}
 				else if (args[0].equals("permission")) {
@@ -139,7 +146,7 @@ public class RandomWorldCommand implements TabCompleter {
 				break;
 			}
 			case 3 : {
-				if (args[0].equals("modify")) {
+				if (args[0].equals("add") || args[0].equals("remove") || args[0].equals("set")) {
 					if (args[1].equals("user")) {
 						StringUtil.copyPartialMatches(args[2], PLAYERS, completions);
 					}
@@ -172,15 +179,15 @@ public class RandomWorldCommand implements TabCompleter {
 				}
 
 				// Item 관련이면
-				if (category == 0) {
+				if (category >= 0 && category <= 1) {
 					StringUtil.copyPartialMatches(args[args.length-1], ITEMS, completions);
 				}
 				// Potion 관련이면
-				else if (category == 1) {
+				else if (category >= 2 && category <= 3) {
 					StringUtil.copyPartialMatches(args[args.length-1], POTIONS, completions);
 				}
 				// Enchant 관련이면
-				else if (category == 2) {
+				else if (category >= 5 && category <= 6) {
 					StringUtil.copyPartialMatches(args[args.length-1], ENCHANTS, completions);
 				}
 			}
@@ -294,10 +301,146 @@ public class RandomWorldCommand implements TabCompleter {
 	
 	
 	// 이벤트 필터링 적용
-	public static boolean setEvents(String entityType, String entityName, String eventName, ArrayList<String> fields) {
+	public static boolean setEvents(CommandSender sender, String cmd_option, String entityType, String entityName, String eventName, ArrayList<String> fields) {
 		// fields의 길이가 0이면 이벤트 공란으로 설정
-		System.out.println("test");
 		
-		return false;
+		RandomEvent re;
+		if (entityType.equals("entity")) {
+			EntityType entity_type;
+			
+			try {
+				entity_type = EntityType.valueOf(entityName);
+			}
+			catch (IllegalArgumentException err) {
+				sender.sendMessage(ChatColor.GREEN + "[RandomWorld] : " + ChatColor.RED + "해당 개체가 존재하지 않습니다.");
+				return false;
+			}
+			
+			re = Main.REGISTED_ENTITY.get(entity_type);
+		}
+		else if (entityType.equals("user")) {
+			OfflinePlayer p = Bukkit.getPlayer(entityName);
+			if (p == null) {
+				OfflinePlayer[] players = Bukkit.getOfflinePlayers();
+				
+				for (OfflinePlayer off_p : players) {
+					if (off_p.getName().equals(entityName)) {
+						p = off_p;
+						break;
+					}
+				}
+				
+				if (p == null) {
+					sender.sendMessage(ChatColor.GREEN + "[RandomWorld] : " + ChatColor.RED + "해당 플레이어가 존재하지 않습니다.");
+					return false;
+				}
+			}
+
+			re = Main.REGISTED_PLAYER.get(p.getUniqueId());
+		}
+		else {
+			sender.sendMessage(ChatColor.GREEN + "[RandomWorld] : " + ChatColor.RED + "/randomworld <add | remove | set> <entity | user> <target_name> <event_name> <values...>");
+			return false;
+		}
+		
+		String eventName_prefix = eventName.replace("_EXCEPT", "").replace("_BAN", "").replace("_MAX", "");
+		if (!re.getActivate(eventName_prefix)) {
+			sender.sendMessage(ChatColor.GREEN + "[RandomWorld] : " + ChatColor.RED + "존재하지 않거나 비활성화 된 이벤트 입니다.");
+			return false;
+		}
+		
+		Integer category = SETTING_CATEGORY.get(eventName);
+		if (category == null) {
+			sender.sendMessage(ChatColor.GREEN + "[RandomWorld] : " + ChatColor.RED + "존재하지 않는 이벤트 입니다.");
+			return false;
+		}
+		
+		String file_context = "";
+		if (fields.size() > 0) {
+			for (String name : fields) {
+				file_context += name + " ";
+			}
+			file_context = file_context.trim().replaceAll(" ", ", ");
+		}
+		
+		
+		if (cmd_option.equals("add")) {
+			ArrayList<String> origin_list = re.getActivateEvents(eventName);
+
+
+			System.out.println(fields + " - " + origin_list);
+			
+			fields.removeAll(origin_list);
+
+			System.out.println(fields);
+			
+			return false;
+			// 차집합
+			// add_set - origin_set
+		}
+		else if (cmd_option.equals("remove")) {
+			
+		}
+		else if (cmd_option.equals("set")) {
+			
+		}
+		else {
+			sender.sendMessage(ChatColor.GREEN + "[RandomWorld] : " + ChatColor.RED + "/randomworld <add | remove | set> <entity | user> <target_name> <event_name> <values...>");
+			return false;
+		}
+		
+		
+		// 파일 및 해시값 수정
+		switch (category) {
+			case 0 : {
+				re.write(eventName, file_context);
+				re.setItemFilter(eventName_prefix, file_context);
+				break;
+			}
+			case 1 : {
+				re.write(eventName, file_context);
+				re.setItemBan(eventName_prefix, file_context);
+				break;
+			}
+			case 2 : {
+				re.write(eventName, file_context);
+				re.setEffectFilter(eventName_prefix, file_context);
+				break;
+			}
+			case 3 : {
+				re.write(eventName, file_context);
+				re.setEffectBan(eventName_prefix, file_context);
+				break;
+			}
+			case 4 : {
+				int max_value = -1;
+				
+				try {
+					max_value = Integer.parseInt(file_context);	
+				}
+				catch (NumberFormatException err) {
+					sender.sendMessage(ChatColor.GREEN + "[RandomWorld] : " + ChatColor.RED + "해당 이벤트는 정수값만 허용합니다.");
+					return false;
+				}
+				
+				re.write(eventName, max_value);
+				re.setEffectMax(eventName_prefix, max_value);
+				break;
+			}
+			case 5 : {
+				re.write(eventName, file_context);
+				re.setEnchantFilter(eventName_prefix, file_context);
+				break;
+			}
+			case 6 : {
+				re.write(eventName, file_context);
+				re.setEnchantBan(eventName_prefix, file_context);
+				break;
+			}
+		}
+		
+		sender.sendMessage(ChatColor.GREEN + "[RandomWorld] : " + ChatColor.AQUA + "수정이 완료되었습니다.");
+		
+		return true;
 	}
 }
