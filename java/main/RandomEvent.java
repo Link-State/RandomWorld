@@ -263,7 +263,6 @@ public class RandomEvent {
 		return result;
 	}
 	
-	
 	public boolean isItemBan(String eventName, Material material) {
 		HashMap<Material, Boolean> event_item_ban = this.itemBan.get(eventName);
 		if (event_item_ban != null && event_item_ban.get(material) != null) {
