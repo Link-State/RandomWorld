@@ -356,7 +356,13 @@ public class InventoryGUI {
 			SkullMeta field_icon_meta = (SkullMeta) field_icon.getItemMeta();
 			field_icon_meta.setOwnerProfile(createProfile("e7742034f59db890c8004156b727c77ca695c4399d8e0da5ce9227cf836bb8e2"));
 			field_icon_meta.setDisplayName(ChatColor.GRAY + field);
-			field_icon_meta.setLore(Arrays.asList(ChatColor.GRAY + "상태 : " + (user_field_map.get(field) ? ChatColor.GOLD + "활성화" : ChatColor.RED + "비활성화")));
+			
+			Boolean activate = user_field_map.get(field);
+			field_icon_meta.setLore(Arrays.asList(
+					ChatColor.GRAY + "상태 : " + (activate ? ChatColor.GOLD + "활성화" : ChatColor.RED + "비활성화"),
+					ChatColor.GRAY + "좌클릭해서 " + (activate ? ChatColor.RED + "비활성화" : ChatColor.GOLD + "활성화"),
+					ChatColor.GRAY + "우클릭해서 이벤트 세부 설정"
+				));
 			field_icon.setItemMeta(field_icon_meta);
 			inv.setItem(i - start + 9, field_icon);
 		}
