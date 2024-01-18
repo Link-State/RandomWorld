@@ -1,5 +1,6 @@
 package main;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -293,6 +294,16 @@ public class RandomEvent {
 	
 	public boolean isAdmin() {
 		return this.admin_user;
+	}
+	
+	public static boolean hasEntity(String name) {
+		File entitydata = new File(Main.PLUGIN.getDataFolder() + File.separator + "userdata" + File.separator + name + ".yml"); // 유저 파일
+		
+		if (entitydata.exists()) {
+			return true;
+		}
+		
+		return false;
 	}
 	
 	public void setActivate(String eventName, boolean b) {

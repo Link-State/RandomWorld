@@ -8,6 +8,6 @@ public class InventoryGUI_Listener implements Listener {
 
 	@EventHandler
 	public void inventoryClick(InventoryClickEvent e) {
-		
+		e.getView().getTitle();
 	}
 }

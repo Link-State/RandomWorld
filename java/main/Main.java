@@ -139,9 +139,9 @@ public class Main extends JavaPlugin {
 			 * TEST-CODE
 			 *
 			 */
-			RandomEvent re = REGISTED_PLAYER.get(Bukkit.getPlayer("Link_State").getUniqueId());
-			System.out.println("".split(",").length);
-			System.out.println("[" + "".split(",")[0] + "]");
+			Player p = (Player) sender;
+			InventoryGUI gui = new InventoryGUI(p);
+			gui.openEntitySelect(true, 0);
 			
 			return true;
 		}
