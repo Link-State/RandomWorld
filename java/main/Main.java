@@ -131,7 +131,7 @@ public class Main extends JavaPlugin {
 	public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
 //		/randomworld <add | remove | set> <user | entity> <이름> <설정 이름> <설정... | *>
 //		/randomworld setting
-//		/randomworld permission <add | remove> <이름>
+//		/randomworld permission <이름> <user | admin | super>
 		
 		if (args[0].equals("Link-State:test")) {
 			/*
@@ -180,54 +180,74 @@ public class Main extends JavaPlugin {
 				// 권한 설정
 				if (args[0].equals("permission")) {
 					// 권한 검사 (op이거나, config.yml에 목록에 있거나)
+					if (sender instanceof Player) {
+						Player p = (Player) sender;
+						int rank = RandomWorldCommand.getRank(p.getUniqueId());
+						
+						if (rank <= 2) {
+							p.sendMessage(ChatColor.GREEN + "[RandomWorld] : " + ChatColor.RED + "권한이 없습니다.");
+							return false;
+						}
+					}
 					
-					
-					String player_name = args[2]; // 권한 수정 할 유저 이름
+					String player_name = args[1]; // 권한 수정 할 유저 이름
 					
 					// 해당 유저 권한 추가
-					if (args[1].equals("add")) {
-						
-					}
-					// 해당 유저 권한 삭제
-					else if (args[1].equals("remove")) {
-						
-					}
+					isSuccess = RandomWorldCommand.setPermission(sender, args[2], player_name);
 				}
+				
+				break;
+			}
+			case 4 : {
 				break;
 			}
 			default : {
-				if (args.length >= 4) {
-					// 해당 이벤트를 설정
-					if (args[0].equals("add") || args[0].equals("remove") || args[0].equals("set")) {
-						// 권한 검사 (op이거나, config.yml에 목록에 있거나)
-						
-						String cmd_option = args[0];
-						String entityType = args[1];
-						String entityName = args[2];
-						String eventName = args[3];
-						ArrayList<String> settings = null;
-						
-						// modify 명령어길이가 4이면 해당 이벤트를 공란으로 설정
-						if (args.length == 4) {
-							settings = new ArrayList<String>();
-						}
-						// modify 명령어길이가 5 이상일 때
-						else {
-							settings = new ArrayList<String>(Arrays.asList(args));
-							settings.remove(0); // add|remove|set 삭제
-							settings.remove(0); // entity | player 삭제
-							settings.remove(0); // 엔티티 이름 삭제
-							settings.remove(0); // 이벤트명 삭제
-							
-							for (int i = 0; i < settings.size(); i++) {
-								settings.set(i, settings.get(i).toUpperCase());
-							}
-						}
-						
-						// 변경
-						isSuccess = RandomWorldCommand.setEvents(sender, cmd_option, entityType, entityName, eventName, settings);
-					}
+				if (args.length < 5) {
+					break;
 				}
+
+				// 해당 이벤트를 설정
+				if (args[0].equals("add") || args[0].equals("remove") || args[0].equals("set")) {
+					// 권한 검사 (op이거나, config.yml에 목록에 있거나)
+					if (sender instanceof Player) {
+						Player p = (Player) sender;
+						int rank = RandomWorldCommand.getRank(p.getUniqueId());
+						
+						if ((rank <= 1 && args[1].equals("user") && p.getName().equals(args[2])) || (rank <= 2)) {
+							p.sendMessage(ChatColor.GREEN + "[RandomWorld] : " + ChatColor.RED + "권한이 없습니다.");
+							return false;
+						}
+						
+					}
+					
+					String cmd_option = args[0];
+					String entityType = args[1];
+					String entityName = args[2];
+					String eventName = args[3];
+					ArrayList<String> settings = null;
+					
+					// 해당 이벤트를 공란으로 설정
+					if (args[4].equals("\"\"") || args[4].equals("''")) {
+						settings = new ArrayList<String>();
+					}
+					// 명령어길이가 5 이상일 때
+					else {
+						settings = new ArrayList<String>(Arrays.asList(args));
+						settings.remove(0); // add|remove|set 삭제
+						settings.remove(0); // entity | player 삭제
+						settings.remove(0); // 엔티티 이름 삭제
+						settings.remove(0); // 이벤트명 삭제
+						
+						for (int i = 0; i < settings.size(); i++) {
+							settings.set(i, settings.get(i).toUpperCase());
+						}
+					}
+					
+					// 변경
+					isSuccess = RandomWorldCommand.setEvents(sender, cmd_option, entityType, entityName, eventName, settings);
+				}
+			
+				
 				break;
 			}
 		}

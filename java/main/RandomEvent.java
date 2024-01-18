@@ -585,6 +585,14 @@ public class RandomEvent {
 		this.itemFilter.put(eventName, valuable);
 	}
 	
+	public void setPermission(boolean isSuper, boolean isAdmin) {
+		this.DATA.set("Super", isSuper);
+		this.DATA.set("Admin", isAdmin);
+		this.DATA.saveConfig();
+		
+		this.super_user = isSuper;
+		this.admin_user = isAdmin;
+	}
 	
 	public void write(String eventName, String file_context) {
 		this.DATA.set(eventName, file_context);

@@ -27,7 +27,7 @@ import org.bukkit.util.StringUtil;
 public class RandomWorldCommand implements TabCompleter {
 	private final ArrayList<String> COMMANDS1 = new ArrayList<String>(Arrays.asList("add", "remove", "set", "setting", "permission"));
 	private final ArrayList<String> TARGET = new ArrayList<String>(Arrays.asList("user", "entity"));
-	private final ArrayList<String> PERMISSION_OPTION = new ArrayList<String>(Arrays.asList("add", "remove"));
+	private final ArrayList<String> PERMISSION_LEVEL = new ArrayList<String>(Arrays.asList("user", "admin", "super"));
 	private final ArrayList<String> PLAYERS = new ArrayList<String>();
 	private final ArrayList<String> ENTITIES = new ArrayList<String>();
 	private final ArrayList<String> SETTINGS = new ArrayList<String>();
@@ -141,7 +141,7 @@ public class RandomWorldCommand implements TabCompleter {
 					StringUtil.copyPartialMatches(args[1], TARGET, completions);
 				}
 				else if (args[0].equals("permission")) {
-					StringUtil.copyPartialMatches(args[1], PERMISSION_OPTION, completions);
+					StringUtil.copyPartialMatches(args[1], PLAYERS, completions);
 				}
 				break;
 			}
@@ -155,9 +155,7 @@ public class RandomWorldCommand implements TabCompleter {
 					}
 				}
 				else if (args[0].equals("permission")) {
-					if (PERMISSION_OPTION.indexOf(args[1]) >= 0) {
-						StringUtil.copyPartialMatches(args[2], PLAYERS, completions);	
-					}
+					StringUtil.copyPartialMatches(args[2], PERMISSION_LEVEL, completions);
 				}
 				break;
 			}
@@ -494,6 +492,46 @@ public class RandomWorldCommand implements TabCompleter {
 		}
 		
 		sender.sendMessage(ChatColor.GREEN + "[RandomWorld] : " + ChatColor.AQUA + "수정이 완료되었습니다.");
+		
+		return true;
+	}
+	
+	public static boolean setPermission(CommandSender sender, String level, String username) {
+		
+		OfflinePlayer p = Bukkit.getPlayer(username);
+		if (p == null) {
+			OfflinePlayer[] off_players = Bukkit.getOfflinePlayers();
+			for (OfflinePlayer off_p : off_players) {
+				if (off_p.getName().equals(username)) {
+					p = off_p;
+				}
+			}
+			
+			if (p == null) {
+				sender.sendMessage(ChatColor.GREEN + "[RandomWorld] : " + ChatColor.RED + "해당 플레이어가 존재하지 않습니다.");
+				return false;
+			}
+		}
+		
+		RandomEvent re = Main.REGISTED_PLAYER.get(p.getUniqueId());
+		
+		boolean isSuper = false;
+		boolean isAdmin = false;
+		
+		if (level.equals("super")) {
+			isSuper = true;
+			isAdmin = true;
+		}
+		else if (level.equals("admin")) {
+			isAdmin = true;
+		}
+		else if (!level.equals("user")){
+			sender.sendMessage(ChatColor.GREEN + "[RandomWorld] : " + ChatColor.RED + "해당 플레이어가 존재하지 않습니다.");
+			return false;
+		}
+		
+		re.setPermission(isSuper, isAdmin);
+		sender.sendMessage(ChatColor.GREEN + "[RandomWorld] : " + ChatColor.AQUA + "권한 수정이 완료되었습니다.");
 		
 		return true;
 	}
