@@ -141,6 +141,7 @@ public class Main extends JavaPlugin {
 			 */
 			Player p = (Player) sender;
 			InventoryGUI gui = new InventoryGUI(p);
+			gui.openEditIntGUI();
 			
 			return true;
 		}

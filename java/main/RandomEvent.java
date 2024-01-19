@@ -196,7 +196,7 @@ public class RandomEvent {
 					// 다 가져오기
 					Material[] materials = Material.values();
 					for (Material material : materials) {
-						if (material.isItem()) {
+						if (material.isItem() && !material.isAir()) {
 							result.add(material.name().toUpperCase());
 						}
 					}
@@ -544,7 +544,7 @@ public class RandomEvent {
 		if (itemList.equals("*") || common_itemList.equals("*")) {
 			Material[] materials = Material.values();
 			for (Material m : materials) {
-				if (m.isItem()) {
+				if (m.isItem() && !m.isAir()) {
 					negativeItems.put(m, true);
 				}
 			}
@@ -593,7 +593,7 @@ public class RandomEvent {
 		// 사용 가능한 아이템만 판별 - 이 코드는 자주 호출하지 않는 것이 좋음
 		Material[] materials = Material.values();
 		for (Material m : materials) {
-			if (m.isItem()) {
+			if (m.isItem() && !m.isAir()) {
 				valuable.put(m, true);
 			}
 		}
