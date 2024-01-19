@@ -262,6 +262,20 @@ public class RandomEvent {
 		
 		return result;
 	}
+	public int getActivateMaxEvents(String eventName) {
+		int category = RandomWorldCommand.SETTING_CATEGORY.get(eventName);
+		if (category != 4) {
+			return -1;
+		}
+		
+		int result = this.DATA.getInt(eventName);
+		
+		if (result == -1) {
+			result = Main.DEFAULT.DATA.getInt(eventName);
+		}
+		
+		return result;
+	}
 	
 	public boolean isItemBan(String eventName, Material material) {
 		HashMap<Material, Boolean> event_item_ban = this.itemBan.get(eventName);

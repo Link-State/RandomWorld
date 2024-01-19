@@ -141,7 +141,6 @@ public class Main extends JavaPlugin {
 			 */
 			Player p = (Player) sender;
 			InventoryGUI gui = new InventoryGUI(p);
-			gui.openEventSelect(p.getUniqueId().toString(), 0, 2);
 			
 			return true;
 		}

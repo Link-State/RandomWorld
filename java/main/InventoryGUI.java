@@ -4,6 +4,7 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.TreeMap;
 import java.util.TreeSet;
 
@@ -24,10 +25,22 @@ import org.bukkit.profile.PlayerTextures;
 public class InventoryGUI {
 	public static final TreeMap<String, OfflinePlayer> SORTED_PLAYERS = new TreeMap<String, OfflinePlayer>();
 	public static final TreeMap<String, EntityType> SORTED_LIVING_ENTITIES = new TreeMap<String, EntityType>();
-	private Player player;
+	
+	private Player commander;
+
+	private String currentTargetType; // user, entity, default
+	private String currentTargetName; // player : UUID OR entity : NAME OR default : DEFAULT
+	private RandomEvent currentTargetRandomEvent; // 변경하려는 대상의 랜덤이벤트
+	private String currentEventType; // ITEM, POTION, ENCHANT
+	private String currentEventName; // PICKUP, AREA_EFFECT_CLOUD, SMITE, ...
+	private String currentSettingType; // EXCEPT, BAN, MAX
+	private final ArrayList<String> stack =  new ArrayList<String>();
+	private final HashMap<String, ArrayList<String>> modifying_StringValue = new HashMap<String, ArrayList<String>>(); // String 값 저장 시 여기에 저장
+	private final HashMap<String, Integer> modifying_IntValue = new HashMap<String, Integer>(); // int값 저장 시 여기에 저장
+	
 	
 	public InventoryGUI(Player p) {
-		this.player = p;
+		this.commander = p;
 		
 		OfflinePlayer[] all_player = Bukkit.getOfflinePlayers();
 		for (OfflinePlayer player : all_player) {
@@ -96,7 +109,7 @@ public class InventoryGUI {
 		inv.setItem(22, entity_icon);
 		inv.setItem(24, default_icon);
 		
-		this.player.openInventory(inv);
+		this.commander.openInventory(inv);
 		return true;
 	}
 	
@@ -195,7 +208,7 @@ public class InventoryGUI {
 		inv.setItem(5, next_icon);
 		
 		
-		this.player.openInventory(inv);
+		this.commander.openInventory(inv);
 		return true;
 	}
 	
@@ -217,20 +230,20 @@ public class InventoryGUI {
 		close_icon_meta.setDisplayName(ChatColor.RED + "닫기");
 		close_icon.setItemMeta(close_icon_meta);
 		
-		// 플레이어
+		// 아이템
 		ItemStack item_icon = new ItemStack(Material.CRAFTING_TABLE, 1);
 		ItemMeta item_icon_meta = item_icon.getItemMeta();
 		item_icon_meta.setDisplayName(ChatColor.WHITE + "아이템");
 		item_icon.setItemMeta(item_icon_meta);
 		
-		// 엔티티
+		// 포션
 		ItemStack potion_icon = new ItemStack(Material.POTION, 1);
 		ItemMeta potion_icon_meta = potion_icon.getItemMeta();
 		potion_icon_meta.addItemFlags(ItemFlag.HIDE_POTION_EFFECTS);
 		potion_icon_meta.setDisplayName(ChatColor.WHITE + "포션효과");
 		potion_icon.setItemMeta(potion_icon_meta);
 		
-		// 공통
+		// 인첸트
 		ItemStack enchant_icon = new ItemStack(Material.ENCHANTED_BOOK, 1);
 		ItemMeta enchant_icon_meta = enchant_icon.getItemMeta();
 		enchant_icon_meta.setDisplayName(ChatColor.WHITE + "인첸트");
@@ -243,7 +256,7 @@ public class InventoryGUI {
 		inv.setItem(22, potion_icon);
 		inv.setItem(24, enchant_icon);
 		
-		this.player.openInventory(inv);
+		this.commander.openInventory(inv);
 		return true;
 	}
 	
@@ -308,7 +321,7 @@ public class InventoryGUI {
 			end = all_field.size();
 		}
 		
-
+		
 		// 뒤로가기 버튼
 		ItemStack backward_icon = new ItemStack(Material.PLAYER_HEAD, 1);
 		SkullMeta backward_icon_meta = (SkullMeta) backward_icon.getItemMeta();
@@ -367,11 +380,219 @@ public class InventoryGUI {
 			inv.setItem(i - start + 9, field_icon);
 		}
 		
-		this.player.openInventory(inv);
+		this.commander.openInventory(inv);
+		return true;
+	}
+	
+	// 이벤트 세부 설정 GUI
+	public boolean openEventDetailSetting(String name, String eventName) {
+		
+		Inventory inv = Bukkit.createInventory(null, 45, "이벤트 세부 설정");
+		
+		RandomEvent re = new RandomEvent(name);
+
+		ArrayList<String> excepts = re.getActivateEvents(eventName + "_EXCEPT");
+		ArrayList<String> bans = re.getActivateEvents(eventName + "_BAN");
+		int max = -1;
+
+		Integer category = RandomWorldCommand.SETTING_CATEGORY.get(eventName + "_MAX");
+		if (category != null && category == 4) {
+			max = re.getActivateMaxEvents(eventName + "_MAX");
+		}
+
+		// 뒤로가기 버튼
+		ItemStack backward_icon = new ItemStack(Material.PLAYER_HEAD, 1);
+		SkullMeta backward_icon_meta = (SkullMeta) backward_icon.getItemMeta();
+		backward_icon_meta.setOwnerProfile(createProfile("1fc2611fbabe4e799062f6b470ac5ae727e32ef00d2b115d38656e341c128936"));
+		backward_icon_meta.setDisplayName(ChatColor.GRAY + "뒤로가기");
+		backward_icon.setItemMeta(backward_icon_meta);
+		inv.setItem(0, backward_icon);
+
+		// 닫기 버튼
+		ItemStack close_icon = new ItemStack(Material.BARRIER, 1);
+		ItemMeta close_icon_meta = close_icon.getItemMeta();
+		close_icon_meta.setDisplayName(ChatColor.RED + "닫기");
+		close_icon.setItemMeta(close_icon_meta);
+		inv.setItem(8, close_icon);
+		
+		// except 아이콘
+		ItemStack except_icon = new ItemStack(Material.WRITABLE_BOOK, 1);
+		ItemMeta except_icon_meta = except_icon.getItemMeta();
+		except_icon_meta.setDisplayName(ChatColor.GOLD + "필터");
+		except_icon.setItemMeta(except_icon_meta);
+		
+		// ban 아이콘
+		ItemStack ban_icon = new ItemStack(Material.WRITABLE_BOOK, 1);
+		ItemMeta ban_icon_meta = ban_icon.getItemMeta();
+		ban_icon_meta.setDisplayName(ChatColor.GOLD + "밴");
+		ban_icon.setItemMeta(ban_icon_meta);
+		
+		// max 아이콘
+		if (max != -1) {
+			ItemStack max_icon = new ItemStack(Material.WRITABLE_BOOK, 1);
+			ItemMeta max_icon_meta = max_icon.getItemMeta();
+			max_icon_meta.setDisplayName(ChatColor.GOLD + "최대버프");
+			max_icon.setItemMeta(max_icon_meta);
+			inv.setItem(20, except_icon);
+			inv.setItem(22, ban_icon);
+			inv.setItem(24, max_icon);
+		}
+		else {
+			inv.setItem(21, except_icon);
+			inv.setItem(23, ban_icon);
+		}
+		
+		this.commander.openInventory(inv);
 		return true;
 	}
 	
 	
+	
+	// 값 수정 GUI
+	public boolean openEditGUI(int type, int page) {
+
+		/*
+		 * Event Type
+		 * 
+		 * 0 - item
+		 * 1 - potion
+		 * 2 - enchant
+		 * 
+		 */
+		
+		ArrayList<ItemStack> items = new ArrayList<ItemStack>();
+		
+		switch (type) {
+			// ITEM이면 모든 아이템을 items에 넣기
+			case 0 : {
+				Material[] materials = Material.values();
+				
+				// this.currentTargetRandomEvent 이용하기
+				
+				for (Material material : materials) {
+					if (!material.isItem()) {
+						continue;
+					}
+					
+					ItemStack stack = new ItemStack(material, 1);
+					ItemMeta meta = stack.getItemMeta();
+					meta.setLore(Arrays.asList("", ""));
+					
+					items.add(stack);
+				}
+				break;
+			}
+			// POTION이면 모든 포션효과를 item에 넣기
+			case 1 : {
+				// 포션 베이스 이용할까?
+				break;
+			}
+			// ENCHANT이면 모든 인첸트를 items에 넣기
+			case 2 : {
+				// 싹다 똑같은 인첸트 북
+				break;
+			}
+		}
+		
+		Inventory inv = createPageWindow(54, "이벤트 세부 설정", page, items);
+		
+		this.commander.openInventory(inv);
+		return true;
+	}
+	public boolean openEditIntGUI() {
+		Inventory inv = createWindow(45, "이벤트 세부 설정");
+		
+		
+		
+		this.commander.openInventory(inv);
+		return true;
+	}
+	
+	
+	public Inventory createPageWindow(int size, String title, int page, ArrayList<ItemStack> contents) {
+		// 18 <= size <= 54 이어야 함
+		if (size < 18 || 54 < size) {
+			return null;
+		}
+		
+		float unit = (float) (size - 9);
+		int lastPage = (int) Math.ceil(contents.size() / unit);
+		 
+		if (page > lastPage) {
+			return null;
+		}
+		
+		int start = (int) (unit * (page - 1));     
+		
+		Inventory inv = createWindow(size, title, contents, start);
+
+		// 이전페이지 버튼
+		ItemStack prev_icon = new ItemStack(Material.PLAYER_HEAD, 1);
+		SkullMeta prev_icon_meta = (SkullMeta) prev_icon.getItemMeta();
+		prev_icon_meta.setOwnerProfile(createProfile("77334cddfab45d75ad28e1a47bf8cf5017d2f0982f6737da22d4972952510661"));
+		prev_icon_meta.setDisplayName(ChatColor.GRAY + "이전페이지");
+		prev_icon_meta.setLore(Arrays.asList(ChatColor.GOLD + "(" + ChatColor.GREEN + page+ ChatColor.GOLD + " / " + lastPage + ")"));
+		prev_icon.setItemMeta(prev_icon_meta);
+		inv.setItem(3, prev_icon);
+		
+		// 다음페이지 버튼
+		ItemStack next_icon = new ItemStack(Material.PLAYER_HEAD, 1);
+		SkullMeta next_icon_meta = (SkullMeta) next_icon.getItemMeta();
+		next_icon_meta.setOwnerProfile(createProfile("e7742034f59db890c8004156b727c77ca695c4399d8e0da5ce9227cf836bb8e2"));
+		next_icon_meta.setDisplayName(ChatColor.GRAY + "다음페이지");
+		next_icon_meta.setLore(Arrays.asList(ChatColor.GOLD + "(" + ChatColor.GREEN + page + ChatColor.GOLD + " / " + lastPage + ")"));
+		next_icon.setItemMeta(next_icon_meta);
+		inv.setItem(5, next_icon);
+		
+		return inv;
+	}
+	public Inventory createWindow(int size, String title) {
+		return createWindow(size, title, new ArrayList<ItemStack>(), 0);
+	}
+	public Inventory createWindow(int size, String title, ArrayList<ItemStack> contents) {
+		return createWindow(size, title, contents, 0);
+	}
+	public Inventory createWindow(int size, String title, ArrayList<ItemStack> contents, int start) {
+		if (size % 9 != 0 || size < 9 || 54 < size) {
+			return null;
+		}
+
+		if (start >= contents.size()) {
+			start = 0;
+		}
+
+		Inventory inv = Bukkit.createInventory(null, size, title);
+		
+		// stack 길이가 0이면 뒤로가기 icon 없음
+		if (this.stack.size() > 0) {
+			// 뒤로가기 버튼
+			ItemStack backward_icon = new ItemStack(Material.PLAYER_HEAD, 1);
+			SkullMeta backward_icon_meta = (SkullMeta) backward_icon.getItemMeta();
+			backward_icon_meta.setOwnerProfile(createProfile("1fc2611fbabe4e799062f6b470ac5ae727e32ef00d2b115d38656e341c128936"));
+			backward_icon_meta.setDisplayName(ChatColor.GRAY + "뒤로가기");
+			backward_icon.setItemMeta(backward_icon_meta);
+			inv.setItem(0, backward_icon);
+		}
+		
+		// 닫기 버튼
+		ItemStack close_icon = new ItemStack(Material.BARRIER, 1);
+		ItemMeta close_icon_meta = close_icon.getItemMeta();
+		close_icon_meta.setDisplayName(ChatColor.RED + "닫기");
+		close_icon.setItemMeta(close_icon_meta);
+		inv.setItem(8, close_icon);
+		
+		int unit = size - 9;
+		int end = start + unit;
+		if (end > contents.size()) {
+			end = contents.size();
+		}
+		
+		for (int i = start; i < end; i++) {
+			inv.setItem(i - start + 9, contents.get(i));
+		}
+		
+		return inv;
+	}
 	
 	
 	private PlayerProfile createProfile(String url) {
