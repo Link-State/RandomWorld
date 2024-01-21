@@ -25,7 +25,6 @@ public class EnchantItem extends RandomItem implements Listener {
 			return;
 		}
 		
-		
 		Map<Enchantment, Integer> origins = e.getEnchantsToAdd(); // 인첸트 테이블에서 추가된 인첸트 목록
 		ArrayList<Enchantment> origin_keys = new ArrayList<Enchantment>(origins.keySet().stream().toList());
 		

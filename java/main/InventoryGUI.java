@@ -4,11 +4,13 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Set;
 import java.util.TreeMap;
 import java.util.TreeSet;
+import java.util.UUID;
 
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
@@ -33,26 +35,10 @@ import org.bukkit.profile.PlayerTextures;
 public class InventoryGUI {
 	public static final TreeMap<String, OfflinePlayer> SORTED_PLAYERS = new TreeMap<String, OfflinePlayer>();
 	public static final TreeMap<String, EntityType> SORTED_LIVING_ENTITIES = new TreeMap<String, EntityType>();
-	
-	private Player commander;
-	private Integer currentTargetType; // 0 - user, 1 - entity, 2 - default
-	private String currentTargetName; // player : UUID OR entity : NAME OR default : DEFAULT
-	private RandomEvent currentTargetRandomEvent; // 변경하려는 대상의 랜덤이벤트
-	private Integer currentEventType; // 0 - ITEM, 1 - POTION, 2 - ENCHANT
-	private String currentEventName; // PICKUP, AREA_EFFECT_CLOUD, SMITE, ...
-	private String currentSettingType; // EXCEPT, BAN, MAX
-	private final ArrayList<String> work_stack =  new ArrayList<String>();
-	
+	public static final HashMap<UUID, InventoryGUI> USING_PLAYERS = new HashMap<UUID, InventoryGUI>();
 	
 	public InventoryGUI(Player p) {
-		this.commander = p;
-		this.currentTargetType = null;
-		this.currentTargetName = null;
-		this.currentTargetRandomEvent = null;
-		this.currentEventType = null;
-		this.currentEventName = null;
-		this.currentSettingType = null;
-		this.work_stack.clear();
+		USING_PLAYERS.put(p.getUniqueId(), this);
 		
 		OfflinePlayer[] all_player = Bukkit.getOfflinePlayers();
 		for (OfflinePlayer player : all_player) {
@@ -79,11 +65,11 @@ public class InventoryGUI {
 	
 	
 	// 개체 타입을 선택하는 GUI
-	public boolean openEntityTypeSelect() {
+	public Inventory openEntityTypeSelect() {
 
 		Inventory inv = createWindow(45, "개체 종류 선택");
 		if (inv == null) {
-			return false;
+			return null;
 		}
 		
 		// 플레이어
@@ -110,17 +96,16 @@ public class InventoryGUI {
 		inv.setItem(24, default_icon);
 		
 		this.currentTargetType = null;
-		this.commander.openInventory(inv);
-		return true;
+		return inv;
 	}
 	
 	
 	
 	// 개체 선택 GUI
-	public boolean openEntitySelect(int page) {
+	public Inventory openEntitySelect(int page) {
 
 		if (this.currentTargetType == null) {
-			return false;
+			return null;
 		}
 
 		ArrayList<ItemStack> icons = new ArrayList<ItemStack>();
@@ -155,7 +140,7 @@ public class InventoryGUI {
 		// 페이지뷰 생성
 		Inventory inv = createPageWindow(54, "개체 선택", icons, page);
 		if (inv == null) {
-			return false;
+			return null;
 		}
 
 		// 플레이어인 경우 검색버튼 활성화
@@ -168,24 +153,23 @@ public class InventoryGUI {
 		}
 
 		this.currentTargetName = null;
-		this.commander.openInventory(inv);
-		return true;
+		return inv;
 	}
 	
 	
 	
 	// 이벤트 종류 선택하는 GUI
-	public boolean openEventTypeSelect() {
+	public Inventory openEventTypeSelect() {
 
 		if (this.currentTargetType == null ||
 			this.currentTargetName == null ||
 			this.currentTargetRandomEvent == null) {
-			return false;
+			return null;
 		}
 		
 		Inventory inv = createWindow(45, "이벤트 종류 선택");
 		if (inv == null) {
-			return false;
+			return null;
 		}
 		
 		// 아이템
@@ -211,14 +195,13 @@ public class InventoryGUI {
 		inv.setItem(24, enchant_icon);
 		
 		this.currentEventType = null;
-		this.commander.openInventory(inv);
-		return true;
+		return inv;
 	}
 	
 	
 	
 	// 이벤트 선택 GUI
-	public boolean openEventSelect(int page) {
+	public Inventory openEventSelect(int page) {
 		
 		/*
 		 * Event Type
@@ -233,7 +216,7 @@ public class InventoryGUI {
 			this.currentTargetName == null ||
 			this.currentEventType == null ||
 			this.currentTargetRandomEvent == null) {
-			return false;
+			return null;
 		}
 		
 		// ArrayList<String> fields = 선택한 이벤트에 알맞게 이벤트이름 알파벳순으로 가져오기
@@ -313,30 +296,29 @@ public class InventoryGUI {
 		
 		Inventory inv = createPageWindow(54, "이벤트 선택", icons, page);
 		if (inv == null) {
-			return false;
+			return null;
 		}
 
 		this.currentEventName = null;
-		this.commander.openInventory(inv);
-		return true;
+		return inv;
 	}
 	
 	
 	
 	// 이벤트 세부 설정 GUI
-	public boolean openEventDetailSetting() {
+	public Inventory openEventDetailSetting() {
 
 		if (this.currentTargetType == null ||
 			this.currentTargetName == null ||
 			this.currentEventType == null ||
 			this.currentEventName == null ||
 			this.currentTargetRandomEvent == null) {
-			return false;
+			return null;
 		}
 		
-		Inventory inv = createWindow(45, "이벤트 세부 설정");
+		Inventory inv = createWindow(45, "이벤트 설정");
 		if (inv == null) {
-			return false;
+			return null;
 		}
 		
 		// except 아이콘
@@ -369,22 +351,13 @@ public class InventoryGUI {
 		
 		this.currentSettingType = null;
 		this.commander.openInventory(inv);
-		return true;
+		return inv;
 	}
 	
 	
 	
 	// 값 수정 GUI
-	public boolean openEditGUI(int page) {
-
-		/*
-		 * Event Type
-		 * 
-		 * 0 - item
-		 * 1 - potion
-		 * 2 - enchant
-		 * 
-		 */
+	public Inventory openEditGUI(int page) {
 
 		if (this.currentTargetType == null ||
 			this.currentTargetName == null ||
@@ -392,7 +365,7 @@ public class InventoryGUI {
 			this.currentEventName == null ||
 			this.currentSettingType == null ||
 			this.currentTargetRandomEvent == null) {
-			return false;
+			return null;
 		}
 		
 		ArrayList<ItemStack> items = new ArrayList<ItemStack>();
@@ -467,20 +440,19 @@ public class InventoryGUI {
 		
 		Inventory inv = createPageWindow(54, "이벤트 세부 설정", items, page);
 		if (inv == null) {
-			return false;
+			return null;
 		}
 		
-		this.commander.openInventory(inv);
-		return true;
+		return inv;
 	}
 	
 	
 	
 	// Int값 입력받을 때 사용하는 GUI
-	public boolean openEditIntGUI() {
+	public Inventory openEditIntGUI() {
 		return openEditIntGUI(0);
 	}
-	public boolean openEditIntGUI(int default_value) {
+	public Inventory openEditIntGUI(int default_value) {
 
 		if (this.currentTargetType == null ||
 			this.currentTargetName == null ||
@@ -488,14 +460,14 @@ public class InventoryGUI {
 			this.currentEventName == null ||
 			this.currentSettingType == null ||
 			this.currentTargetRandomEvent == null) {
-			return false;
+			return null;
 		}
 	
 		
 		
 		Inventory inv = createWindow(45, "숫자 입력");
 		if (inv == null) {
-			return false;
+			return null;
 		}
 
 		ItemStack one_icon = new ItemStack(Material.IRON_NUGGET, 1);
@@ -534,17 +506,16 @@ public class InventoryGUI {
 		value_icon.setItemMeta(value_icon_meta);
 		inv.setItem(22, value_icon);
 		
-		this.commander.openInventory(inv);
-		return true;
+		return inv;
 	}
 	
 	
 	
 	// 확인GUI (사용안함)
-	public boolean openConfirmGUI() {
+	public Inventory openConfirmGUI() {
 		Inventory inv = createWindow(45, "저장 및 적용");
 		if (inv == null) {
-			return false;
+			return null;
 		}
 		
 		inv.setItem(0, null);
@@ -565,8 +536,7 @@ public class InventoryGUI {
 		deny_icon_meta.setDisplayName("" + ChatColor.RED + ChatColor.BOLD + "취소");
 		inv.setItem(33, deny_icon);
 		
-		this.commander.openInventory(inv);
-		return true;
+		return inv;
 	}
 	
 	

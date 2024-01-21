@@ -176,7 +176,7 @@ public class RandomEvent {
 		
 		String line = this.DATA.getString(eventName).replaceAll("\n", "").replaceAll(" ", "");
 		int category = RandomWorldCommand.SETTING_CATEGORY.get(eventName);
-
+		
 		// ''(empty)일 경우
 		if (line.isEmpty()) {
 			// 빈 리스트 반환

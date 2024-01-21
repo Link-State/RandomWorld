@@ -46,20 +46,6 @@ public class Main extends JavaPlugin {
 	// 플러그인 활성화 시,
 	@Override
 	public void onEnable() {
-		// 이벤트 이름:설명리스트 해시맵
-//		ITEM_FIELD.put("WORKBENCH", new String[] {"제작대를 사용했을 때"});
-//		ITEM_FIELD.put("CRAFTING",new String[] {"플레이어의 2x2 제작대를 사용했을 때"});
-//		ITEM_FIELD.put("FURNACE", new String[] {"화로를 사용했을 때"});
-//		ITEM_FIELD.put("BLAST_FURNACE", new String[] {"용광로를 사용했을 때"});
-//		ITEM_FIELD.put("SMOKER", new String[] {"훈연기를 사용했을 때"});
-//		ITEM_FIELD.put("STONECUTTER", new String[] {"석재 절단기를 사용했을 때"});
-//		ITEM_FIELD.put("SMITHING", new String[] {"대장장이 작업대를 사용했을 때"});
-//		ITEM_FIELD.put("CARTOGRAPHY", new String[] {"지도 제작대를 사용했을 때"});
-//		ITEM_FIELD.put("LOOM", new String[] {"베틀을 사용했을 때"});
-//		ITEM_FIELD.put("ANVIL", new String[] {"모루를 사용했을 때"});
-//		ITEM_FIELD.put("GRINDSTONE", new String[] {"숫돌을 사용했을 때"});
-//		ITEM_FIELD.put("MERCHANT", new String[] {"상인에게서 물건을 구입했을 때"});
-		
 		// 포션이펙트 관련
 		Cause[] effect_causes = EntityPotionEffectEvent.Cause.values();
 		for (Cause cause : effect_causes) {
@@ -103,7 +89,7 @@ public class Main extends JavaPlugin {
 		EVENTS.put("inventoryclick", new CreateItem());
 		EVENTS.put("potion", new GivePotionEffect());
 		EVENTS.put("playerIO", new PlayerIO());
-		EVENTS.put("gui", new InventoryGUI_Listener());
+		EVENTS.put("GUI", new InventoryGUI_Listener());
 		
 		// 서버 내 랜덤효과 쓰는 플레이어 등록
 		REGISTED_PLAYER = new HashMap<UUID, RandomEvent>();
@@ -120,7 +106,7 @@ public class Main extends JavaPlugin {
 		Bukkit.getPluginManager().registerEvents(EVENTS.get("inventoryclick"), this);
 		Bukkit.getPluginManager().registerEvents(EVENTS.get("potion"), this);
 		Bukkit.getPluginManager().registerEvents(EVENTS.get("playerIO"), this);
-		Bukkit.getPluginManager().registerEvents(EVENTS.get("playerIO"), this);
+		Bukkit.getPluginManager().registerEvents(EVENTS.get("GUI"), this);
 
 		// 명령어 자동완성 등록
 		this.getCommand("randomworld").setTabCompleter(new RandomWorldCommand());
