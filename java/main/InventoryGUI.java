@@ -4,14 +4,11 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Set;
 import java.util.TreeMap;
 import java.util.TreeSet;
-import java.util.UUID;
-
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.Material;
@@ -19,7 +16,6 @@ import org.bukkit.OfflinePlayer;
 import org.bukkit.Registry;
 import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.EntityType;
-import org.bukkit.entity.Player;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemFlag;
 import org.bukkit.inventory.ItemStack;
@@ -35,11 +31,8 @@ import org.bukkit.profile.PlayerTextures;
 public class InventoryGUI {
 	public static final TreeMap<String, OfflinePlayer> SORTED_PLAYERS = new TreeMap<String, OfflinePlayer>();
 	public static final TreeMap<String, EntityType> SORTED_LIVING_ENTITIES = new TreeMap<String, EntityType>();
-	public static final HashMap<UUID, InventoryGUI> USING_PLAYERS = new HashMap<UUID, InventoryGUI>();
 	
-	public InventoryGUI(Player p) {
-		USING_PLAYERS.put(p.getUniqueId(), this);
-		
+	public InventoryGUI() {
 		OfflinePlayer[] all_player = Bukkit.getOfflinePlayers();
 		for (OfflinePlayer player : all_player) {
 			if (RandomEvent.hasEntity(player.getUniqueId().toString())) {
@@ -66,8 +59,9 @@ public class InventoryGUI {
 	
 	// 개체 타입을 선택하는 GUI
 	public Inventory openEntityTypeSelect() {
-
-		Inventory inv = createWindow(45, "개체 종류 선택");
+		
+		ArrayList<String> stack = new ArrayList<String>();
+		Inventory inv = createWindow(45, "개체 종류 선택", stack);
 		if (inv == null) {
 			return null;
 		}
@@ -95,23 +89,23 @@ public class InventoryGUI {
 		default_icon.setItemMeta(default_icon_meta);
 		inv.setItem(24, default_icon);
 		
-		this.currentTargetType = null;
 		return inv;
 	}
 	
 	
 	
 	// 개체 선택 GUI
-	public Inventory openEntitySelect(int page) {
+	public Inventory openEntitySelect(ArrayList<String> stack, int page) {
 
-		if (this.currentTargetType == null) {
+		if (stack.size() <= 0) {
 			return null;
 		}
-
+		
+		String entityType = stack.get(stack.size() - 1);
 		ArrayList<ItemStack> icons = new ArrayList<ItemStack>();
 		
 		// 플레이어인 경우
-		if (this.currentTargetType == 0) {
+		if (entityType.equals("player")) {
 			ArrayList<String> all_player = new ArrayList<String>( new TreeSet<String>(SORTED_PLAYERS.keySet()) );
 			
 			for (String player : all_player) {
@@ -138,13 +132,13 @@ public class InventoryGUI {
 		}
 		
 		// 페이지뷰 생성
-		Inventory inv = createPageWindow(54, "개체 선택", icons, page);
+		Inventory inv = createPageWindow(54, "개체 선택", icons, page, stack);
 		if (inv == null) {
 			return null;
 		}
 
 		// 플레이어인 경우 검색버튼 활성화
-		if (this.currentTargetType == 0) {
+		if (entityType.equals("player")) {
 			ItemStack search_icon = new ItemStack(Material.SPYGLASS, 1);
 			ItemMeta search_icon_meta = search_icon.getItemMeta();
 			search_icon_meta.setDisplayName(ChatColor.GRAY + "검색");
@@ -152,22 +146,19 @@ public class InventoryGUI {
 			inv.setItem(4, search_icon);
 		}
 
-		this.currentTargetName = null;
 		return inv;
 	}
 	
 	
 	
 	// 이벤트 종류 선택하는 GUI
-	public Inventory openEventTypeSelect() {
-
-		if (this.currentTargetType == null ||
-			this.currentTargetName == null ||
-			this.currentTargetRandomEvent == null) {
+	public Inventory openEventTypeSelect(ArrayList<String> stack) {
+		
+		if (stack.size() <= 1) {
 			return null;
 		}
 		
-		Inventory inv = createWindow(45, "이벤트 종류 선택");
+		Inventory inv = createWindow(45, "이벤트 종류 선택", stack);
 		if (inv == null) {
 			return null;
 		}
@@ -194,14 +185,13 @@ public class InventoryGUI {
 		enchant_icon.setItemMeta(enchant_icon_meta);
 		inv.setItem(24, enchant_icon);
 		
-		this.currentEventType = null;
 		return inv;
 	}
 	
 	
 	
 	// 이벤트 선택 GUI
-	public Inventory openEventSelect(int page) {
+	public Inventory openEventSelect(ArrayList<String> stack, int page) {
 		
 		/*
 		 * Event Type
@@ -212,41 +202,45 @@ public class InventoryGUI {
 		 * 
 		 */
 		
-		if (this.currentTargetType == null ||
-			this.currentTargetName == null ||
-			this.currentEventType == null ||
-			this.currentTargetRandomEvent == null) {
+		if (stack.size() <= 2) {
 			return null;
 		}
 		
 		// ArrayList<String> fields = 선택한 이벤트에 알맞게 이벤트이름 알파벳순으로 가져오기
+		String eventType = stack.get(2);
+		String entityName = stack.get(1);
+		String entityType_str = stack.get(0);
+		
 		TreeSet<String> all_field_set = null;
 		ArrayList<String> all_field = null;
 		TreeMap<String, Boolean> user_field_map = new TreeMap<String, Boolean>();
 		
-		switch(this.currentEventType) {
-			// ITEM 필드 선택
-			case 0 : {
-				all_field_set = new TreeSet<String>(Main.ITEM_FIELD.keySet());
-				break;
-			}
-			// POTION 필드 선택
-			case 1 : {
-				all_field_set = new TreeSet<String>(Main.POTION_FIELD.keySet());
-				break;
-			}
-			// ENCHANT 필드 선택
-			case 2 : {
-				all_field_set = new TreeSet<String>(Main.ENCHANT_FIELD.keySet());
-				break;
-			}
-			default : {
-				all_field_set = new TreeSet<String>();
-			}
+		if (eventType.equals("item")) {
+			all_field_set = new TreeSet<String>(Main.ITEM_FIELD.keySet());
+		}
+		else if (eventType.equals("potion")) {
+			all_field_set = new TreeSet<String>(Main.POTION_FIELD.keySet());
+		}
+		else if (eventType.equals("enchant")) {
+			all_field_set = new TreeSet<String>(Main.ENCHANT_FIELD.keySet());
+		}
+		else {
+			all_field_set = new TreeSet<String>();
 		}
 		all_field = new ArrayList<String>(all_field_set);
 		
-		RandomEvent re = this.currentTargetRandomEvent;
+		RandomEvent re = null;
+		if (entityType_str.equals("player")) {
+			OfflinePlayer p = SORTED_PLAYERS.get(entityName);
+			re = Main.REGISTED_PLAYER.get(p.getUniqueId());
+		}
+		else if (entityType_str.equals("entity")) {
+			EntityType entityType = EntityType.valueOf(entityName);
+			re = Main.REGISTED_ENTITY.get(entityType);
+		}
+		else if (entityType_str.equals("default")) {
+			re = Main.DEFAULT;
+		}
 		
 		for (String field : all_field) {
 			user_field_map.put(field, re.getActivate(field));
@@ -286,7 +280,7 @@ public class InventoryGUI {
 			
 			Boolean activate = user_field_map.get(field);
 			field_icon_meta.setLore(Arrays.asList(
-					ChatColor.GRAY + "상태 : " + (activate ? ChatColor.GOLD + "활성화" : ChatColor.RED + "비활성화"),
+					ChatColor.GRAY + "상태 : [" + ChatColor.BOLD + (activate ? ChatColor.GOLD + "활성화" : ChatColor.RED + "비활성화") + ChatColor.RESET + ChatColor.GRAY + "]",
 					ChatColor.GRAY + "좌클릭해서 " + (activate ? ChatColor.RED + "비활성화" : ChatColor.GOLD + "활성화"),
 					ChatColor.GRAY + "우클릭해서 " + ChatColor.YELLOW + "이벤트 세부 설정"
 				));
@@ -294,29 +288,26 @@ public class InventoryGUI {
 			icons.add(field_icon);
 		}
 		
-		Inventory inv = createPageWindow(54, "이벤트 선택", icons, page);
+		Inventory inv = createPageWindow(54, "이벤트 선택", icons, page, stack);
 		if (inv == null) {
 			return null;
 		}
 
-		this.currentEventName = null;
 		return inv;
 	}
 	
 	
 	
 	// 이벤트 세부 설정 GUI
-	public Inventory openEventDetailSetting() {
-
-		if (this.currentTargetType == null ||
-			this.currentTargetName == null ||
-			this.currentEventType == null ||
-			this.currentEventName == null ||
-			this.currentTargetRandomEvent == null) {
+	public Inventory openEventDetailSetting(ArrayList<String> stack) {
+		
+		if (stack.size() <= 3) {
 			return null;
 		}
 		
-		Inventory inv = createWindow(45, "이벤트 설정");
+		String eventName = stack.get(3);
+		
+		Inventory inv = createWindow(45, "이벤트 설정", stack);
 		if (inv == null) {
 			return null;
 		}
@@ -334,7 +325,7 @@ public class InventoryGUI {
 		ban_icon.setItemMeta(ban_icon_meta);
 		
 		// max 아이콘
-		Integer category = RandomWorldCommand.SETTING_CATEGORY.get(this.currentEventName + "_MAX");
+		Integer category = RandomWorldCommand.SETTING_CATEGORY.get(eventName + "_MAX");
 		if (category != null && category == 4) {
 			ItemStack max_icon = new ItemStack(Material.WRITABLE_BOOK, 1);
 			ItemMeta max_icon_meta = max_icon.getItemMeta();
@@ -349,96 +340,106 @@ public class InventoryGUI {
 			inv.setItem(23, ban_icon);
 		}
 		
-		this.currentSettingType = null;
-		this.commander.openInventory(inv);
 		return inv;
 	}
 	
 	
 	
 	// 값 수정 GUI
-	public Inventory openEditGUI(int page) {
-
-		if (this.currentTargetType == null ||
-			this.currentTargetName == null ||
-			this.currentEventType == null ||
-			this.currentEventName == null ||
-			this.currentSettingType == null ||
-			this.currentTargetRandomEvent == null) {
+	public Inventory openEditGUI(ArrayList<String> stack, int page) {
+		
+		if (stack.size() <= 4) {
 			return null;
 		}
+
+		String settingType = stack.get(4);
+		String eventName = stack.get(3);
+		String eventType = stack.get(2);
+		String entityName = stack.get(1);
+		String entityType_str = stack.get(0);
+
+		RandomEvent re = null;
+		if (entityType_str.equals("player")) {
+			OfflinePlayer p = SORTED_PLAYERS.get(entityName);
+			re = Main.REGISTED_PLAYER.get(p.getUniqueId());
+		}
+		else if (entityType_str.equals("entity")) {
+			EntityType entityType = EntityType.valueOf(entityName);
+			re = Main.REGISTED_ENTITY.get(entityType);
+		}
+		else if (entityType_str.equals("default")) {
+			re = Main.DEFAULT;
+		}
 		
-		ArrayList<ItemStack> items = new ArrayList<ItemStack>();
-		Set<String> applying_items = new HashSet<String>(this.currentTargetRandomEvent.getActivateEvents(this.currentEventName + "_" + this.currentSettingType));
+		TreeMap<String, ItemStack> items = new TreeMap<String, ItemStack>();
+		Set<String> applying_items = new HashSet<String>(re.getActivateEvents(eventName + "_" + settingType));
 		
-		switch (this.currentEventType) {
-			// ITEM이면 모든 아이템을 items에 넣기
-			case 0 : {
-				Material[] materials = Material.values();
+		if (eventType.equals("item")) {
+			Material[] materials = Material.values();
+			
+			for (Material material : materials) {
+				if (!material.isItem() || material.isAir()) {
+					continue;
+				}
 				
-				for (Material material : materials) {
-					if (!material.isItem() || material.isAir()) {
-						continue;
-					}
-					
-					ItemStack stack = new ItemStack(material, 1);
-					ItemMeta meta = stack.getItemMeta();
-					boolean status = applying_items.contains(material.name().toUpperCase());
-					meta.setLore(Arrays.asList(
-							ChatColor.GRAY + "상태 : " + ( status ? ChatColor.GOLD + "적용" : ChatColor.RED + "미적용"),
-							ChatColor.GRAY + "좌클릭해서 " + ( status ? ChatColor.RED + "미적용" : ChatColor.GOLD + "적용")
-							));
+				ItemStack item_stack = new ItemStack(material, 1);
+				ItemMeta item_meta = item_stack.getItemMeta();
+				boolean status = applying_items.contains(material.name().toUpperCase());
+				item_meta.setLore(Arrays.asList(
+						ChatColor.GRAY + "상태 : [" + ChatColor.BOLD + ( status ? ChatColor.GOLD + "적용" : ChatColor.RED + "미적용") + ChatColor.RESET + ChatColor.GRAY + "]",
+						ChatColor.GRAY + "좌클릭해서 " + ( status ? ChatColor.RED + "미적용" : ChatColor.GOLD + "적용")
+						));
 
-					stack.setItemMeta(meta);
-					items.add(stack);
-				}
-				break;
+				item_stack.setItemMeta(item_meta);
+				items.put(item_meta.getDisplayName(), item_stack);
 			}
-			// POTION이면 모든 포션효과를 item에 넣기
-			case 1 : {
-				Iterator<PotionEffectType> potions = Registry.EFFECT.iterator();
-				while (potions.hasNext()) {
-					PotionEffectType potion = potions.next();
+		}
+		else if (eventType.equals("potion")) {
+			Iterator<PotionEffectType> potions = Registry.EFFECT.iterator();
+			while (potions.hasNext()) {
+				PotionEffectType potion = potions.next();
 
-					ItemStack stack = new ItemStack(Material.POTION, 1);
-					PotionMeta meta = (PotionMeta) stack.getItemMeta();
-					meta.setDisplayName(ChatColor.GRAY + potion.getKey().getKey().toUpperCase());
-					meta.addCustomEffect(new PotionEffect(potion, 0, 0, false, false), false);
-					boolean status = applying_items.contains(potion.getKey().getKey().toUpperCase());
-					meta.setLore(Arrays.asList(
-							ChatColor.GRAY + "상태 : " + ( status ? ChatColor.GOLD + "적용" : ChatColor.RED + "미적용"),
-							ChatColor.GRAY + "좌클릭해서 " + ( status ? ChatColor.RED + "미적용" : ChatColor.GOLD + "적용")
-							));
-					
-					stack.setItemMeta(meta);
-					items.add(stack);
-				}
-				break;
+				ItemStack item_stack = new ItemStack(Material.POTION, 1);
+				PotionMeta item_meta = (PotionMeta) item_stack.getItemMeta();
+				item_meta.setDisplayName(ChatColor.GRAY + potion.getKey().getKey().toUpperCase());
+				item_meta.addCustomEffect(new PotionEffect(potion, 0, 0, false, false), false);
+				boolean status = applying_items.contains(potion.getKey().getKey().toUpperCase());
+				item_meta.setLore(Arrays.asList(
+						ChatColor.GRAY + "상태 : [" + ChatColor.BOLD + ( status ? ChatColor.GOLD + "적용" : ChatColor.RED + "미적용") + ChatColor.RESET + ChatColor.GRAY + "]",
+						ChatColor.GRAY + "좌클릭해서 " + ( status ? ChatColor.RED + "미적용" : ChatColor.GOLD + "적용")
+						));
+				
+				item_stack.setItemMeta(item_meta);
+				items.put(item_meta.getDisplayName(), item_stack);
 			}
-			// ENCHANT이면 모든 인첸트를 items에 넣기
-			case 2 : {
-				Iterator<Enchantment> enchants = Registry.ENCHANTMENT.iterator();
-				while (enchants.hasNext()) {
-					Enchantment enchant = enchants.next();
+		}
+		else if (eventType.equals("enchant")) {
+			Iterator<Enchantment> enchants = Registry.ENCHANTMENT.iterator();
+			while (enchants.hasNext()) {
+				Enchantment enchant = enchants.next();
 
-					ItemStack stack = new ItemStack(Material.ENCHANTED_BOOK, 1);
-					EnchantmentStorageMeta meta = (EnchantmentStorageMeta) stack.getItemMeta();
-					meta.setDisplayName(ChatColor.GRAY + enchant.getKey().getKey().toUpperCase());
-					meta.addStoredEnchant(enchant, 1, false);
-					boolean status = applying_items.contains(enchant.getKey().getKey().toUpperCase());
-					meta.setLore(Arrays.asList(
-							ChatColor.GRAY + "상태 : " + ( status ? ChatColor.GOLD + "적용" : ChatColor.RED + "미적용"),
-							ChatColor.GRAY + "좌클릭해서 " + ( status ? ChatColor.RED + "미적용" : ChatColor.GOLD + "적용")
-							));
+				ItemStack item_stack = new ItemStack(Material.ENCHANTED_BOOK, 1);
+				EnchantmentStorageMeta item_meta = (EnchantmentStorageMeta) item_stack.getItemMeta();
+				item_meta.setDisplayName(ChatColor.GRAY + enchant.getKey().getKey().toUpperCase());
+				item_meta.addStoredEnchant(enchant, 1, false);
+				boolean status = applying_items.contains(enchant.getKey().getKey().toUpperCase());
+				item_meta.setLore(Arrays.asList(
+						ChatColor.GRAY + "상태 : [" + ChatColor.BOLD + ( status ? ChatColor.GOLD + "적용" : ChatColor.RED + "미적용") + ChatColor.RESET + ChatColor.GRAY + "]",
+						ChatColor.GRAY + "좌클릭해서 " + ( status ? ChatColor.RED + "미적용" : ChatColor.GOLD + "적용")
+						));
 
-					stack.setItemMeta(meta);
-					items.add(stack);
-				}
-				break;
+				item_stack.setItemMeta(item_meta);
+				items.put(item_meta.getDisplayName(), item_stack);
 			}
 		}
 		
-		Inventory inv = createPageWindow(54, "이벤트 세부 설정", items, page);
+		ArrayList<ItemStack> sorted_items = new ArrayList<ItemStack>();
+		TreeSet<String> keys = new TreeSet<String>(items.keySet());
+		for (String key : keys) {
+			sorted_items.add(items.get(key));
+		}
+		
+		Inventory inv = createPageWindow(54, "이벤트 세부 설정", sorted_items, page, stack);
 		if (inv == null) {
 			return null;
 		}
@@ -449,23 +450,16 @@ public class InventoryGUI {
 	
 	
 	// Int값 입력받을 때 사용하는 GUI
-	public Inventory openEditIntGUI() {
-		return openEditIntGUI(0);
+	public Inventory openEditIntGUI(ArrayList<String> stack) {
+		return openEditIntGUI(stack, 0);
 	}
-	public Inventory openEditIntGUI(int default_value) {
+	public Inventory openEditIntGUI(ArrayList<String> stack, int default_value) {
 
-		if (this.currentTargetType == null ||
-			this.currentTargetName == null ||
-			this.currentEventType == null ||
-			this.currentEventName == null ||
-			this.currentSettingType == null ||
-			this.currentTargetRandomEvent == null) {
+		if (stack.size() <= 4) {
 			return null;
 		}
-	
 		
-		
-		Inventory inv = createWindow(45, "숫자 입력");
+		Inventory inv = createWindow(45, "숫자 입력", stack);
 		if (inv == null) {
 			return null;
 		}
@@ -512,8 +506,8 @@ public class InventoryGUI {
 	
 	
 	// 확인GUI (사용안함)
-	public Inventory openConfirmGUI() {
-		Inventory inv = createWindow(45, "저장 및 적용");
+	public Inventory openConfirmGUI(ArrayList<String> stack) {
+		Inventory inv = createWindow(45, "저장 및 적용", stack);
 		if (inv == null) {
 			return null;
 		}
@@ -542,10 +536,10 @@ public class InventoryGUI {
 	
 	
 	// 페이지뷰 생성
-	public Inventory createPageWindow(int size, String title, ArrayList<ItemStack> contents) {
-		return createPageWindow(size, title, contents, 1);
+	public Inventory createPageWindow(int size, String title, ArrayList<ItemStack> contents, ArrayList<String> stack) {
+		return createPageWindow(size, title, contents, 1, stack);
 	}
-	public Inventory createPageWindow(int size, String title, ArrayList<ItemStack> contents, int page) {
+	public Inventory createPageWindow(int size, String title, ArrayList<ItemStack> contents, int page, ArrayList<String> stack) {
 		// 18 <= size <= 54 이어야 함
 		if (size < 18 || 54 < size) {
 			return null;
@@ -555,7 +549,7 @@ public class InventoryGUI {
 		int lastPage = (int) Math.ceil(contents.size() / unit);
 		 
 		if (page > lastPage) {
-			return null;
+			page = lastPage;
 		}
 		
 		if (page <= 0) {
@@ -564,7 +558,7 @@ public class InventoryGUI {
 		
 		int start = (int) (unit * (page - 1));     
 		
-		Inventory inv = createWindow(size, title, contents, start);
+		Inventory inv = createWindow(size, title, contents, start, stack);
 		if (inv == null) {
 			return null;
 		}
@@ -593,13 +587,13 @@ public class InventoryGUI {
 	
 	
 	// 일반 뷰 생성
-	public Inventory createWindow(int size, String title) {
-		return createWindow(size, title, new ArrayList<ItemStack>(), 0);
+	public Inventory createWindow(int size, String title, ArrayList<String> stack) {
+		return createWindow(size, title, new ArrayList<ItemStack>(), 0, stack);
 	}
-	public Inventory createWindow(int size, String title, ArrayList<ItemStack> contents) {
-		return createWindow(size, title, contents, 0);
+	public Inventory createWindow(int size, String title, ArrayList<ItemStack> contents, ArrayList<String> stack) {
+		return createWindow(size, title, contents, 0, stack);
 	}
-	public Inventory createWindow(int size, String title, ArrayList<ItemStack> contents, int start) {
+	public Inventory createWindow(int size, String title, ArrayList<ItemStack> contents, int start, ArrayList<String> stack) {
 		if (size % 9 != 0 || size < 9 || 54 < size) {
 			return null;
 		}
@@ -611,7 +605,7 @@ public class InventoryGUI {
 		Inventory inv = Bukkit.createInventory(null, size, title);
 		
 		// stack 길이가 0이면 뒤로가기 icon 없음
-		if (this.work_stack.size() > 0) {
+		if (stack.size() > 0) {
 			// 뒤로가기 버튼
 			ItemStack backward_icon = new ItemStack(Material.PLAYER_HEAD, 1);
 			SkullMeta backward_icon_meta = (SkullMeta) backward_icon.getItemMeta();
@@ -619,6 +613,16 @@ public class InventoryGUI {
 			backward_icon_meta.setDisplayName(ChatColor.GRAY + "뒤로가기");
 			backward_icon.setItemMeta(backward_icon_meta);
 			inv.setItem(0, backward_icon);
+		}
+
+		// 선택 정보
+		if (stack.size() > 0) {
+			ItemStack info_icon = new ItemStack(Material.PRIZE_POTTERY_SHERD, 1);
+			ItemMeta info_icon_meta = info_icon.getItemMeta();
+			info_icon_meta.setDisplayName(ChatColor.WHITE + "선택 정보");
+			info_icon_meta.setLore(stack);
+			info_icon.setItemMeta(info_icon_meta);
+			inv.setItem(1, info_icon);
 		}
 		
 		// 닫기 버튼
@@ -640,7 +644,6 @@ public class InventoryGUI {
 		
 		return inv;
 	}
-	
 	
 	
 	// 캐릭터 프로파일 생성

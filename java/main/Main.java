@@ -115,7 +115,7 @@ public class Main extends JavaPlugin {
 	
 	@Override
 	public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
-//		/randomworld <add | remove | set> <user | entity> <이름> <설정 이름> <설정... | *>
+//		/randomworld <add | remove | set> <player | entity> <이름> <설정 이름> <설정... | *>
 //		/randomworld setting
 //		/randomworld permission <이름> <user | admin | super>
 		
@@ -125,10 +125,7 @@ public class Main extends JavaPlugin {
 			 * TEST-CODE
 			 *
 			 */
-			Player p = (Player) sender;
-			InventoryGUI gui = new InventoryGUI(p);
-			gui.openEditIntGUI();
-			
+			System.out.println("(190/300)".replaceAll("\\(", "").replaceAll("/[0-9]+\\)", ""));
 			return true;
 		}
 
@@ -199,7 +196,7 @@ public class Main extends JavaPlugin {
 						Player p = (Player) sender;
 						int rank = RandomWorldCommand.getRank(p.getUniqueId());
 						
-						if ((rank <= 1 && args[1].equals("user") && p.getName().equals(args[2])) || (rank <= 2)) {
+						if ((rank <= 1 && args[1].equals("player") && p.getName().equals(args[2])) || (rank <= 2)) {
 							p.sendMessage(ChatColor.GREEN + "[RandomWorld] : " + ChatColor.RED + "권한이 없습니다.");
 							return false;
 						}

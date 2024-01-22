@@ -20,12 +20,13 @@ import org.bukkit.command.TabCompleter;
 import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.EntityType;
 import org.bukkit.entity.Player;
+import org.bukkit.inventory.Inventory;
 import org.bukkit.potion.PotionEffectType;
 import org.bukkit.util.StringUtil;
 
 public class RandomWorldCommand implements TabCompleter {
 	private final ArrayList<String> COMMANDS1 = new ArrayList<String>(Arrays.asList("add", "remove", "set", "setting", "permission"));
-	private final ArrayList<String> TARGET = new ArrayList<String>(Arrays.asList("user", "entity"));
+	private final ArrayList<String> TARGET = new ArrayList<String>(Arrays.asList("player", "entity"));
 	private final ArrayList<String> PERMISSION_LEVEL = new ArrayList<String>(Arrays.asList("user", "admin", "super"));
 	private final ArrayList<String> PLAYERS = new ArrayList<String>();
 	private final ArrayList<String> ENTITIES = new ArrayList<String>();
@@ -146,7 +147,7 @@ public class RandomWorldCommand implements TabCompleter {
 			}
 			case 3 : {
 				if (args[0].equals("add") || args[0].equals("remove") || args[0].equals("set")) {
-					if (args[1].equals("user")) {
+					if (args[1].equals("player")) {
 						StringUtil.copyPartialMatches(args[2], PLAYERS, completions);
 					}
 					else if (args[1].equals("entity")) {
@@ -159,7 +160,7 @@ public class RandomWorldCommand implements TabCompleter {
 				break;
 			}
 			case 4 : {
-				if ((args[1].equals("user") && PLAYERS.indexOf(args[2]) >= 0) || 
+				if ((args[1].equals("player") && PLAYERS.indexOf(args[2]) >= 0) || 
 					(args[1].equals("entity") && ENTITIES.indexOf(args[2]) >= 0)) {
 					StringUtil.copyPartialMatches(args[3], SETTINGS, completions);
 				}
@@ -254,23 +255,34 @@ public class RandomWorldCommand implements TabCompleter {
 	// 설정 GUI창 열기
 	public static boolean openSettingGUI(Player player, int rank) {
 		
-		InventoryGUI gui = new InventoryGUI(player);
-		
+		ArrayList<String> stack = new ArrayList<String>();
+		stack.add(player.getName());
+		InventoryGUI gui = new InventoryGUI();
+		Inventory inv = null;
 		switch (rank) {
 			// admin
 			case 2 : {
-				gui.openEventTypeSelect();
+				stack.add("player");
+				stack.add(player.getName());
+				inv = gui.openEventTypeSelect(stack);
+
 				break;
 			}
 			// op 또는 super
 			case 3 :
 			case 4 : {
-				gui.openEntityTypeSelect();
+				inv = gui.openEntityTypeSelect();
 				break;
 			}
 		}
 		
-		return false;
+		if (inv == null) {
+			return false;
+		}
+		
+		player.openInventory(inv);
+		
+		return true;
 	}
 	
 	
@@ -292,7 +304,7 @@ public class RandomWorldCommand implements TabCompleter {
 			
 			re = Main.REGISTED_ENTITY.get(entity_type);
 		}
-		else if (entityType.equals("user")) {
+		else if (entityType.equals("player")) {
 			OfflinePlayer p = Bukkit.getPlayer(entityName);
 			if (p == null) {
 				OfflinePlayer[] players = Bukkit.getOfflinePlayers();
@@ -313,7 +325,7 @@ public class RandomWorldCommand implements TabCompleter {
 			re = Main.REGISTED_PLAYER.get(p.getUniqueId());
 		}
 		else {
-			sender.sendMessage(ChatColor.GREEN + "[RandomWorld] : " + ChatColor.RED + "/randomworld <add | remove | set> <entity | user> <target_name> <event_name> <values...>");
+			sender.sendMessage(ChatColor.GREEN + "[RandomWorld] : " + ChatColor.RED + "/randomworld <add | remove | set> <entity | player> <target_name> <event_name> <values...>");
 			return false;
 		}
 		
