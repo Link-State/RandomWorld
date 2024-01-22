@@ -232,7 +232,11 @@ public class InventoryGUI {
 		RandomEvent re = null;
 		if (entityType_str.equals("player")) {
 			OfflinePlayer p = SORTED_PLAYERS.get(entityName);
+
 			re = Main.REGISTED_PLAYER.get(p.getUniqueId());
+			if (re == null) {
+				re = new RandomEvent(p.getUniqueId().toString());
+			}
 		}
 		else if (entityType_str.equals("entity")) {
 			EntityType entityType = EntityType.valueOf(entityName);
@@ -248,34 +252,10 @@ public class InventoryGUI {
 		
 		ArrayList<ItemStack> icons = new ArrayList<ItemStack>();
 		
-		// 페이지가 1개면 페이지 이동버튼 생성 안함
-//		if (lastPage > 1) {
-//			// 이전페이지 버튼
-//			ItemStack prev_icon = new ItemStack(Material.PLAYER_HEAD, 1);
-//			SkullMeta prev_icon_meta = (SkullMeta) prev_icon.getItemMeta();
-//			prev_icon_meta.setOwnerProfile(createProfile("77334cddfab45d75ad28e1a47bf8cf5017d2f0982f6737da22d4972952510661"));
-//			prev_icon_meta.setDisplayName(ChatColor.GRAY + "이전페이지");
-//			prev_icon_meta.setLore(Arrays.asList(ChatColor.GOLD + "(" + ChatColor.GREEN + currentPage+ ChatColor.GOLD + " / " + lastPage + ")"));
-//			prev_icon.setItemMeta(prev_icon_meta);
-//			inv.setItem(3, prev_icon);
-//			
-//			// 다음페이지 버튼
-//			ItemStack next_icon = new ItemStack(Material.PLAYER_HEAD, 1);
-//			SkullMeta next_icon_meta = (SkullMeta) next_icon.getItemMeta();
-//			next_icon_meta.setOwnerProfile(createProfile("e7742034f59db890c8004156b727c77ca695c4399d8e0da5ce9227cf836bb8e2"));
-//			next_icon_meta.setDisplayName(ChatColor.GRAY + "다음페이지");
-//			next_icon_meta.setLore(Arrays.asList(ChatColor.GOLD + "(" + ChatColor.GREEN + currentPage + ChatColor.GOLD + " / " + lastPage + ")"));
-//			next_icon.setItemMeta(next_icon_meta);
-//			inv.setItem(5, next_icon);
-//		}
-		
-		
 		// all_field으로 전체 이벤트 아이콘 생성
-		// 그리고 키값을 user_field_map에 넣어서 활성화여부 lore에 저장하기
 		for (String field : all_field) {
-			ItemStack field_icon = new ItemStack(Material.PLAYER_HEAD, 1);
-			SkullMeta field_icon_meta = (SkullMeta) field_icon.getItemMeta();
-			field_icon_meta.setOwnerProfile(createProfile("e7742034f59db890c8004156b727c77ca695c4399d8e0da5ce9227cf836bb8e2"));
+			ItemStack field_icon = new ItemStack(Material.HOPPER, 1);
+			ItemMeta field_icon_meta = field_icon.getItemMeta();
 			field_icon_meta.setDisplayName(ChatColor.GRAY + field);
 			
 			Boolean activate = user_field_map.get(field);
@@ -361,7 +341,11 @@ public class InventoryGUI {
 		RandomEvent re = null;
 		if (entityType_str.equals("player")) {
 			OfflinePlayer p = SORTED_PLAYERS.get(entityName);
+
 			re = Main.REGISTED_PLAYER.get(p.getUniqueId());
+			if (re == null) {
+				re = new RandomEvent(p.getUniqueId().toString());
+			}
 		}
 		else if (entityType_str.equals("entity")) {
 			EntityType entityType = EntityType.valueOf(entityName);
@@ -389,9 +373,8 @@ public class InventoryGUI {
 						ChatColor.GRAY + "상태 : [" + ChatColor.BOLD + ( status ? ChatColor.GOLD + "적용" : ChatColor.RED + "미적용") + ChatColor.RESET + ChatColor.GRAY + "]",
 						ChatColor.GRAY + "좌클릭해서 " + ( status ? ChatColor.RED + "미적용" : ChatColor.GOLD + "적용")
 						));
-
 				item_stack.setItemMeta(item_meta);
-				items.put(item_meta.getDisplayName(), item_stack);
+				items.put(material.name().toUpperCase(), item_stack);
 			}
 		}
 		else if (eventType.equals("potion")) {
@@ -439,6 +422,7 @@ public class InventoryGUI {
 			sorted_items.add(items.get(key));
 		}
 		
+		
 		Inventory inv = createPageWindow(54, "이벤트 세부 설정", sorted_items, page, stack);
 		if (inv == null) {
 			return null;
@@ -451,7 +435,43 @@ public class InventoryGUI {
 	
 	// Int값 입력받을 때 사용하는 GUI
 	public Inventory openEditIntGUI(ArrayList<String> stack) {
-		return openEditIntGUI(stack, 0);
+
+		if (stack.size() <= 4) {
+			return null;
+		}
+
+		String settingType = stack.get(4);
+		String eventName = stack.get(3);
+		String entityName = stack.get(1);
+		String entityType_str = stack.get(0);
+		
+		if (!settingType.equals("MAX")) {
+			return null;
+		}
+
+		RandomEvent re = null;
+		if (entityType_str.equals("player")) {
+			OfflinePlayer p = SORTED_PLAYERS.get(entityName);
+
+			re = Main.REGISTED_PLAYER.get(p.getUniqueId());
+			if (re == null) {
+				re = new RandomEvent(p.getUniqueId().toString());
+			}
+		}
+		else if (entityType_str.equals("entity")) {
+			EntityType entityType = EntityType.valueOf(entityName);
+			re = Main.REGISTED_ENTITY.get(entityType);
+		}
+		else if (entityType_str.equals("default")) {
+			re = Main.DEFAULT;
+		}
+		else {
+			return null;
+		}
+		
+		int value = re.getActivateMaxEvents(eventName + "_" + settingType);
+		
+		return openEditIntGUI(stack, value);
 	}
 	public Inventory openEditIntGUI(ArrayList<String> stack, int default_value) {
 

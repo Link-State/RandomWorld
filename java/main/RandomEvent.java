@@ -6,6 +6,7 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Set;
+import java.util.TreeSet;
 
 import org.bukkit.Material;
 import org.bukkit.Registry;
@@ -275,6 +276,29 @@ public class RandomEvent {
 		}
 		
 		return result;
+	}
+	public ArrayList<String> getEnabledEvents() {
+		String line = this.DATA.getString("Enable_Events").replaceAll(" ", "").replaceAll("\n", "");
+		
+		if (line.equals("-")) {
+			line = Main.DEFAULT.DATA.getString("Enable_Events").replaceAll(" ", "").replaceAll("\n", "");
+		}
+		
+		TreeSet<String> events = new TreeSet<String>();
+		
+		if (line.equals("*")) {
+			events.addAll(Main.ITEM_FIELD.keySet());
+			events.addAll(Main.POTION_FIELD.keySet());
+			events.addAll(Main.ENCHANT_FIELD.keySet());
+		}
+		else if (!line.isEmpty()) {
+			String[] user_event = line.split(",");
+			for (String event : user_event) {
+				events.add(event);
+			}
+		}
+		
+		return new ArrayList<String>(events);
 	}
 	
 	public boolean isItemBan(String eventName, Material material) {
@@ -646,7 +670,7 @@ public class RandomEvent {
 		}
 		
 		if (!this.DATA.contains("Enable_Events")) {
-			this.DATA.set("Enable_Events", "*");
+			this.DATA.set("Enable_Events", "-");
 			updated++;
 		}
 		

@@ -25,8 +25,8 @@ import org.bukkit.potion.PotionEffectType;
 import org.bukkit.util.StringUtil;
 
 public class RandomWorldCommand implements TabCompleter {
-	private final ArrayList<String> COMMANDS1 = new ArrayList<String>(Arrays.asList("add", "remove", "set", "setting", "permission"));
-	private final ArrayList<String> TARGET = new ArrayList<String>(Arrays.asList("player", "entity"));
+	private final ArrayList<String> COMMANDS1 = new ArrayList<String>(Arrays.asList("add", "remove", "set", "switch", "setting", "permission"));
+	private final ArrayList<String> TARGET = new ArrayList<String>(Arrays.asList("player", "entity", "default"));
 	private final ArrayList<String> PERMISSION_LEVEL = new ArrayList<String>(Arrays.asList("user", "admin", "super"));
 	private final ArrayList<String> PLAYERS = new ArrayList<String>();
 	private final ArrayList<String> ENTITIES = new ArrayList<String>();
@@ -50,7 +50,6 @@ public class RandomWorldCommand implements TabCompleter {
 	 */
 	
 	public RandomWorldCommand() {
-
 		// 현재 접속 중인 플레이어 이름 목록
 		Iterator<? extends Player> online_player_list = Bukkit.getOnlinePlayers().iterator();
 		while (online_player_list.hasNext()) {
@@ -99,6 +98,7 @@ public class RandomWorldCommand implements TabCompleter {
 		keys = Main.ITEM_FIELD.keySet().stream().sorted().iterator();
 		while (keys.hasNext()) {
 			String field_name = keys.next();
+			System.out.println(field_name);
 			SETTINGS.add(field_name + "_EXCEPT");
 			SETTINGS.add(field_name + "_BAN");
 			SETTING_CATEGORY.put(field_name + "_EXCEPT", 0);
@@ -137,7 +137,7 @@ public class RandomWorldCommand implements TabCompleter {
 				break;
 			}
 			case 2 : {
-				if (args[0].equals("add") || args[0].equals("remove") || args[0].equals("set")) {
+				if (args[0].equals("add") || args[0].equals("remove") || args[0].equals("set") || args[0].equals("switch")) {
 					StringUtil.copyPartialMatches(args[1], TARGET, completions);
 				}
 				else if (args[0].equals("permission")) {
@@ -146,12 +146,15 @@ public class RandomWorldCommand implements TabCompleter {
 				break;
 			}
 			case 3 : {
-				if (args[0].equals("add") || args[0].equals("remove") || args[0].equals("set")) {
+				if (args[0].equals("add") || args[0].equals("remove") || args[0].equals("set") || args[0].equals("switch")) {
 					if (args[1].equals("player")) {
 						StringUtil.copyPartialMatches(args[2], PLAYERS, completions);
 					}
 					else if (args[1].equals("entity")) {
 						StringUtil.copyPartialMatches(args[2], ENTITIES, completions);
+					}
+					else if (args[1].equals("default")) {
+						StringUtil.copyPartialMatches(args[2], new ArrayList<String>(Arrays.asList("default")), completions);
 					}
 				}
 				else if (args[0].equals("permission")) {
@@ -161,12 +164,16 @@ public class RandomWorldCommand implements TabCompleter {
 			}
 			case 4 : {
 				if ((args[1].equals("player") && PLAYERS.indexOf(args[2]) >= 0) || 
-					(args[1].equals("entity") && ENTITIES.indexOf(args[2]) >= 0)) {
+					(args[1].equals("entity") && ENTITIES.indexOf(args[2]) >= 0) ||
+					args[1].equals("default") && args[2].equals("default")) {
 					StringUtil.copyPartialMatches(args[3], SETTINGS, completions);
-				}
+				} 
 				break;
 			}
 			default : {
+				if (args[0].equals("switch")) {
+					break;
+				}
 				if (args.length < 5) {
 					break;
 				}
@@ -217,7 +224,10 @@ public class RandomWorldCommand implements TabCompleter {
 			return 0;
 		}
 
-		RandomEvent re = new RandomEvent(p.getUniqueId().toString());
+		RandomEvent re = Main.REGISTED_PLAYER.get(p.getUniqueId());
+		if (re == null) {
+			re = new RandomEvent(p.getUniqueId().toString());
+		}
 		
 		// 슈퍼 유저
 		if (re.isSuper()) {
@@ -323,6 +333,12 @@ public class RandomWorldCommand implements TabCompleter {
 			}
 
 			re = Main.REGISTED_PLAYER.get(p.getUniqueId());
+			if (re == null) {
+				re = new RandomEvent(p.getUniqueId().toString());
+			}
+		}
+		else if (entityType.equals("default") && entityName.equals("default")) {
+			re = Main.DEFAULT;
 		}
 		else {
 			sender.sendMessage(ChatColor.GREEN + "[RandomWorld] : " + ChatColor.RED + "/randomworld <add | remove | set> <entity | player> <target_name> <event_name> <values...>");
@@ -484,6 +500,68 @@ public class RandomWorldCommand implements TabCompleter {
 		return true;
 	}
 	
+	
+	public static boolean toggleEvent(CommandSender sender, String entityType, String entityName, String eventName) {
+		RandomEvent re;
+		if (entityType.equals("entity")) {
+			EntityType entity_type;
+			
+			try {
+				entity_type = EntityType.valueOf(entityName);
+			}
+			catch (IllegalArgumentException err) {
+				sender.sendMessage(ChatColor.GREEN + "[RandomWorld] : " + ChatColor.RED + "해당 개체가 존재하지 않습니다.");
+				return false;
+			}
+			
+			re = Main.REGISTED_ENTITY.get(entity_type);
+		}
+		else if (entityType.equals("player")) {
+			OfflinePlayer p = Bukkit.getPlayer(entityName);
+			if (p == null) {
+				OfflinePlayer[] players = Bukkit.getOfflinePlayers();
+				
+				for (OfflinePlayer off_p : players) {
+					if (off_p.getName().equals(entityName)) {
+						p = off_p;
+						break;
+					}
+				}
+				
+				if (p == null) {
+					sender.sendMessage(ChatColor.GREEN + "[RandomWorld] : " + ChatColor.RED + "해당 플레이어가 존재하지 않습니다.");
+					return false;
+				}
+			}
+
+			re = Main.REGISTED_PLAYER.get(p.getUniqueId());
+			if (re == null) {
+				re = new RandomEvent(p.getUniqueId().toString());
+			}
+		}
+		else if (entityType.equals("default") && entityName.equals("default")) {
+			re = Main.DEFAULT;
+		}
+		else {
+			sender.sendMessage(ChatColor.GREEN + "[RandomWorld] : " + ChatColor.RED + "/randomworld switch <entity | player> <target_name> <event_name>");
+			return false;
+		}
+		
+		// 파일에 업데이트 안된 이벤트일 경우
+		
+		if (re.getActivate(eventName)) {
+			
+			// 라인 가져와서 수정 후 저장
+		}
+		else {
+
+			// 라인 가져와서 수정 후 저장
+		}
+		
+		return false;
+	}
+	
+	
 	public static boolean setPermission(CommandSender sender, String level, String username) {
 		
 		OfflinePlayer p = Bukkit.getPlayer(username);
@@ -500,9 +578,11 @@ public class RandomWorldCommand implements TabCompleter {
 				return false;
 			}
 		}
-		
+
 		RandomEvent re = Main.REGISTED_PLAYER.get(p.getUniqueId());
-		
+		if (re == null) {
+			re = new RandomEvent(p.getUniqueId().toString());
+		}
 		boolean isSuper = false;
 		boolean isAdmin = false;
 		

@@ -76,25 +76,29 @@ public class InventoryGUI_Listener extends InventoryGUI implements Listener {
 		}
 		else if (title.equals("이벤트 선택")) {
 			ClickType click_btn = e.getClick();
-			inv = selectedEvent(e.getInventory(), clicked_meta, click_btn);
+			inv = selectedEvent(e.getInventory(), clicked_meta, click_btn, p);
 		}
 		else if (title.equals("이벤트 설정")) {
 			inv = selectedEventDetail(e.getInventory(), clicked_meta);
 		}
 		else if (title.equals("이벤트 세부 설정")) {
 			ClickType click_btn = e.getClick();
-			inv = selectedEditOption(e.getInventory(), clicked_meta, click_btn, p);
+			inv = selectedEditOption(e.getInventory(), clicked, click_btn, p);
 		}
 		else if (title.equals("숫자 입력")) {
 			ClickType click_btn = e.getClick();
-			inv = inputInt(e.getInventory(), clicked, click_btn);
+			inv = inputInt(e.getInventory(), clicked, click_btn, p);
 		}
+		else {
+			return;
+		}
+		
+		e.setCancelled(true);
 		
 		if (inv == null) {
 			return;
 		}
 		
-		e.setCancelled(true);
 		p.openInventory(inv);
 	}
 	
@@ -114,7 +118,11 @@ public class InventoryGUI_Listener extends InventoryGUI implements Listener {
 			entityType = "entity";
 		}
 		else if (clicked.equals(ChatColor.WHITE + "공통")) {
-			entityType = "default";
+			ArrayList<String> stack = new ArrayList<String>();
+			stack.add("default");
+			stack.add("default");
+			Inventory inv = openEventTypeSelect(stack);
+			return inv;
 		}
 		else {
 			return null;
@@ -199,8 +207,18 @@ public class InventoryGUI_Listener extends InventoryGUI implements Listener {
 			inv = openEventSelect(stack, 1);
 		}
 		else if (clicked_name.equals(ChatColor.GRAY + "뒤로가기") && rank >= 3) {
-			stack.remove(stack.size() - 1);
-			inv = openEntitySelect(stack, 1);
+			
+			String entityType = stack.get(0);
+			String entityName = stack.get(1);
+			
+			if (entityType.equals("default") && entityName.equals("default")) {
+				inv = openEntityTypeSelect();
+			}
+			else {
+				stack.remove(stack.size() - 1);
+				inv = openEntitySelect(stack, 1);
+			}
+			
 		}
 		
 		return inv;
@@ -208,7 +226,7 @@ public class InventoryGUI_Listener extends InventoryGUI implements Listener {
 
 	// 이벤트 선택
 	// openEventSelect
-	private Inventory selectedEvent(Inventory GUI, ItemMeta clicked_meta, ClickType btn) {
+	private Inventory selectedEvent(Inventory GUI, ItemMeta clicked_meta, ClickType btn, Player sender) {
 		ItemStack info_item = GUI.getItem(1);
 		if (info_item == null || info_item.getType().isAir()) {
 			return null;
@@ -239,8 +257,11 @@ public class InventoryGUI_Listener extends InventoryGUI implements Listener {
 			inv = openEventTypeSelect(stack);
 		}
 		else if (btn.equals(ClickType.LEFT)) {
-			// 이벤트 활성화
-			// ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+			String entityType = stack.get(0);
+			String entityName = stack.get(1);
+			String eventName = clicked_name.replaceAll("" + ChatColor.GRAY, "");
+			RandomWorldCommand.toggleEvent(sender, entityType, entityName, eventName);
+			
 			inv = openEventSelect(stack, current_page);
 		}
 		else if (btn.equals(ClickType.RIGHT)) {
@@ -287,7 +308,7 @@ public class InventoryGUI_Listener extends InventoryGUI implements Listener {
 
 	// 이벤트 세부 설정
 	// openEditGUI
-	private Inventory selectedEditOption(Inventory GUI, ItemMeta clicked_meta, ClickType btn, Player sender) {
+	private Inventory selectedEditOption(Inventory GUI, ItemStack clicked, ClickType btn, Player sender) {
 		ItemStack info_item = GUI.getItem(1);
 		if (info_item == null || info_item.getType().isAir()) {
 			return null;
@@ -305,7 +326,12 @@ public class InventoryGUI_Listener extends InventoryGUI implements Listener {
 		}
 		
 		Inventory inv = null;
+		ItemMeta clicked_meta = clicked.getItemMeta();
 		String clicked_name = clicked_meta.getDisplayName();
+		if (clicked_name.isEmpty()) {
+			clicked_name = clicked.getType().name();
+		}
+		
 		
 		if (clicked_name.equals(ChatColor.GRAY + "이전페이지")) {
 			inv = openEditGUI(stack, current_page - 1);
@@ -357,7 +383,7 @@ public class InventoryGUI_Listener extends InventoryGUI implements Listener {
 
 	// 숫자 입력
 	// openEditIntGUI
-	private Inventory inputInt(Inventory GUI, ItemStack clicked_stack, ClickType btn) {
+	private Inventory inputInt(Inventory GUI, ItemStack clicked_stack, ClickType btn, Player sender) {
 		ItemStack info_item = GUI.getItem(1);
 		if (info_item == null || info_item.getType().isAir()) {
 			return null;
@@ -382,6 +408,17 @@ public class InventoryGUI_Listener extends InventoryGUI implements Listener {
 		if (clicked_name.equals(ChatColor.GRAY + "뒤로가기")) {
 			stack.remove(stack.size() - 1);
 			inv = openEventDetailSetting(stack);
+		}
+		else if (clicked_type.equals(Material.NAME_TAG)) {
+			String entityType = stack.get(0);
+			String entityName = stack.get(1);
+			String eventName = stack.get(3) + "_" + stack.get(4);
+			ArrayList<String> fields = new ArrayList<String>();
+			fields.add(value_str);
+
+			RandomWorldCommand.setEvents(sender, "set", entityType, entityName, eventName, fields);
+			
+			inv = openEditIntGUI(stack, value);
 		}
 		else {
 			int acc = 1;

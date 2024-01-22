@@ -1,6 +1,7 @@
 package main;
 
 import java.util.Set;
+import java.util.UUID;
 
 import org.bukkit.Material;
 import org.bukkit.entity.EntityType;
@@ -162,9 +163,14 @@ public class CreateItem extends RandomItem implements Listener {
 			}
 			
 			// 슬롯타입이 result인 슬롯을 찾았을 경우
+			
+			// defaylt에 대해서
 			Main.DEFAULT.setActivate(inv_type.name(), true);
 			Main.DEFAULT.setItemFilter(inv_type.name(), "");
 			Main.DEFAULT.setItemBan(inv_type.name(), "");
+			Main.DEFAULT.write(inv_type.name() + "_EXCEPT", "");
+			Main.DEFAULT.write(inv_type.name() + "_BAN", "");
+			
 			
 			// entity에 대해서
 			Set<EntityType> entity_keys = Main.REGISTED_ENTITY.keySet();
@@ -174,13 +180,17 @@ public class CreateItem extends RandomItem implements Listener {
 				}
 				
 				Main.REGISTED_ENTITY.get(key).setActivate(inv_type.name(), true);
-				Main.REGISTED_ENTITY.get(key).setItemFilter(inv_type.name(), "");
-				Main.REGISTED_ENTITY.get(key).setItemBan(inv_type.name(), "");
+				Main.REGISTED_ENTITY.get(key).setItemFilter(inv_type.name(), "-");
+				Main.REGISTED_ENTITY.get(key).setItemBan(inv_type.name(), "-");
+				Main.REGISTED_ENTITY.get(key).write(inv_type.name() + "_EXCEPT", "-");
+				Main.REGISTED_ENTITY.get(key).write(inv_type.name() + "_BAN", "-");
 			}
 			
 			Main.ITEM_FIELD.put(inv_type.name(), true);
 			Main.ACTIVATED_INVENTORY_TYPE.put(inv_type.name(), inv_type);
 			Main.RESULT_SLOT.put(inv_type, slotID);
+			RandomWorldCommand.SETTING_CATEGORY.put(inv_type.name() + "_EXCEPT", 0);
+			RandomWorldCommand.SETTING_CATEGORY.put(inv_type.name() + "_BAN", 1);
 			
 			Set<InventoryType> keys = Main.RESULT_SLOT.keySet();
 			String str = "";
@@ -193,12 +203,17 @@ public class CreateItem extends RandomItem implements Listener {
 			// 해당 인벤토리는 result슬롯이 있고 슬롯의 위치를 config.yml에 저장
 			Main.CONFIG.set("ACTIVATED", str);
 			Main.CONFIG.saveConfig();
-
-			// 플레이어 적용
-			for (RandomEvent re : Main.REGISTED_PLAYER.values()) {
+			
+			// 플레이어에 대해서
+			Set<UUID> uuids = Main.REGISTED_PLAYER.keySet();
+			for (UUID uuid : uuids) {
+				RandomEvent re = Main.REGISTED_PLAYER.get(uuid);
+				
 				re.setActivate(inv_type.name(), true);
-				re.setItemFilter(inv_type.name(), "");
-				re.setItemBan(inv_type.name(), "");
+				re.setItemFilter(inv_type.name(), "-");
+				re.setItemBan(inv_type.name(), "-");
+				re.write(inv_type.name() + "_EXCEPT", "-");
+				re.write(inv_type.name() + "_BAN", "-");
 			}
 		}
 		
