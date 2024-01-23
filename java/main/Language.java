@@ -4,8 +4,7 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
-import java.util.Set;
-
+import java.util.HashSet;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.plugin.Plugin;
@@ -13,10 +12,12 @@ import org.bukkit.plugin.Plugin;
 public class Language {
 	public static HashMap<String, SimpleConfig> LANGUAGE;
 	public static HashMap<String, HashMap<String, String>> LANGUAGE_DATA;
+	public static HashSet<String> LANG_KEY;
 	
 	public static void loadLanguage() {
 		LANGUAGE = new HashMap<String, SimpleConfig>();
 		LANGUAGE_DATA = new HashMap<String, HashMap<String, String>>();
+		LANG_KEY = new HashSet<String>();
 		
 		// 영어,한국어 파일 없으면 생성하기
 		// lang 폴더 내 언어파일들을 전부 스캔해서 서버의 언어 해시맵 변수에 저장하기
@@ -29,6 +30,9 @@ public class Language {
 		if (!korean.exists()) {
 			korean_yml.set("ONLY_PLAYER", ChatColor.GREEN + "[RandomWorld] : " + ChatColor.RED + "해당 명령어는 플레이어만 사용할 수 있습니다.");
 			korean_yml.set("NO_PERMISSION", ChatColor.GREEN + "[RandomWorld] : " + ChatColor.RED + "권한이 없습니다.");
+			korean_yml.set("WRONG_LANGUAGE_COMMAND", ChatColor.GREEN + "[RandomWorld] : " + ChatColor.RED + "/randomworld language <user_name> <lang>");
+			korean_yml.set("NOT_EXSIT_LANGUAGE", ChatColor.GREEN + "[RandomWorld] : " + ChatColor.RED + "해당 언어가 존재하지 않습니다.");
+			korean_yml.set("COMPLETE_LANGUAGE_EDIT", ChatColor.GREEN + "[RandomWorld] : " + ChatColor.AQUA + "언어 수정이 완료되었습니다.");
 			korean_yml.set("WRONG_PERMISSION_COMMAND", ChatColor.GREEN + "[RandomWorld] : " + ChatColor.RED + "/randomworld permission <user_name> <user | admin | super>");
 			korean_yml.set("WRONG_EDIT_COMMAND", ChatColor.GREEN + "[RandomWorld] : " + ChatColor.RED + "/randomworld <add | remove | set> <player | entity | default> <entity_name> <event_name> <args...>");
 			korean_yml.set("NOT_EXIST_ENTITY", ChatColor.GREEN + "[RandomWorld] : " + ChatColor.RED + "해당 개체가 존재하지 않습니다.");
@@ -89,6 +93,9 @@ public class Language {
 		if (!english.exists()) {
 			english_yml.set("ONLY_PLAYER", ChatColor.GREEN + "[RandomWorld] : " + ChatColor.RED + "This command allowed only Player.");
 			english_yml.set("NO_PERMISSION", ChatColor.GREEN + "[RandomWorld] : " + ChatColor.RED + "No Permission.");
+			english_yml.set("WRONG_LANGUAGE_COMMAND", ChatColor.GREEN + "[RandomWorld] : " + ChatColor.RED + "/randomworld language <user_name> <lang>");
+			english_yml.set("NOT_EXSIT_LANGUAGE", ChatColor.GREEN + "[RandomWorld] : " + ChatColor.RED + "This Language is not exist.");
+			english_yml.set("COMPLETE_LANGUAGE_EDIT", ChatColor.GREEN + "[RandomWorld] : " + ChatColor.AQUA + "Edit language complete.");
 			english_yml.set("WRONG_PERMISSION_COMMAND", ChatColor.GREEN + "[RandomWorld] : " + ChatColor.RED + "/randomworld permission <user_name> <user | admin | super>");
 			english_yml.set("WRONG_EDIT_COMMAND", ChatColor.GREEN + "[RandomWorld] : " + ChatColor.RED + "/randomworld <add | remove | set> <player | entity | default> <entity_name> <event_name> <args...>");
 			english_yml.set("NOT_EXIST_ENTITY", ChatColor.GREEN + "[RandomWorld] : " + ChatColor.RED + "This Entity is not exist.");
@@ -144,6 +151,8 @@ public class Language {
 		}
 		LANGUAGE.put("English", english_yml);
 		
+		LANG_KEY = new HashSet<String>(korean_yml.getKeys());
+		
 		// lang 폴더 내 언어파일 스캔 및 각 파일별로 언어정보 가져오기
 		File lang_folder = new File(plugin.getDataFolder() + File.separator + "lang");
 		ArrayList<String> lang_list = new ArrayList<String>(Arrays.asList(lang_folder.list()));
@@ -160,9 +169,12 @@ public class Language {
 	public static void fetchLanguage(String name) {
 		SimpleConfig LANG = Main.MANAGER.getNewConfig(File.separator + "lang" + File.separator + name + ".yml");
 		HashMap<String, String> lang_map = new HashMap<String, String>();
-		Set<String> keys = LANG.getKeys();
 		
-		for (String key : keys) {
+		for (String key : LANG_KEY) {
+			if (!LANG.contains(key)) {
+				return;
+			}
+			
 			lang_map.put(key, LANG.getString(key));
 		}
 		

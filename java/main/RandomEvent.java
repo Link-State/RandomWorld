@@ -349,6 +349,10 @@ public class RandomEvent {
 	}
 	
 	public void setLanguage(String lang) {
+		if (Language.LANGUAGE_DATA.get(lang) == null) {
+			return;
+		}
+		
 		this.language = lang;
 		return;
 	}
@@ -686,6 +690,11 @@ public class RandomEvent {
 			updated++;
 		}
 		
+		if (!this.DATA.contains("Language")) {
+			this.DATA.set("Language", "English");
+			updated++;
+		}
+		
 		if (!this.DATA.contains("Super")) {
 			this.DATA.set("Super", false);
 			updated++;
@@ -769,6 +778,14 @@ public class RandomEvent {
 		
 		// 유저데이터에서 가져오기
 		String eventsString = this.DATA.getString("Enable_Events").replaceAll("\n", "").replaceAll(" ", "").toUpperCase();
+
+		Boolean super_user = this.DATA.getBoolean("Super");
+		Boolean admin_user = this.DATA.getBoolean("Admin");
+		this.super_user = super_user;
+		this.admin_user = admin_user;
+
+		String lang = this.DATA.getString("Language").replaceAll("\n", "").replaceAll(" ", "").toUpperCase();
+		this.language = lang;
 		
 		if (!this.RESIDENT_NAME.equals("DEFAULT") && eventsString.equals("-")) {
 			eventsString = Main.DEFAULT.DATA.getString("Enable_Events").replaceAll("\n", "").replaceAll(" ", "").toUpperCase();

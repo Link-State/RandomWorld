@@ -8,7 +8,6 @@ import java.util.HashMap;
 import java.util.UUID;
 
 import org.bukkit.Bukkit;
-import org.bukkit.ChatColor;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.World;
 import org.bukkit.command.Command;
@@ -115,16 +114,6 @@ public class Main extends JavaPlugin {
 //		/randomworld <add | remove | set> <player | entity> <이름> <설정 이름> <설정... | *>
 //		/randomworld setting
 //		/randomworld permission <이름> <user | admin | super>
-		
-		if (args[0].equals("Link-State:test")) {
-			/*
-			 * 
-			 * TEST-CODE
-			 *
-			 */
-			System.out.println("(190/300)".replaceAll("\\(", "").replaceAll("/[0-9]+\\)", ""));
-			return true;
-		}
 
 		if (!label.equals("randomworld")) {
 			return false;
@@ -132,24 +121,34 @@ public class Main extends JavaPlugin {
 
 		boolean isSuccess = false;
 		
+		String lang = "English";
+		Player p = null;
+		RandomEvent re = null;
+		if (sender instanceof Player) {
+			p = (Player) sender;
+			re = REGISTED_PLAYER.get(p.getUniqueId());
+			
+			if (re != null) {
+				lang = re.getLanguage();
+			}
+		}
+		
 		if (args.length <= 0) {
 			return false;
 		}
 		
 		if (args[0].equals("setting")) {
-			if (!(sender instanceof Player)) {
-				sender.sendMessage(ChatColor.GREEN + "[RandomWorld] : " + ChatColor.RED + "해당 명령어는 플레이어만 사용할 수 있습니다.");
+			if (p == null) {
+				sender.sendMessage(Language.LANGUAGE_DATA.get(lang).get("ONLY_PLAYER"));
 				return false;
 			}
-			
-			Player p = (Player) sender;
 			
 			// 권한 검사 (op이거나, config.yml에 목록에 있거나)
 			int rank = RandomWorldCommand.getRank(p);
 			
 			// 일반유저 또는 유저가 아닌 경우
 			if (rank <= 1) {
-				p.sendMessage(ChatColor.GREEN + "[RandomWorld] : " + ChatColor.RED + "권한이 없습니다.");
+				p.sendMessage(Language.LANGUAGE_DATA.get(lang).get("NO_PERMISSION"));
 				return false;
 			}
 			
@@ -158,17 +157,16 @@ public class Main extends JavaPlugin {
 		
 		if (args[0].equals("permission")) {
 			if (args.length != 3) {
-				sender.sendMessage(ChatColor.GREEN + "[RandomWorld] : " + ChatColor.RED + "/randomworld permission <user_name> <user | admin | super>");
+				sender.sendMessage(Language.LANGUAGE_DATA.get(lang).get("WRONG_PERMISSION_COMMAND"));
 				return false;
 			}
 			
 			// 권한 검사 (op이거나, config.yml에 목록에 있거나)
-			if (sender instanceof Player) {
-				Player p = (Player) sender;
+			if (p != null) {
 				int rank = RandomWorldCommand.getRank(p.getUniqueId());
 				
 				if (rank <= 2) {
-					p.sendMessage(ChatColor.GREEN + "[RandomWorld] : " + ChatColor.RED + "권한이 없습니다.");
+					p.sendMessage(Language.LANGUAGE_DATA.get(lang).get("NO_PERMISSION"));
 					return false;
 				}
 			}
@@ -182,29 +180,29 @@ public class Main extends JavaPlugin {
 		
 		if (args[0].equals("language")) {
 			if (args.length != 3) {
-				sender.sendMessage(ChatColor.GREEN + "[RandomWorld] : " + ChatColor.RED + "/randomworld language <user_name> <lang>");
+				sender.sendMessage(Language.LANGUAGE_DATA.get(lang).get("WRONG_LANGUAGE_COMMAND"));
 				return false;
 			}
 			
 			String player_name = args[1];
-			String lang = args[2];
+			String change_lang = args[2];
 			
-			OfflinePlayer p = InventoryGUI.SORTED_PLAYERS.get(player_name);
+			OfflinePlayer target_p = InventoryGUI.SORTED_PLAYERS.get(player_name);
 			
-			RandomEvent re = Main.REGISTED_PLAYER.get(p.getUniqueId());
-			if (re == null) {
-				sender.sendMessage(ChatColor.GREEN + "[RandomWorld] : " + ChatColor.RED + "해당 플레이어가 존재하지 않습니다.");
+			RandomEvent target_re = Main.REGISTED_PLAYER.get(target_p.getUniqueId());
+			if (target_re == null) {
+				sender.sendMessage(Language.LANGUAGE_DATA.get(lang).get("NOT_EXIST_PLAYER"));
 				return false;
 			}
 			
-			if (Language.LANGUAGE.get(lang) == null) {
-				sender.sendMessage(ChatColor.GREEN + "[RandomWorld] : " + ChatColor.RED + "해당 언어가 존재하지 않습니다.");
+			if (Language.LANGUAGE.get(change_lang) == null) {
+				sender.sendMessage(Language.LANGUAGE_DATA.get(lang).get("NOT_EXIST_LANGUAGE"));
 				return false;
 			}
 			
-			re.setLanguage(lang);
-
-			sender.sendMessage(ChatColor.GREEN + "[RandomWorld] : " + ChatColor.AQUA + "언어 수정 완료.");
+			re.setLanguage(change_lang);
+			
+			sender.sendMessage(Language.LANGUAGE_DATA.get(change_lang).get("COMPLETE_LANGUAGE_COMMAND"));
 			
 			isSuccess = true;
 		}
@@ -213,18 +211,17 @@ public class Main extends JavaPlugin {
 			args[0].equals("remove") ||
 			args[0].equals("set")) {
 			if (args.length < 5) {
-				sender.sendMessage(ChatColor.GREEN + "[RandomWorld] : " + ChatColor.RED + "/randomworld <add | remove | set> <player | entity | default> <entity_name> <event_name> <args...>");
+				sender.sendMessage(Language.LANGUAGE_DATA.get(lang).get("WRONG_EDIT_COMMAND"));
 				return false;
 			}
 			
 			// 권한 검사
-			if (sender instanceof Player) {
-				Player p = (Player) sender;
+			if (p != null) {
 				int rank = RandomWorldCommand.getRank(p.getUniqueId());
 				
 				if ((rank <= 1 && args[1].equals("player") && p.getName().equals(args[2])) ||
 					(rank <= 2)) {
-					p.sendMessage(ChatColor.GREEN + "[RandomWorld] : " + ChatColor.RED + "권한이 없습니다.");
+					p.sendMessage(Language.LANGUAGE_DATA.get(lang).get("NO_PERMISSION"));
 					return false;
 				}
 			}
