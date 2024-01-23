@@ -8,6 +8,7 @@ import java.util.HashMap;
 import java.util.UUID;
 
 import org.bukkit.Bukkit;
+import org.bukkit.ChatColor;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.World;
 import org.bukkit.command.Command;
@@ -135,6 +136,12 @@ public class Main extends JavaPlugin {
 		
 		if (args.length <= 0) {
 			return false;
+		}
+		
+		if (args[0].equals("test")) {
+			for (ChatColor str : ChatColor.values()) {
+				System.out.println(str + " : " + str.name());
+			}
 		}
 		
 		if (args[0].equals("setting")) {
@@ -286,7 +293,11 @@ public class Main extends JavaPlugin {
 			CONFIG.set("ACTIVATED", "");
 			CONFIG.saveConfig();
 		}
+
+		// 언어 정보 생성
+		Language.loadLanguage();
 		
+		// 설정 불러오기
 		loadSetting();
 		
 		return CONFIG.getBoolean("Enable_Plugin");
@@ -366,9 +377,6 @@ public class Main extends JavaPlugin {
 				REGISTED_ENTITY.put(entity, re);
 			}
 		}
-
-		// 언어 정보 생성
-		Language.loadLanguage();
 		
 		// 월드 밴
 		String worlds_str = CONFIG.getString("Disable_World").replaceAll(" ", "").replaceAll("\n", "");

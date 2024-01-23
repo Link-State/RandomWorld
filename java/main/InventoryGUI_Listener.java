@@ -48,7 +48,7 @@ public class InventoryGUI_Listener extends InventoryGUI implements Listener {
 		Player p = (Player) e.getWhoClicked();
 		ItemStack clicked = e.getCurrentItem();
 		ItemMeta clicked_meta = clicked.getItemMeta();
-		String clicked_icon = clicked_meta.getDisplayName();
+		String clicked_icon = clicked_meta.getDisplayName().replaceAll("§.", "");
 		String title = e.getView().getTitle();
 		
 		String lang = "English";
@@ -57,40 +57,44 @@ public class InventoryGUI_Listener extends InventoryGUI implements Listener {
 			lang = re.getLanguage();
 		}
 		
-		if (clicked_icon.equals(Language.LANGUAGE_DATA.get(lang).get("SELECTED_INFO"))) {
+		String selected_info_icon = Language.getClearString(lang, "SELECTED_INFO");
+		String close_icon = Language.getClearString(lang, "CLOSE");
+		
+		if (clicked_icon.equals(selected_info_icon)) {
 			e.setCancelled(true);
 			return;
 		}
 		
-		if (clicked_icon.equals(Language.LANGUAGE_DATA.get(lang).get("CLOSE"))) {
+		if (clicked_icon.equals(close_icon)) {
 			e.setCancelled(true);
 			p.closeInventory();
 			return;
 		}
 		
+		
 		Inventory inv = null;
-		if (title.equals(Language.LANGUAGE_DATA.get(lang).get("SELECT_ENTITY_TYPE"))) {
+		if (title.equals(Language.getClearString(lang, "SELECT_ENTITY_TYPE"))) {
 			inv = selectedEntityType(lang, e.getInventory(), clicked_icon);
 		}
-		else if (title.equals(Language.LANGUAGE_DATA.get(lang).get("SELECT_ENTITY"))) {
+		else if (title.equals(Language.getClearString(lang, "SELECT_ENTITY"))) {
 			inv = selectedEntity(lang, e.getInventory(), clicked_meta);
 		}
-		else if (title.equals(Language.LANGUAGE_DATA.get(lang).get("SELECT_EVENT_TYPE"))) {
+		else if (title.equals(Language.getClearString(lang, "SELECT_EVENT_TYPE"))) {
 			int rank = RandomWorldCommand.getRank(p);
 			inv = selectedEventType(lang, e.getInventory(), clicked_meta, rank);
 		}
-		else if (title.equals(Language.LANGUAGE_DATA.get(lang).get("SELECT_EVENT"))) {
+		else if (title.equals(Language.getClearString(lang, "SELECT_EVENT"))) {
 			ClickType click_btn = e.getClick();
 			inv = selectedEvent(lang, e.getInventory(), clicked_meta, click_btn, p);
 		}
-		else if (title.equals(Language.LANGUAGE_DATA.get(lang).get("SET_EVENT"))) {
+		else if (title.equals(Language.getClearString(lang, "SET_EVENT"))) {
 			inv = selectedEventDetail(lang, e.getInventory(), clicked_meta);
 		}
-		else if (title.equals(Language.LANGUAGE_DATA.get(lang).get("SET_EVENT_DETAIL"))) {
+		else if (title.equals(Language.getClearString(lang, "SET_EVENT_DETAIL"))) {
 			ClickType click_btn = e.getClick();
 			inv = selectedEditOption(lang, e.getInventory(), clicked, click_btn, p);
 		}
-		else if (title.equals(Language.LANGUAGE_DATA.get(lang).get("INPUT_INT"))) {
+		else if (title.equals(Language.getClearString(lang, "INPUT_INT"))) {
 			ClickType click_btn = e.getClick();
 			inv = inputInt(lang, e.getInventory(), clicked, click_btn, p);
 		}
@@ -347,6 +351,8 @@ public class InventoryGUI_Listener extends InventoryGUI implements Listener {
 		else if (btn.equals(ClickType.LEFT)) {
 			String detailName = clicked_name.replaceAll(ChatColor.GRAY + "", "");
 			String status = clicked_meta.getLore().get(0);
+			String allow = Language.LANGUAGE_DATA.get(lang).get("STATUS_ACTIVATE");
+			String deny = Language.LANGUAGE_DATA.get(lang).get("STATUS_INACTIVATE");
 			String cmd_option = "";
 			String entityType = stack.get(0);
 			String entityName = stack.get(1);
@@ -354,10 +360,14 @@ public class InventoryGUI_Listener extends InventoryGUI implements Listener {
 			ArrayList<String> fields = new ArrayList<String>();
 			fields.add(detailName);
 			
-			if (status.equals(Language.LANGUAGE_DATA.get(lang).get("STATUS_ACTIVATE"))) {
+			status = status.replaceAll("§.", "");
+			allow = allow.replaceAll("§.", "");
+			deny = deny.replaceAll("§.", "");
+			
+			if (status.equals(allow)) {
 				cmd_option = "remove";
 			}
-			else if (status.equals(Language.LANGUAGE_DATA.get(lang).get("STATUS_INACTIVATE"))) {
+			else if (status.equals(deny)) {
 				cmd_option = "add";
 			}
 			else {

@@ -243,4 +243,23 @@ public class Language {
 		
 		LANGUAGE_DATA.put(name, lang_map);
 	}
+	
+	public static String getClearString(String lang, String key) {
+		HashMap<String, String> lang_map = LANGUAGE_DATA.get(lang);
+		if (lang_map == null) {
+			System.out.println("[RandomWorld] : What is " + lang + "?");
+			return "";
+		}
+		
+		String result = lang_map.get(key);
+		
+		if (result == null) {
+			System.out.println("[RandomWorld] : Not Found " + key);
+			return "";
+		}
+		
+		result = result.replaceAll("§.", "");
+		
+		return result;
+	}
 }

@@ -354,6 +354,9 @@ public class RandomEvent {
 		}
 		
 		this.language = lang;
+		this.DATA.set("Language", lang);
+		this.DATA.saveConfig();
+		
 		return;
 	}
 	
@@ -784,7 +787,7 @@ public class RandomEvent {
 		this.super_user = super_user;
 		this.admin_user = admin_user;
 
-		String lang = this.DATA.getString("Language").replaceAll("\n", "").replaceAll(" ", "").toUpperCase();
+		String lang = this.DATA.getString("Language");
 		this.language = lang;
 		
 		if (!this.RESIDENT_NAME.equals("DEFAULT") && eventsString.equals("-")) {
