@@ -18,6 +18,7 @@ public class RandomEvent {
 	private final SimpleConfig DATA; // 데이터
 	private boolean super_user;
 	private boolean admin_user;
+	private String language;
 	private HashMap<String, Boolean> activated; // 각 이벤트 별, 활성화여부 해시맵
 	private HashMap<String, HashMap<Material, Boolean>> itemFilter; // 랜덤 결과로 나오지 않을 아이템 해시맵
 	private HashMap<String, HashMap<Material, Boolean>> itemBan; // 바꾸지 않을 아이템 해시맵
@@ -33,6 +34,7 @@ public class RandomEvent {
 		this.DATA = Main.MANAGER.getNewConfig("/userdata/" + resident_name + ".yml");
 		this.super_user = false;
 		this.admin_user = false;
+		this.language = "한국어";
 		this.activated = new HashMap<String, Boolean>();
 		this.itemFilter = new HashMap<String, HashMap<Material, Boolean>>();
 		this.itemBan = new HashMap<String, HashMap<Material, Boolean>>();
@@ -52,6 +54,9 @@ public class RandomEvent {
 		this.loadEvent();
 	}
 	
+	public String getLanguage() {
+		return this.language;
+	}
 	
 	public boolean getActivate(String eventName) {
 		Boolean activate = this.activated.get(eventName);
@@ -277,7 +282,7 @@ public class RandomEvent {
 		
 		return result;
 	}
-	public ArrayList<String> getEnabledEvents() {
+	public TreeSet<String> getEnabledEvents() {
 		String line = this.DATA.getString("Enable_Events").replaceAll(" ", "").replaceAll("\n", "");
 		
 		if (line.equals("-")) {
@@ -298,7 +303,7 @@ public class RandomEvent {
 			}
 		}
 		
-		return new ArrayList<String>(events);
+		return events;
 	}
 	
 	public boolean isItemBan(String eventName, Material material) {
@@ -341,6 +346,11 @@ public class RandomEvent {
 		}
 		
 		return false;
+	}
+	
+	public void setLanguage(String lang) {
+		this.language = lang;
+		return;
 	}
 	
 	public void setActivate(String eventName, boolean b) {
@@ -660,17 +670,19 @@ public class RandomEvent {
 		int updated = 0;
 		
 		// 개인유저는 공통에서 덮어씌우는 것을 기본 값
+		String default_event_list = "-";
 		String default_value = "-";
 		int default_max = -1;
 		
 		// 공통설정일 경우 기본값을
 		if (this.RESIDENT_NAME.equals("DEFAULT")) {
+			default_event_list = "*";
 			default_value = "";
 			default_max = 5;
 		}
 		
 		if (!this.DATA.contains("Enable_Events")) {
-			this.DATA.set("Enable_Events", "-");
+			this.DATA.set("Enable_Events", default_event_list);
 			updated++;
 		}
 		
@@ -757,6 +769,10 @@ public class RandomEvent {
 		
 		// 유저데이터에서 가져오기
 		String eventsString = this.DATA.getString("Enable_Events").replaceAll("\n", "").replaceAll(" ", "").toUpperCase();
+		
+		if (!this.RESIDENT_NAME.equals("DEFAULT") && eventsString.equals("-")) {
+			eventsString = Main.DEFAULT.DATA.getString("Enable_Events").replaceAll("\n", "").replaceAll(" ", "").toUpperCase();
+		}
 		
 		ArrayList<String> eventList;
 		if (eventsString.equals("*")) {

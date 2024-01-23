@@ -1,9 +1,11 @@
 package main;
 
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Set;
-import java.util.UUID;
-
+import org.bukkit.Bukkit;
 import org.bukkit.Material;
+import org.bukkit.OfflinePlayer;
 import org.bukkit.entity.EntityType;
 import org.bukkit.entity.HumanEntity;
 import org.bukkit.entity.Player;
@@ -44,6 +46,12 @@ public class CreateItem extends RandomItem implements Listener {
 		// 양조기 인벤토리일 경우
 		if (invType.equals(InventoryType.BREWING)) {
 			
+			// 해당 이벤트 비활성화된 경우
+			if (re == null || !re.getActivate(invType.name())) {
+				removeTag(stack);
+				return;
+			}
+			
 			// 클릭한 슬롯이 양조기 제작 슬롯일 경우
 			if (!e.getSlotType().equals(SlotType.CRAFTING)) {
 				return;
@@ -69,12 +77,11 @@ public class CreateItem extends RandomItem implements Listener {
 			return;
 		}
 		
-		
 		// result 슬롯이 없는 인벤토리일 경우, (슬롯이 있는, 처음보는 인벤토리일 경우 기록 및 Main의 static 변수에 등록)
 		if (!hasResultSlot(e.getView())) {
 			return;
 		}
-		
+
 		if (re == null || !re.getActivate(invType.name())) {
 			return;
 		}
@@ -189,6 +196,7 @@ public class CreateItem extends RandomItem implements Listener {
 			Main.ITEM_FIELD.put(inv_type.name(), true);
 			Main.ACTIVATED_INVENTORY_TYPE.put(inv_type.name(), inv_type);
 			Main.RESULT_SLOT.put(inv_type, slotID);
+			RandomWorldCommand.SETTINGS.add(inv_type.name());
 			RandomWorldCommand.SETTING_CATEGORY.put(inv_type.name() + "_EXCEPT", 0);
 			RandomWorldCommand.SETTING_CATEGORY.put(inv_type.name() + "_BAN", 1);
 			
@@ -205,9 +213,12 @@ public class CreateItem extends RandomItem implements Listener {
 			Main.CONFIG.saveConfig();
 			
 			// 플레이어에 대해서
-			Set<UUID> uuids = Main.REGISTED_PLAYER.keySet();
-			for (UUID uuid : uuids) {
-				RandomEvent re = Main.REGISTED_PLAYER.get(uuid);
+			ArrayList<OfflinePlayer> players = new ArrayList<OfflinePlayer>(Arrays.asList(Bukkit.getOfflinePlayers()));
+			for (OfflinePlayer p : players) {
+				RandomEvent re = Main.REGISTED_PLAYER.get(p.getUniqueId());
+				if (re == null) {
+					re = new RandomEvent(p.getUniqueId().toString());
+				}
 				
 				re.setActivate(inv_type.name(), true);
 				re.setItemFilter(inv_type.name(), "-");

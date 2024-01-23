@@ -16,9 +16,6 @@ public class BrewPotion extends RandomItem implements Listener {
 		if (Main.DISABLE_WORLD.get(e.getBlock().getWorld()) != null) {
 			return;
 		}
-		
-		// 이벤트가 활성화 되어 있지 않을 때
-		// ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 		// 양조된 아이템 목록
 		List<ItemStack> potions = e.getResults();

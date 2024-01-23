@@ -2,15 +2,15 @@ package main;
 
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
+import java.util.TreeMap;
+import java.util.TreeSet;
 import java.util.UUID;
 
 import org.bukkit.Bukkit;
-import org.bukkit.ChatColor;
 import org.bukkit.Material;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.Registry;
@@ -25,13 +25,13 @@ import org.bukkit.potion.PotionEffectType;
 import org.bukkit.util.StringUtil;
 
 public class RandomWorldCommand implements TabCompleter {
-	private final ArrayList<String> COMMANDS1 = new ArrayList<String>(Arrays.asList("add", "remove", "set", "switch", "setting", "permission"));
-	private final ArrayList<String> TARGET = new ArrayList<String>(Arrays.asList("player", "entity", "default"));
-	private final ArrayList<String> PERMISSION_LEVEL = new ArrayList<String>(Arrays.asList("user", "admin", "super"));
+	private final ArrayList<String> COMMANDS1 = new ArrayList<String>(Arrays.asList("add", "remove", "set", "switch", "setting", "permission", "language"));
+	private final ArrayList<String> TARGET = new ArrayList<String>(Arrays.asList("default", "entity", "player"));
+	private final ArrayList<String> PERMISSION_LEVEL = new ArrayList<String>(Arrays.asList("super", "admin", "user"));
 	private final ArrayList<String> PLAYERS = new ArrayList<String>();
 	private final ArrayList<String> ENTITIES = new ArrayList<String>();
-	private final ArrayList<String> SETTINGS = new ArrayList<String>();
-	public static final HashMap<String, Integer> SETTING_CATEGORY = new HashMap<String, Integer>();
+	public static final TreeSet<String> SETTINGS = new TreeSet<String>();
+	public static final TreeMap<String, Integer> SETTING_CATEGORY = new TreeMap<String, Integer>();
 	public static final ArrayList<String> ITEMS = new ArrayList<String>();
 	public static final ArrayList<String> POTIONS = new ArrayList<String>();
 	public static final ArrayList<String> ENCHANTS = new ArrayList<String>();
@@ -74,13 +74,10 @@ public class RandomWorldCommand implements TabCompleter {
 		
 		// 각 이벤트 설정
 		Iterator<String> keys;
-		
 		keys = Main.POTION_FIELD.keySet().stream().sorted().iterator();
 		while (keys.hasNext()) {
 			String field_name = keys.next();
-			SETTINGS.add(field_name + "_EXCEPT");
-			SETTINGS.add(field_name + "_BAN");
-			SETTINGS.add(field_name + "_MAX");
+			SETTINGS.add(field_name);
 			SETTING_CATEGORY.put(field_name + "_EXCEPT", 2);
 			SETTING_CATEGORY.put(field_name + "_BAN", 3);
 			SETTING_CATEGORY.put(field_name + "_MAX", 4);
@@ -89,8 +86,7 @@ public class RandomWorldCommand implements TabCompleter {
 		keys = Main.ENCHANT_FIELD.keySet().stream().sorted().iterator();
 		while (keys.hasNext()) {
 			String field_name = keys.next();
-			SETTINGS.add(field_name + "_EXCEPT");
-			SETTINGS.add(field_name + "_BAN");
+			SETTINGS.add(field_name);
 			SETTING_CATEGORY.put(field_name + "_EXCEPT", 5);
 			SETTING_CATEGORY.put(field_name + "_BAN", 6);
 		}
@@ -98,9 +94,7 @@ public class RandomWorldCommand implements TabCompleter {
 		keys = Main.ITEM_FIELD.keySet().stream().sorted().iterator();
 		while (keys.hasNext()) {
 			String field_name = keys.next();
-			System.out.println(field_name);
-			SETTINGS.add(field_name + "_EXCEPT");
-			SETTINGS.add(field_name + "_BAN");
+			SETTINGS.add(field_name);
 			SETTING_CATEGORY.put(field_name + "_EXCEPT", 0);
 			SETTING_CATEGORY.put(field_name + "_BAN", 1);
 		}
@@ -130,57 +124,52 @@ public class RandomWorldCommand implements TabCompleter {
 	public List<String> onTabComplete(CommandSender sender, Command cmd, String alias, String[] args) {
 		final List<String> completions = new ArrayList<>();
 		
-		// 명령어 자동 완성
-		switch (args.length) {
-			case 1 : {
-				StringUtil.copyPartialMatches(args[0], COMMANDS1, completions);
-				break;
+		// randomworld 
+		if (args.length == 1) {
+			StringUtil.copyPartialMatches(args[0], COMMANDS1, completions);
+			return completions;
+		}
+		
+		// randomworld <add | remove | set>
+		if (args[0].equals("add") ||
+			args[0].equals("remove") ||
+			args[0].equals("set")) {
+			if (args.length == 2) {
+				StringUtil.copyPartialMatches(args[1], TARGET, completions);
+				return completions;
 			}
-			case 2 : {
-				if (args[0].equals("add") || args[0].equals("remove") || args[0].equals("set") || args[0].equals("switch")) {
-					StringUtil.copyPartialMatches(args[1], TARGET, completions);
-				}
-				else if (args[0].equals("permission")) {
-					StringUtil.copyPartialMatches(args[1], PLAYERS, completions);
-				}
-				break;
-			}
-			case 3 : {
-				if (args[0].equals("add") || args[0].equals("remove") || args[0].equals("set") || args[0].equals("switch")) {
-					if (args[1].equals("player")) {
-						StringUtil.copyPartialMatches(args[2], PLAYERS, completions);
-					}
-					else if (args[1].equals("entity")) {
-						StringUtil.copyPartialMatches(args[2], ENTITIES, completions);
-					}
-					else if (args[1].equals("default")) {
-						StringUtil.copyPartialMatches(args[2], new ArrayList<String>(Arrays.asList("default")), completions);
-					}
-				}
-				else if (args[0].equals("permission")) {
-					StringUtil.copyPartialMatches(args[2], PERMISSION_LEVEL, completions);
-				}
-				break;
-			}
-			case 4 : {
-				if ((args[1].equals("player") && PLAYERS.indexOf(args[2]) >= 0) || 
-					(args[1].equals("entity") && ENTITIES.indexOf(args[2]) >= 0) ||
-					args[1].equals("default") && args[2].equals("default")) {
-					StringUtil.copyPartialMatches(args[3], SETTINGS, completions);
-				} 
-				break;
-			}
-			default : {
-				if (args[0].equals("switch")) {
-					break;
-				}
-				if (args.length < 5) {
-					break;
+			
+			if (args.length == 3) {
+				if (args[1].equals("player")) {
+					StringUtil.copyPartialMatches(args[2], PLAYERS, completions);
+					return completions;
 				}
 				
+				if (args[1].equals("entity")) {
+					StringUtil.copyPartialMatches(args[2], ENTITIES, completions);
+					return completions;
+				}
+				
+				if (args[1].equals("default")) {
+					ArrayList<String> DEFAULT = new ArrayList<String>(Arrays.asList("default"));
+					StringUtil.copyPartialMatches(args[2], DEFAULT, completions);
+					return completions;
+				}
+			}
+			
+			if (args.length == 4) {
+				if ((args[1].equals("player") && PLAYERS.indexOf(args[2]) >= 0) || 
+					(args[1].equals("entity") && ENTITIES.indexOf(args[2]) >= 0) ||
+					(args[1].equals("default") && args[2].equals("default"))) {
+					ArrayList<String> SET_NAME = new ArrayList<String>(SETTING_CATEGORY.keySet());
+					StringUtil.copyPartialMatches(args[3], SET_NAME, completions);
+				}
+			}
+			
+			if (args.length > 5) {
 				Integer category = SETTING_CATEGORY.get(args[3]);
 				if (category == null) {
-					break;
+					return completions;
 				}
 
 				// Item 관련이면
@@ -195,11 +184,75 @@ public class RandomWorldCommand implements TabCompleter {
 				else if (category >= 5 && category <= 6) {
 					StringUtil.copyPartialMatches(args[args.length-1], ENCHANTS, completions);
 				}
+
+				return completions;
 			}
 		}
+		
+		// randomworld permission
+		if (args[0].equals("permission")) {
+			if (args.length == 2) {
+				StringUtil.copyPartialMatches(args[1], PLAYERS, completions);
+				return completions;	
+			}
+			
+			if (args.length == 3) {
+				StringUtil.copyPartialMatches(args[2], PERMISSION_LEVEL, completions);
+				return completions;
+			}
+		}
+		
+		// randomworld switch
+		if (args[0].equals("switch")) {
+			if (args.length == 2) {
+				StringUtil.copyPartialMatches(args[1], TARGET, completions);
+				return completions;
+			}
+			
+			if (args.length == 3) {
+				if (args[1].equals("player")) {
+					StringUtil.copyPartialMatches(args[2], PLAYERS, completions);
+					return completions;
+				}
+				
+				if (args[1].equals("entity")) {
+					StringUtil.copyPartialMatches(args[2], ENTITIES, completions);
+					return completions;
+				}
+				
+				if (args[1].equals("default")) {
+					ArrayList<String> DEFAULT = new ArrayList<String>(Arrays.asList("default"));
+					StringUtil.copyPartialMatches(args[2], DEFAULT, completions);
+					return completions;
+				}
+			}
+			
+			if (args.length == 4) {
+				if ((args[1].equals("player") && PLAYERS.indexOf(args[2]) >= 0) || 
+					(args[1].equals("entity") && ENTITIES.indexOf(args[2]) >= 0) ||
+					(args[1].equals("default") && args[2].equals("default"))) {
+					ArrayList<String> SET_NAME = new ArrayList<String>(SETTINGS);
+					StringUtil.copyPartialMatches(args[3], SET_NAME, completions);
+					return completions;
+				}
+			}
+		}
+		
+		if (args[0].equals("language")) {
+			if (args.length == 2) {
+				StringUtil.copyPartialMatches(args[1], PLAYERS, completions);
+				return completions;	
+			}
+			
+			if (args.length == 3) {
+				ArrayList<String> langs = new ArrayList<String>(Language.LANGUAGE_DATA.keySet());
+				StringUtil.copyPartialMatches(args[2], langs, completions);
+				return completions;	
+			}
+		}
+		
 		return completions;
 	}
-	
 	
 	/*
 	 * Permission Rank
@@ -264,6 +317,16 @@ public class RandomWorldCommand implements TabCompleter {
 	
 	// 설정 GUI창 열기
 	public static boolean openSettingGUI(Player player, int rank) {
+		String lang = "English";
+		RandomEvent sender_event = Main.REGISTED_PLAYER.get(player.getUniqueId());
+		
+		if (sender_event != null) {
+			lang = sender_event.getLanguage();
+		}
+		
+		if (Language.LANGUAGE_DATA.get(lang) == null) {
+			lang = "English";
+		}
 		
 		ArrayList<String> stack = new ArrayList<String>();
 		stack.add(player.getName());
@@ -274,14 +337,14 @@ public class RandomWorldCommand implements TabCompleter {
 			case 2 : {
 				stack.add("player");
 				stack.add(player.getName());
-				inv = gui.openEventTypeSelect(stack);
+				inv = gui.openEventTypeSelect(lang, stack);
 
 				break;
 			}
 			// op 또는 super
 			case 3 :
 			case 4 : {
-				inv = gui.openEntityTypeSelect();
+				inv = gui.openEntityTypeSelect(lang);
 				break;
 			}
 		}
@@ -298,7 +361,20 @@ public class RandomWorldCommand implements TabCompleter {
 	
 	// 이벤트 필터링 적용
 	public static boolean setEvents(CommandSender sender, String cmd_option, String entityType, String entityName, String eventName, ArrayList<String> fields) {
-		// fields의 길이가 0이면 이벤트 공란으로 설정
+		String lang = "English";
+		if (sender instanceof Player) {
+			Player p = (Player) sender;
+			RandomEvent sender_event = Main.REGISTED_PLAYER.get(p.getUniqueId());
+			
+			if (sender_event != null) {
+				lang = sender_event.getLanguage();
+			}
+			
+			if (Language.LANGUAGE_DATA.get(lang) == null) {
+				lang = "English";
+			}
+		}
+		
 		
 		RandomEvent re;
 		if (entityType.equals("entity")) {
@@ -308,7 +384,7 @@ public class RandomWorldCommand implements TabCompleter {
 				entity_type = EntityType.valueOf(entityName);
 			}
 			catch (IllegalArgumentException err) {
-				sender.sendMessage(ChatColor.GREEN + "[RandomWorld] : " + ChatColor.RED + "해당 개체가 존재하지 않습니다.");
+				sender.sendMessage(Language.LANGUAGE_DATA.get(lang).get("NOT_EXIST_ENTITY"));
 				return false;
 			}
 			
@@ -327,7 +403,7 @@ public class RandomWorldCommand implements TabCompleter {
 				}
 				
 				if (p == null) {
-					sender.sendMessage(ChatColor.GREEN + "[RandomWorld] : " + ChatColor.RED + "해당 플레이어가 존재하지 않습니다.");
+					sender.sendMessage(Language.LANGUAGE_DATA.get(lang).get("NOT_EXIST_PLAYER"));
 					return false;
 				}
 			}
@@ -341,28 +417,26 @@ public class RandomWorldCommand implements TabCompleter {
 			re = Main.DEFAULT;
 		}
 		else {
-			sender.sendMessage(ChatColor.GREEN + "[RandomWorld] : " + ChatColor.RED + "/randomworld <add | remove | set> <entity | player> <target_name> <event_name> <values...>");
+			sender.sendMessage(Language.LANGUAGE_DATA.get(lang).get("WRONG_EDIT_COMMAND"));
+			return false;
+		}
+
+		Integer category = SETTING_CATEGORY.get(eventName);
+		if (category == null) {
+			sender.sendMessage(Language.LANGUAGE_DATA.get(lang).get("NOT_EXIST_EVENT"));
 			return false;
 		}
 		
 		String eventName_prefix = eventName.replace("_EXCEPT", "").replace("_BAN", "").replace("_MAX", "");
 		if (!re.getActivate(eventName_prefix)) {
-			sender.sendMessage(ChatColor.GREEN + "[RandomWorld] : " + ChatColor.RED + "존재하지 않거나 비활성화 된 이벤트 입니다.");
+			sender.sendMessage(Language.LANGUAGE_DATA.get(lang).get("INACTIVATE_EVENT"));
 			return false;
 		}
-		
-		Integer category = SETTING_CATEGORY.get(eventName);
-		if (category == null) {
-			sender.sendMessage(ChatColor.GREEN + "[RandomWorld] : " + ChatColor.RED + "존재하지 않는 이벤트 입니다.");
-			return false;
-		}
-		
-		
 		
 		// _MAX인 경우, add나 remove가 안되고 set으로만 할 수 있도록.
 		if (category == 4) {
 			if (!cmd_option.equals("set")) {
-				sender.sendMessage(ChatColor.GREEN + "[RandomWorld] : " + ChatColor.RED + "해당 이벤트는 set 명령만 허용됩니다.");
+				sender.sendMessage(Language.LANGUAGE_DATA.get(lang).get("ONLY_ALLOW_SET"));
 				return false;
 			}
 			
@@ -372,13 +446,13 @@ public class RandomWorldCommand implements TabCompleter {
 					max_value = Integer.parseInt(fields.get(0));
 				}
 				catch (NumberFormatException err) {
-					sender.sendMessage(ChatColor.GREEN + "[RandomWorld] : " + ChatColor.RED + "해당 이벤트는 정수값만 허용됩니다.");
+					sender.sendMessage(Language.LANGUAGE_DATA.get(lang).get("ONLY_ALLOW_INT"));
 					return false;
 				}
 			}
 			re.write(eventName, max_value);
 			re.setEffectMax(eventName_prefix, max_value);
-			sender.sendMessage(ChatColor.GREEN + "[RandomWorld] : " + ChatColor.AQUA + "수정이 완료되었습니다.");
+			sender.sendMessage(Language.LANGUAGE_DATA.get(lang).get("COMPLETE_EDIT"));
 			return true;
 		}
 		
@@ -437,13 +511,13 @@ public class RandomWorldCommand implements TabCompleter {
 			origin_set = new HashSet<String>(origin_list);
 		}
 		else if (!cmd_option.equals("set")) {
-			sender.sendMessage(ChatColor.GREEN + "[RandomWorld] : " + ChatColor.RED + "/randomworld <add | remove | set> <entity | user> <target_name> <event_name> <values...>");
+			sender.sendMessage(Language.LANGUAGE_DATA.get(lang).get("WRONG_EDIT_COMMAND"));
 			return false;
 		}
 		
 		// origin_set과 apply와 내용물이 같은 경우
 		if (origin_set.equals(apply_set)) {
-			sender.sendMessage(ChatColor.GREEN + "[RandomWorld] : " + ChatColor.YELLOW + "변경사항이 없습니다.");
+			sender.sendMessage(Language.LANGUAGE_DATA.get(lang).get("NOT_MODIFIED"));
 			return false;
 		}
 
@@ -495,13 +569,27 @@ public class RandomWorldCommand implements TabCompleter {
 			}
 		}
 		
-		sender.sendMessage(ChatColor.GREEN + "[RandomWorld] : " + ChatColor.AQUA + "수정이 완료되었습니다.");
+		sender.sendMessage(Language.LANGUAGE_DATA.get(lang).get("COMPLETE_EDIT"));
 		
 		return true;
 	}
 	
 	
 	public static boolean toggleEvent(CommandSender sender, String entityType, String entityName, String eventName) {
+		String lang = "English";
+		if (sender instanceof Player) {
+			Player p = (Player) sender;
+			RandomEvent sender_event = Main.REGISTED_PLAYER.get(p.getUniqueId());
+			
+			if (sender_event != null) {
+				lang = sender_event.getLanguage();
+			}
+			
+			if (Language.LANGUAGE_DATA.get(lang) == null) {
+				lang = "English";
+			}
+		}
+		
 		RandomEvent re;
 		if (entityType.equals("entity")) {
 			EntityType entity_type;
@@ -510,7 +598,7 @@ public class RandomWorldCommand implements TabCompleter {
 				entity_type = EntityType.valueOf(entityName);
 			}
 			catch (IllegalArgumentException err) {
-				sender.sendMessage(ChatColor.GREEN + "[RandomWorld] : " + ChatColor.RED + "해당 개체가 존재하지 않습니다.");
+				sender.sendMessage(Language.LANGUAGE_DATA.get(lang).get("NOT_EXIST_ENTITY"));
 				return false;
 			}
 			
@@ -529,7 +617,7 @@ public class RandomWorldCommand implements TabCompleter {
 				}
 				
 				if (p == null) {
-					sender.sendMessage(ChatColor.GREEN + "[RandomWorld] : " + ChatColor.RED + "해당 플레이어가 존재하지 않습니다.");
+					sender.sendMessage(Language.LANGUAGE_DATA.get(lang).get("NOT_EXIST_PLAYER"));
 					return false;
 				}
 			}
@@ -543,26 +631,59 @@ public class RandomWorldCommand implements TabCompleter {
 			re = Main.DEFAULT;
 		}
 		else {
-			sender.sendMessage(ChatColor.GREEN + "[RandomWorld] : " + ChatColor.RED + "/randomworld switch <entity | player> <target_name> <event_name>");
+			sender.sendMessage(Language.LANGUAGE_DATA.get(lang).get("WRONG_SWITCH_COMMAND"));
 			return false;
 		}
 		
-		// 파일에 업데이트 안된 이벤트일 경우
+		TreeSet<String> all_events = SETTINGS;
+		TreeSet<String> enabled_events = re.getEnabledEvents();
+		TreeSet<String> defalut_events = Main.DEFAULT.getEnabledEvents();
 		
 		if (re.getActivate(eventName)) {
-			
-			// 라인 가져와서 수정 후 저장
+			re.setActivate(eventName, false);
+			enabled_events.remove(eventName);
 		}
 		else {
-
-			// 라인 가져와서 수정 후 저장
+			re.setActivate(eventName, true);
+			enabled_events.add(eventName);
 		}
 		
-		return false;
+		String line = "";
+		
+		if (enabled_events.equals(all_events)) {
+			line = "*";
+		}
+		else if (enabled_events.equals(defalut_events)) {
+			line = "-";
+		}
+		else if (enabled_events.size() <= 0) {
+			line = "";
+		}
+		else {
+			line = String.join(", ", enabled_events);
+		}
+		
+		re.write("Enable_Events", line);
+		
+		sender.sendMessage(Language.LANGUAGE_DATA.get(lang).get("COMPLETE_EDIT"));
+		return true;
 	}
 	
 	
 	public static boolean setPermission(CommandSender sender, String level, String username) {
+		String lang = "English";
+		if (sender instanceof Player) {
+			Player p = (Player) sender;
+			RandomEvent sender_event = Main.REGISTED_PLAYER.get(p.getUniqueId());
+			
+			if (sender_event != null) {
+				lang = sender_event.getLanguage();
+			}
+			
+			if (Language.LANGUAGE_DATA.get(lang) == null) {
+				lang = "English";
+			}
+		}
 		
 		OfflinePlayer p = Bukkit.getPlayer(username);
 		if (p == null) {
@@ -574,7 +695,7 @@ public class RandomWorldCommand implements TabCompleter {
 			}
 			
 			if (p == null) {
-				sender.sendMessage(ChatColor.GREEN + "[RandomWorld] : " + ChatColor.RED + "해당 플레이어가 존재하지 않습니다.");
+				sender.sendMessage(Language.LANGUAGE_DATA.get(lang).get("NOT_EXIST_PLAYER"));
 				return false;
 			}
 		}
@@ -594,12 +715,12 @@ public class RandomWorldCommand implements TabCompleter {
 			isAdmin = true;
 		}
 		else if (!level.equals("user")){
-			sender.sendMessage(ChatColor.GREEN + "[RandomWorld] : " + ChatColor.RED + "해당 플레이어가 존재하지 않습니다.");
+			sender.sendMessage(Language.LANGUAGE_DATA.get(lang).get("NOT_EXIST_PLAYER"));
 			return false;
 		}
 		
 		re.setPermission(isSuper, isAdmin);
-		sender.sendMessage(ChatColor.GREEN + "[RandomWorld] : " + ChatColor.AQUA + "권한 수정이 완료되었습니다.");
+		sender.sendMessage(Language.LANGUAGE_DATA.get(lang).get("COMPLETE_PERMISSION_EDIT"));
 		
 		return true;
 	}

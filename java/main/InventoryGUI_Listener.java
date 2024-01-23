@@ -10,7 +10,6 @@ import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.inventory.ClickType;
 import org.bukkit.event.inventory.InventoryClickEvent;
-import org.bukkit.event.inventory.InventoryCloseEvent;
 import org.bukkit.event.inventory.InventoryType;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
@@ -18,7 +17,7 @@ import org.bukkit.inventory.meta.ItemMeta;
 
 public class InventoryGUI_Listener extends InventoryGUI implements Listener {
 	private final Inventory TEST_INV = Bukkit.createInventory(null, 9, "test");
-
+	
 	@EventHandler
 	public void inventoryClick(InventoryClickEvent e) {
 		
@@ -52,42 +51,48 @@ public class InventoryGUI_Listener extends InventoryGUI implements Listener {
 		String clicked_icon = clicked_meta.getDisplayName();
 		String title = e.getView().getTitle();
 		
-		if (clicked_icon.equals(ChatColor.WHITE + "선택 정보")) {
+		String lang = "English";
+		RandomEvent re = Main.REGISTED_PLAYER.get(p.getUniqueId());
+		if (re != null) {
+			lang = re.getLanguage();
+		}
+		
+		if (clicked_icon.equals(Language.LANGUAGE_DATA.get(lang).get("SELECTED_INFO"))) {
 			e.setCancelled(true);
 			return;
 		}
 		
-		if (clicked_icon.equals(ChatColor.RED + "닫기")) {
+		if (clicked_icon.equals(Language.LANGUAGE_DATA.get(lang).get("CLOSE"))) {
 			e.setCancelled(true);
 			p.closeInventory();
 			return;
 		}
 		
 		Inventory inv = null;
-		if (title.equals("개체 종류 선택")) {
-			inv = selectedEntityType(e.getInventory(), clicked_icon);
+		if (title.equals(Language.LANGUAGE_DATA.get(lang).get("SELECT_ENTITY_TYPE"))) {
+			inv = selectedEntityType(lang, e.getInventory(), clicked_icon);
 		}
-		else if (title.equals("개체 선택")) {
-			inv = selectedEntity(e.getInventory(), clicked_meta);
+		else if (title.equals(Language.LANGUAGE_DATA.get(lang).get("SELECT_ENTITY"))) {
+			inv = selectedEntity(lang, e.getInventory(), clicked_meta);
 		}
-		else if (title.equals("이벤트 종류 선택")) {
+		else if (title.equals(Language.LANGUAGE_DATA.get(lang).get("SELECT_EVENT_TYPE"))) {
 			int rank = RandomWorldCommand.getRank(p);
-			inv = selectedEventType(e.getInventory(), clicked_meta, rank);
+			inv = selectedEventType(lang, e.getInventory(), clicked_meta, rank);
 		}
-		else if (title.equals("이벤트 선택")) {
+		else if (title.equals(Language.LANGUAGE_DATA.get(lang).get("SELECT_EVENT"))) {
 			ClickType click_btn = e.getClick();
-			inv = selectedEvent(e.getInventory(), clicked_meta, click_btn, p);
+			inv = selectedEvent(lang, e.getInventory(), clicked_meta, click_btn, p);
 		}
-		else if (title.equals("이벤트 설정")) {
-			inv = selectedEventDetail(e.getInventory(), clicked_meta);
+		else if (title.equals(Language.LANGUAGE_DATA.get(lang).get("SET_EVENT"))) {
+			inv = selectedEventDetail(lang, e.getInventory(), clicked_meta);
 		}
-		else if (title.equals("이벤트 세부 설정")) {
+		else if (title.equals(Language.LANGUAGE_DATA.get(lang).get("SET_EVENT_DETAIL"))) {
 			ClickType click_btn = e.getClick();
-			inv = selectedEditOption(e.getInventory(), clicked, click_btn, p);
+			inv = selectedEditOption(lang, e.getInventory(), clicked, click_btn, p);
 		}
-		else if (title.equals("숫자 입력")) {
+		else if (title.equals(Language.LANGUAGE_DATA.get(lang).get("INPUT_INT"))) {
 			ClickType click_btn = e.getClick();
-			inv = inputInt(e.getInventory(), clicked, click_btn, p);
+			inv = inputInt(lang, e.getInventory(), clicked, click_btn, p);
 		}
 		else {
 			return;
@@ -101,27 +106,23 @@ public class InventoryGUI_Listener extends InventoryGUI implements Listener {
 		
 		p.openInventory(inv);
 	}
-	
-	@EventHandler
-	public void inventoryClose(InventoryCloseEvent e) {
-	}
 
 	// 개체 종류 선택
 	// openEntityTypeSelect
-	private Inventory selectedEntityType(Inventory GUI, String clicked) {
+	private Inventory selectedEntityType(String lang, Inventory GUI, String clicked) {
 		
 		String entityType = "";
-		if (clicked.equals(ChatColor.WHITE + "플레이어")) {
+		if (clicked.equals(Language.LANGUAGE_DATA.get(lang).get("PLAYER"))) {
 			entityType = "player";
 		}
-		else if (clicked.equals(ChatColor.WHITE + "엔티티")) {
+		else if (clicked.equals(Language.LANGUAGE_DATA.get(lang).get("ENTITY"))) {
 			entityType = "entity";
 		}
-		else if (clicked.equals(ChatColor.WHITE + "공통")) {
+		else if (clicked.equals(Language.LANGUAGE_DATA.get(lang).get("DEFAULT"))) {
 			ArrayList<String> stack = new ArrayList<String>();
 			stack.add("default");
 			stack.add("default");
-			Inventory inv = openEventTypeSelect(stack);
+			Inventory inv = openEventTypeSelect(lang, stack);
 			return inv;
 		}
 		else {
@@ -131,13 +132,13 @@ public class InventoryGUI_Listener extends InventoryGUI implements Listener {
 		ArrayList<String> stack = new ArrayList<String>();
 		stack.add(entityType);
 		
-		Inventory inv = openEntitySelect(stack, 1);
+		Inventory inv = openEntitySelect(lang, stack, 1);
 		return inv;
 	}
 	
 	// 개체 선택
 	// selectEntityTypeSelect
-	private Inventory selectedEntity(Inventory GUI, ItemMeta clicked_meta) {
+	private Inventory selectedEntity(String lang, Inventory GUI, ItemMeta clicked_meta) {
 		
 		ItemStack info_item = GUI.getItem(1);
 		if (info_item == null || info_item.getType().isAir()) {
@@ -149,32 +150,32 @@ public class InventoryGUI_Listener extends InventoryGUI implements Listener {
 		Inventory inv = null;
 		String clicked_name = clicked_meta.getDisplayName();
 		
-		if (clicked_name.equals(ChatColor.GRAY + "이전페이지")) {
+		if (clicked_name.equals(Language.LANGUAGE_DATA.get(lang).get("PREV_PAGE"))) {
 			String page = clicked_meta.getLore().get(0);
 			page = page.replaceAll(ChatColor.GOLD + "\\(" + ChatColor.GREEN, "");
 			page = page.replaceAll(ChatColor.GOLD + " / [0-9]+\\)", "");
 			int prev_page = Integer.parseInt(page) - 1;
 			
-			inv = openEntitySelect(stack, prev_page);
+			inv = openEntitySelect(lang, stack, prev_page);
 		}
-		else if (clicked_name.equals(ChatColor.GRAY + "다음페이지")) {
+		else if (clicked_name.equals(Language.LANGUAGE_DATA.get(lang).get("NEXT_PAGE"))) {
 			String page = clicked_meta.getLore().get(0);
 			page = page.replaceAll(ChatColor.GOLD + "\\(" + ChatColor.GREEN, "");
 			page = page.replaceAll(ChatColor.GOLD + " / [0-9]+\\)", "");
 			int next_page = Integer.parseInt(page) + 1;
 			
-			inv = openEntitySelect(stack, next_page);
+			inv = openEntitySelect(lang, stack, next_page);
 		}
-		else if (clicked_name.equals(ChatColor.GRAY + "뒤로가기")) {
-			inv = openEntityTypeSelect();
+		else if (clicked_name.equals(Language.LANGUAGE_DATA.get(lang).get("BACKWARD"))) {
+			inv = openEntityTypeSelect(lang);
 		}
-		else if (clicked_name.equals(ChatColor.GRAY + "검색")) {
+		else if (clicked_name.equals(Language.LANGUAGE_DATA.get(lang).get("SEARCH"))) {
 			// search
 		}
 		else {
 			String name = clicked_name.replaceAll(ChatColor.WHITE + "", "");
 			stack.add(name);
-			inv = openEventTypeSelect(stack);
+			inv = openEventTypeSelect(lang, stack);
 		}
 		
 		return inv;
@@ -182,7 +183,7 @@ public class InventoryGUI_Listener extends InventoryGUI implements Listener {
 
 	// 이벤트 종류 선택
 	//openEventTypeSelect
-	private Inventory selectedEventType(Inventory GUI, ItemMeta clicked_meta, int rank) {
+	private Inventory selectedEventType(String lang, Inventory GUI, ItemMeta clicked_meta, int rank) {
 		
 		ItemStack info_item = GUI.getItem(1);
 		if (info_item == null || info_item.getType().isAir()) {
@@ -194,29 +195,29 @@ public class InventoryGUI_Listener extends InventoryGUI implements Listener {
 		Inventory inv = null;
 		String clicked_name = clicked_meta.getDisplayName();
 		
-		if (clicked_name.equals(ChatColor.WHITE + "아이템")) {
+		if (clicked_name.equals(Language.LANGUAGE_DATA.get(lang).get("ITEM"))) {
 			stack.add("item");
-			inv = openEventSelect(stack, 1);
+			inv = openEventSelect(lang, stack, 1);
 		}
-		else if (clicked_name.equals(ChatColor.WHITE + "포션효과")) {
+		else if (clicked_name.equals(Language.LANGUAGE_DATA.get(lang).get("POTION_EFFECT"))) {
 			stack.add("potion");
-			inv = openEventSelect(stack, 1);
+			inv = openEventSelect(lang, stack, 1);
 		}
-		else if (clicked_name.equals(ChatColor.WHITE + "인첸트")) {
+		else if (clicked_name.equals(Language.LANGUAGE_DATA.get(lang).get("ENCHANT"))) {
 			stack.add("enchant");
-			inv = openEventSelect(stack, 1);
+			inv = openEventSelect(lang, stack, 1);
 		}
-		else if (clicked_name.equals(ChatColor.GRAY + "뒤로가기") && rank >= 3) {
+		else if (clicked_name.equals(Language.LANGUAGE_DATA.get(lang).get("BACKWARD")) && rank >= 3) {
 			
 			String entityType = stack.get(0);
 			String entityName = stack.get(1);
 			
 			if (entityType.equals("default") && entityName.equals("default")) {
-				inv = openEntityTypeSelect();
+				inv = openEntityTypeSelect(lang);
 			}
 			else {
 				stack.remove(stack.size() - 1);
-				inv = openEntitySelect(stack, 1);
+				inv = openEntitySelect(lang, stack, 1);
 			}
 			
 		}
@@ -226,7 +227,7 @@ public class InventoryGUI_Listener extends InventoryGUI implements Listener {
 
 	// 이벤트 선택
 	// openEventSelect
-	private Inventory selectedEvent(Inventory GUI, ItemMeta clicked_meta, ClickType btn, Player sender) {
+	private Inventory selectedEvent(String lang, Inventory GUI, ItemMeta clicked_meta, ClickType btn, Player sender) {
 		ItemStack info_item = GUI.getItem(1);
 		if (info_item == null || info_item.getType().isAir()) {
 			return null;
@@ -246,15 +247,15 @@ public class InventoryGUI_Listener extends InventoryGUI implements Listener {
 		Inventory inv = null;
 		String clicked_name = clicked_meta.getDisplayName();
 		
-		if (clicked_name.equals(ChatColor.GRAY + "이전페이지")) {
-			inv = openEventSelect(stack, current_page - 1);
+		if (clicked_name.equals(Language.LANGUAGE_DATA.get(lang).get("PREV_PAGE"))) {
+			inv = openEventSelect(lang, stack, current_page - 1);
 		}
-		else if (clicked_name.equals(ChatColor.GRAY + "다음페이지")) {
-			inv = openEventSelect(stack, current_page + 1);
+		else if (clicked_name.equals(Language.LANGUAGE_DATA.get(lang).get("NEXT_PAGE"))) {
+			inv = openEventSelect(lang, stack, current_page + 1);
 		}
-		else if (clicked_name.equals(ChatColor.GRAY + "뒤로가기")) {
+		else if (clicked_name.equals(Language.LANGUAGE_DATA.get(lang).get("BACKWARD"))) {
 			stack.remove(stack.size() - 1);
-			inv = openEventTypeSelect(stack);
+			inv = openEventTypeSelect(lang, stack);
 		}
 		else if (btn.equals(ClickType.LEFT)) {
 			String entityType = stack.get(0);
@@ -262,12 +263,12 @@ public class InventoryGUI_Listener extends InventoryGUI implements Listener {
 			String eventName = clicked_name.replaceAll("" + ChatColor.GRAY, "");
 			RandomWorldCommand.toggleEvent(sender, entityType, entityName, eventName);
 			
-			inv = openEventSelect(stack, current_page);
+			inv = openEventSelect(lang, stack, current_page);
 		}
 		else if (btn.equals(ClickType.RIGHT)) {
 			String eventName = clicked_name.replaceAll(ChatColor.GRAY + "", "");
 			stack.add(eventName);
-			inv = openEventDetailSetting(stack);
+			inv = openEventDetailSetting(lang, stack);
 		}
 		
 		return inv;
@@ -275,7 +276,7 @@ public class InventoryGUI_Listener extends InventoryGUI implements Listener {
 
 	// 이벤트 설정
 	// openEventDetailSetting
-	private Inventory selectedEventDetail(Inventory GUI, ItemMeta clicked_meta) {
+	private Inventory selectedEventDetail(String lang, Inventory GUI, ItemMeta clicked_meta) {
 		ItemStack info_item = GUI.getItem(1);
 		if (info_item == null || info_item.getType().isAir()) {
 			return null;
@@ -286,21 +287,21 @@ public class InventoryGUI_Listener extends InventoryGUI implements Listener {
 		Inventory inv = null;
 		String clicked_name = clicked_meta.getDisplayName();
 		
-		if (clicked_name.equals(ChatColor.GOLD + "필터")) {
+		if (clicked_name.equals(Language.LANGUAGE_DATA.get(lang).get("EXCEPT"))) {
 			stack.add("EXCEPT");
-			inv = openEditGUI(stack, 1);
+			inv = openEditGUI(lang, stack, 1);
 		}
-		else if (clicked_name.equals(ChatColor.GOLD + "밴")) {
+		else if (clicked_name.equals(Language.LANGUAGE_DATA.get(lang).get("BAN"))) {
 			stack.add("BAN");
-			inv = openEditGUI(stack, 1);
+			inv = openEditGUI(lang, stack, 1);
 		}
-		else if (clicked_name.equals(ChatColor.GOLD + "최대버프")) {
+		else if (clicked_name.equals(Language.LANGUAGE_DATA.get(lang).get("MAX"))) {
 			stack.add("MAX");
-			inv = openEditIntGUI(stack);
+			inv = openEditIntGUI(lang, stack);
 		}
-		else if (clicked_name.equals(ChatColor.GRAY + "뒤로가기")) {
+		else if (clicked_name.equals(Language.LANGUAGE_DATA.get(lang).get("BACKWARD"))) {
 			stack.remove(stack.size() - 1);
-			inv = openEventSelect(stack, 1);
+			inv = openEventSelect(lang, stack, 1);
 		}
 		
 		return inv;
@@ -308,7 +309,7 @@ public class InventoryGUI_Listener extends InventoryGUI implements Listener {
 
 	// 이벤트 세부 설정
 	// openEditGUI
-	private Inventory selectedEditOption(Inventory GUI, ItemStack clicked, ClickType btn, Player sender) {
+	private Inventory selectedEditOption(String lang, Inventory GUI, ItemStack clicked, ClickType btn, Player sender) {
 		ItemStack info_item = GUI.getItem(1);
 		if (info_item == null || info_item.getType().isAir()) {
 			return null;
@@ -333,19 +334,21 @@ public class InventoryGUI_Listener extends InventoryGUI implements Listener {
 		}
 		
 		
-		if (clicked_name.equals(ChatColor.GRAY + "이전페이지")) {
-			inv = openEditGUI(stack, current_page - 1);
+		if (clicked_name.equals(Language.LANGUAGE_DATA.get(lang).get("PREV_PAGE"))) {
+			inv = openEditGUI(lang, stack, current_page - 1);
 		}
-		else if (clicked_name.equals(ChatColor.GRAY + "다음페이지")) {
-			inv = openEditGUI(stack, current_page + 1);
+		else if (clicked_name.equals(Language.LANGUAGE_DATA.get(lang).get("NEXT_PAGE"))) {
+			inv = openEditGUI(lang, stack, current_page + 1);
 		}
-		else if (clicked_name.equals(ChatColor.GRAY + "뒤로가기")) {
+		else if (clicked_name.equals(Language.LANGUAGE_DATA.get(lang).get("BACKWARD"))) {
 			stack.remove(stack.size() - 1);
-			inv = openEventDetailSetting(stack);
+			inv = openEventDetailSetting(lang, stack);
 		}
 		else if (btn.equals(ClickType.LEFT)) {
 			String detailName = clicked_name.replaceAll(ChatColor.GRAY + "", "");
 			String status = clicked_meta.getLore().get(0);
+			
+			// ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 			status = status.replaceAll(ChatColor.BOLD + "", "");
 			status = status.replaceAll(ChatColor.RESET + "", "");
 			status = status.replaceAll(ChatColor.GRAY + "", "");
@@ -372,7 +375,7 @@ public class InventoryGUI_Listener extends InventoryGUI implements Listener {
 			}
 			
 			RandomWorldCommand.setEvents(sender, cmd_option, entityType, entityName, eventName, fields);
-			inv = openEditGUI(stack, current_page);
+			inv = openEditGUI(lang, stack, current_page);
 		}
 		else if (btn.equals(ClickType.RIGHT)) {
 			// 미정
@@ -383,7 +386,7 @@ public class InventoryGUI_Listener extends InventoryGUI implements Listener {
 
 	// 숫자 입력
 	// openEditIntGUI
-	private Inventory inputInt(Inventory GUI, ItemStack clicked_stack, ClickType btn, Player sender) {
+	private Inventory inputInt(String lang, Inventory GUI, ItemStack clicked_stack, ClickType btn, Player sender) {
 		ItemStack info_item = GUI.getItem(1);
 		if (info_item == null || info_item.getType().isAir()) {
 			return null;
@@ -405,9 +408,9 @@ public class InventoryGUI_Listener extends InventoryGUI implements Listener {
 		int value = Integer.parseInt(value_str);
 		
 
-		if (clicked_name.equals(ChatColor.GRAY + "뒤로가기")) {
+		if (clicked_name.equals(Language.LANGUAGE_DATA.get(lang).get("BACKWARD"))) {
 			stack.remove(stack.size() - 1);
-			inv = openEventDetailSetting(stack);
+			inv = openEventDetailSetting(lang, stack);
 		}
 		else if (clicked_type.equals(Material.NAME_TAG)) {
 			String entityType = stack.get(0);
@@ -418,7 +421,7 @@ public class InventoryGUI_Listener extends InventoryGUI implements Listener {
 
 			RandomWorldCommand.setEvents(sender, "set", entityType, entityName, eventName, fields);
 			
-			inv = openEditIntGUI(stack, value);
+			inv = openEditIntGUI(lang, stack, value);
 		}
 		else {
 			int acc = 1;
@@ -443,7 +446,7 @@ public class InventoryGUI_Listener extends InventoryGUI implements Listener {
 			
 			value += (sign * acc);
 			
-			inv = openEditIntGUI(stack, value);
+			inv = openEditIntGUI(lang, stack, value);
 		}
 		
 		return inv;

@@ -74,6 +74,15 @@ public class RandomItem {
 		return 0;
 	}
 	
+	public ItemStack removeTag(ItemStack stack) {
+		ItemMeta meta = stack.getItemMeta();
+		PersistentDataContainer tag = meta.getPersistentDataContainer();
+		tag.remove(KEY);
+		stack.setItemMeta(meta);
+		
+		return stack;
+	}
+	
 	/**
 	 * -Change Item Tag-
 	 * Must be used only when the return value of getItemStatus() is not 0.
