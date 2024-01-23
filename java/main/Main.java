@@ -155,6 +155,7 @@ public class Main extends JavaPlugin {
 			isSuccess = RandomWorldCommand.openSettingGUI(p, rank);
 		}
 		
+		
 		if (args[0].equals("permission")) {
 			if (args.length != 3) {
 				sender.sendMessage(Language.LANGUAGE_DATA.get(lang).get("WRONG_PERMISSION_COMMAND"));
@@ -175,8 +176,8 @@ public class Main extends JavaPlugin {
 			
 			// 해당 유저 권한 추가
 			isSuccess = RandomWorldCommand.setPermission(sender, args[2], player_name);
-			
 		}
+		
 		
 		if (args[0].equals("language")) {
 			if (args.length != 3) {
@@ -189,8 +190,8 @@ public class Main extends JavaPlugin {
 			
 			OfflinePlayer target_p = InventoryGUI.SORTED_PLAYERS.get(player_name);
 			
-			RandomEvent target_re = Main.REGISTED_PLAYER.get(target_p.getUniqueId());
-			if (target_re == null) {
+			re = Main.REGISTED_PLAYER.get(target_p.getUniqueId());
+			if (re == null) {
 				sender.sendMessage(Language.LANGUAGE_DATA.get(lang).get("NOT_EXIST_PLAYER"));
 				return false;
 			}
@@ -202,10 +203,11 @@ public class Main extends JavaPlugin {
 			
 			re.setLanguage(change_lang);
 			
-			sender.sendMessage(Language.LANGUAGE_DATA.get(change_lang).get("COMPLETE_LANGUAGE_COMMAND"));
+			sender.sendMessage(Language.LANGUAGE_DATA.get(change_lang).get("COMPLETE_LANGUAGE_EDIT"));
 			
 			isSuccess = true;
 		}
+		
 		
 		if (args[0].equals("add") ||
 			args[0].equals("remove") ||

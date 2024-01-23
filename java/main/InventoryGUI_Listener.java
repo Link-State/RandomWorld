@@ -347,16 +347,6 @@ public class InventoryGUI_Listener extends InventoryGUI implements Listener {
 		else if (btn.equals(ClickType.LEFT)) {
 			String detailName = clicked_name.replaceAll(ChatColor.GRAY + "", "");
 			String status = clicked_meta.getLore().get(0);
-			
-			// ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-			status = status.replaceAll(ChatColor.BOLD + "", "");
-			status = status.replaceAll(ChatColor.RESET + "", "");
-			status = status.replaceAll(ChatColor.GRAY + "", "");
-			status = status.replaceAll(ChatColor.GOLD + "", "");
-			status = status.replaceAll(ChatColor.RED + "", "");
-			status = status.replaceAll("상태 : \\[", "");
-			status = status.replaceAll("\\]", "");
-
 			String cmd_option = "";
 			String entityType = stack.get(0);
 			String entityName = stack.get(1);
@@ -364,10 +354,10 @@ public class InventoryGUI_Listener extends InventoryGUI implements Listener {
 			ArrayList<String> fields = new ArrayList<String>();
 			fields.add(detailName);
 			
-			if (status.equals("적용")) {
+			if (status.equals(Language.LANGUAGE_DATA.get(lang).get("STATUS_ACTIVATE"))) {
 				cmd_option = "remove";
 			}
-			else if (status.equals("미적용")) {
+			else if (status.equals(Language.LANGUAGE_DATA.get(lang).get("STATUS_INACTIVATE"))) {
 				cmd_option = "add";
 			}
 			else {

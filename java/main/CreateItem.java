@@ -171,7 +171,7 @@ public class CreateItem extends RandomItem implements Listener {
 			
 			// 슬롯타입이 result인 슬롯을 찾았을 경우
 			
-			// defaylt에 대해서
+			// default에 대해서
 			Main.DEFAULT.setActivate(inv_type.name(), true);
 			Main.DEFAULT.setItemFilter(inv_type.name(), "");
 			Main.DEFAULT.setItemBan(inv_type.name(), "");

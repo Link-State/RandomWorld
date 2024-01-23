@@ -524,38 +524,6 @@ public class InventoryGUI {
 	}
 	
 	
-	
-	// 확인GUI (사용안함)
-	public Inventory openConfirmGUI(ArrayList<String> stack) {
-		String lang = "English";
-		Inventory inv = createWindow(lang, 45, "저장 및 적용", stack);
-		if (inv == null) {
-			return null;
-		}
-		
-		inv.setItem(0, null);
-
-		ItemStack alert_icon = new ItemStack(Material.NAME_TAG, 1);
-		ItemMeta alert_icon_meta = alert_icon.getItemMeta();
-		alert_icon_meta.setDisplayName("" + ChatColor.WHITE + "적용");
-		alert_icon_meta.setLore(Arrays.asList("" + ChatColor.WHITE + "적용"));
-		inv.setItem(13, alert_icon);
-		
-		ItemStack accept_icon = new ItemStack(Material.NAME_TAG, 1);
-		ItemMeta accept_icon_meta = accept_icon.getItemMeta();
-		accept_icon_meta.setDisplayName("" + ChatColor.GREEN + ChatColor.BOLD + "적용");
-		inv.setItem(29, accept_icon);
-		
-		ItemStack deny_icon = new ItemStack(Material.NAME_TAG, 1);
-		ItemMeta deny_icon_meta = deny_icon.getItemMeta();
-		deny_icon_meta.setDisplayName("" + ChatColor.RED + ChatColor.BOLD + "취소");
-		inv.setItem(33, deny_icon);
-		
-		return inv;
-	}
-	
-	
-	
 	// 페이지뷰 생성
 	public Inventory createPageWindow(String lang, int size, String title, ArrayList<ItemStack> contents, ArrayList<String> stack) {
 		return createPageWindow(lang, size, title, contents, 1, stack);
@@ -589,7 +557,7 @@ public class InventoryGUI {
 		SkullMeta prev_icon_meta = (SkullMeta) prev_icon.getItemMeta();
 		prev_icon_meta.setOwnerProfile(createProfile("77334cddfab45d75ad28e1a47bf8cf5017d2f0982f6737da22d4972952510661"));
 		prev_icon_meta.setDisplayName(Language.LANGUAGE_DATA.get(lang).get("PREV_PAGE"));
-		prev_icon_meta.setLore(Arrays.asList(ChatColor.GOLD + "(" + ChatColor.GREEN + page+ ChatColor.GOLD + " / " + lastPage + ")"));
+		prev_icon_meta.setLore(Arrays.asList(ChatColor.GOLD + "(" + ChatColor.GREEN + page + ChatColor.GOLD + " / " + lastPage + ")"));
 		prev_icon.setItemMeta(prev_icon_meta);
 		inv.setItem(3, prev_icon);
 		

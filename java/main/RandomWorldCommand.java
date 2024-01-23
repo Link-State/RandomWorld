@@ -166,7 +166,7 @@ public class RandomWorldCommand implements TabCompleter {
 				}
 			}
 			
-			if (args.length > 5) {
+			if (args.length >= 5) {
 				Integer category = SETTING_CATEGORY.get(args[3]);
 				if (category == null) {
 					return completions;

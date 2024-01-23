@@ -19,15 +19,74 @@ public class Language {
 		LANGUAGE_DATA = new HashMap<String, HashMap<String, String>>();
 		LANG_KEY = new HashSet<String>();
 		
+		LANG_KEY.add("ONLY_PLAYER");
+		LANG_KEY.add("NO_PERMISSION");
+		LANG_KEY.add("WRONG_LANGUAGE_COMMAND");
+		LANG_KEY.add("NOT_EXSIT_LANGUAGE");
+		LANG_KEY.add("COMPLETE_LANGUAGE_EDIT");
+		LANG_KEY.add("WRONG_PERMISSION_COMMAND");
+		LANG_KEY.add("WRONG_EDIT_COMMAND");
+		LANG_KEY.add("NOT_EXIST_ENTITY");
+		LANG_KEY.add("NOT_EXIST_PLAYER");
+		LANG_KEY.add("INACTIVATED_EVENT");
+		LANG_KEY.add("NOT_EXIST_EVENT");
+		LANG_KEY.add("ONLY_ALLOW_SET");
+		LANG_KEY.add("ONLY_ALLOW_INT");
+		LANG_KEY.add("COMPLETE_EDIT");
+		LANG_KEY.add("NOT_MODIFIED");
+		LANG_KEY.add("WRONG_SWITCH_COMMAND");
+		LANG_KEY.add("COMPLETE_PERMISSION_EDIT");
+		
+		LANG_KEY.add("PLAYER");
+		LANG_KEY.add("ENTITY");
+		LANG_KEY.add("DEFAULT");
+		LANG_KEY.add("ITEM");
+		LANG_KEY.add("POTION_EFFECT");
+		LANG_KEY.add("ENCHANT");
+		LANG_KEY.add("EXCEPT");
+		LANG_KEY.add("BAN");
+		LANG_KEY.add("MAX");
+		LANG_KEY.add("SEARCH");
+		LANG_KEY.add("BACKWARD");
+		LANG_KEY.add("CLOSE");
+		LANG_KEY.add("PREV_PAGE");
+		LANG_KEY.add("NEXT_PAGE");
+		LANG_KEY.add("SELECTED_INFO");
+		LANG_KEY.add("STATUS_ENABLE");
+		LANG_KEY.add("STATUS_DISABLE");
+		LANG_KEY.add("LEFTCLICK_ENABLE");
+		LANG_KEY.add("LEFTCLICK_DISABLE");
+		LANG_KEY.add("RIGHTCLICK_EVENT_DETAIL");
+		LANG_KEY.add("STATUS_ACTIVATE");
+		LANG_KEY.add("STATUS_INACTIVATE");
+		LANG_KEY.add("LEFTCLICK_ACTIVATE");
+		LANG_KEY.add("LEFTCLICK_INACTIVATE");
+		LANG_KEY.add("LEFTCLICK_1");
+		LANG_KEY.add("RIGHTCLICK_1");
+		LANG_KEY.add("LEFTCLICK_5");
+		LANG_KEY.add("RIGHTCLICK_5");
+		LANG_KEY.add("LEFTCLICK_10");
+		LANG_KEY.add("RIGHTCLICK_10");
+		LANG_KEY.add("LEFTCLICK_APPLY");
+		
+		LANG_KEY.add("SELECT_ENTITY_TYPE");
+		LANG_KEY.add("SELECT_ENTITY");
+		LANG_KEY.add("SELECT_EVENT_TYPE");
+		LANG_KEY.add("SELECT_EVENT");
+		LANG_KEY.add("SET_EVENT");
+		LANG_KEY.add("SET_EVENT_DETAIL");
+		LANG_KEY.add("INPUT_INT");
+		
 		// 영어,한국어 파일 없으면 생성하기
 		// lang 폴더 내 언어파일들을 전부 스캔해서 서버의 언어 해시맵 변수에 저장하기
 		Plugin plugin = Bukkit.getPluginManager().getPlugin("RandomWorld");
-		File korean = new File(plugin.getDataFolder() + File.separator + "lang" + File.separator + "한국어.yml");
-		File english = new File(plugin.getDataFolder() + File.separator + "lang" + File.separator + "English.yml");
 		
 		// 한국어 파일이 없는 경우 생성
 		SimpleConfig korean_yml = Main.MANAGER.getNewConfig(File.separator + "lang" + File.separator + "한국어.yml");
-		if (!korean.exists()) {
+		HashSet<String> keys = null;
+		
+		keys = new HashSet<String>(korean_yml.getKeys());
+		if (!keys.equals(LANG_KEY)) {
 			korean_yml.set("ONLY_PLAYER", ChatColor.GREEN + "[RandomWorld] : " + ChatColor.RED + "해당 명령어는 플레이어만 사용할 수 있습니다.");
 			korean_yml.set("NO_PERMISSION", ChatColor.GREEN + "[RandomWorld] : " + ChatColor.RED + "권한이 없습니다.");
 			korean_yml.set("WRONG_LANGUAGE_COMMAND", ChatColor.GREEN + "[RandomWorld] : " + ChatColor.RED + "/randomworld language <user_name> <lang>");
@@ -90,7 +149,9 @@ public class Language {
 
 		// 영어 파일이 없는 경우 생성
 		SimpleConfig english_yml = Main.MANAGER.getNewConfig(File.separator + "lang" + File.separator + "English.yml");
-		if (!english.exists()) {
+
+		keys = new HashSet<String>(english_yml.getKeys());
+		if (!keys.equals(LANG_KEY)) {
 			english_yml.set("ONLY_PLAYER", ChatColor.GREEN + "[RandomWorld] : " + ChatColor.RED + "This command allowed only Player.");
 			english_yml.set("NO_PERMISSION", ChatColor.GREEN + "[RandomWorld] : " + ChatColor.RED + "No Permission.");
 			english_yml.set("WRONG_LANGUAGE_COMMAND", ChatColor.GREEN + "[RandomWorld] : " + ChatColor.RED + "/randomworld language <user_name> <lang>");
@@ -150,8 +211,6 @@ public class Language {
 			english_yml.saveConfig();
 		}
 		LANGUAGE.put("English", english_yml);
-		
-		LANG_KEY = new HashSet<String>(korean_yml.getKeys());
 		
 		// lang 폴더 내 언어파일 스캔 및 각 파일별로 언어정보 가져오기
 		File lang_folder = new File(plugin.getDataFolder() + File.separator + "lang");
