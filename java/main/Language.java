@@ -244,7 +244,7 @@ public class Language {
 		LANGUAGE_DATA.put(name, lang_map);
 	}
 	
-	public static String getClearString(String lang, String key) {
+	public static String fetchString(String lang, String key) {
 		HashMap<String, String> lang_map = LANGUAGE_DATA.get(lang);
 		if (lang_map == null) {
 			System.out.println("[RandomWorld] : What is " + lang + "?");
@@ -255,11 +255,26 @@ public class Language {
 		
 		if (result == null) {
 			System.out.println("[RandomWorld] : Not Found " + key);
-			return "";
+			return null;
 		}
 		
-		result = result.replaceAll("§.", "");
-		
 		return result;
+	}
+	
+	public static String getClearString(String lang, String key) {
+		String result = fetchString(lang, key);
+		
+		return result.replaceAll("§.", "");
+	}
+	
+	public static boolean equalsIgnoreColor(String lang, String str1, String key) {
+		String changed_1 = str1.replaceAll("§.", "");
+		String changed_2 = getClearString(lang, key);
+		
+		if (changed_1.equals(changed_2)) {
+			return true;
+		}
+		
+		return false;
 	}
 }

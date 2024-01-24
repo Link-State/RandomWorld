@@ -50,6 +50,7 @@ public class RandomWorldCommand implements TabCompleter {
 	 */
 	
 	public RandomWorldCommand() {
+		
 		// 현재 접속 중인 플레이어 이름 목록
 		Iterator<? extends Player> online_player_list = Bukkit.getOnlinePlayers().iterator();
 		while (online_player_list.hasNext()) {
@@ -384,7 +385,7 @@ public class RandomWorldCommand implements TabCompleter {
 				entity_type = EntityType.valueOf(entityName);
 			}
 			catch (IllegalArgumentException err) {
-				sender.sendMessage(Language.LANGUAGE_DATA.get(lang).get("NOT_EXIST_ENTITY"));
+				sender.sendMessage(Language.fetchString(lang, "NOT_EXIST_ENTITY"));
 				return false;
 			}
 			
@@ -403,7 +404,7 @@ public class RandomWorldCommand implements TabCompleter {
 				}
 				
 				if (p == null) {
-					sender.sendMessage(Language.LANGUAGE_DATA.get(lang).get("NOT_EXIST_PLAYER"));
+					sender.sendMessage(Language.fetchString(lang, "NOT_EXIST_PLAYER"));
 					return false;
 				}
 			}
@@ -417,26 +418,26 @@ public class RandomWorldCommand implements TabCompleter {
 			re = Main.DEFAULT;
 		}
 		else {
-			sender.sendMessage(Language.LANGUAGE_DATA.get(lang).get("WRONG_EDIT_COMMAND"));
+			sender.sendMessage(Language.fetchString(lang, "WRONG_EDIT_COMMAND"));
 			return false;
 		}
 
 		Integer category = SETTING_CATEGORY.get(eventName);
 		if (category == null) {
-			sender.sendMessage(Language.LANGUAGE_DATA.get(lang).get("NOT_EXIST_EVENT"));
+			sender.sendMessage(Language.fetchString(lang, "NOT_EXIST_EVENT"));
 			return false;
 		}
 		
 		String eventName_prefix = eventName.replace("_EXCEPT", "").replace("_BAN", "").replace("_MAX", "");
 		if (!re.getActivate(eventName_prefix)) {
-			sender.sendMessage(Language.LANGUAGE_DATA.get(lang).get("INACTIVATE_EVENT"));
+			sender.sendMessage(Language.fetchString(lang, "INACTIVATED_EVENT"));
 			return false;
 		}
 		
 		// _MAX인 경우, add나 remove가 안되고 set으로만 할 수 있도록.
 		if (category == 4) {
 			if (!cmd_option.equals("set")) {
-				sender.sendMessage(Language.LANGUAGE_DATA.get(lang).get("ONLY_ALLOW_SET"));
+				sender.sendMessage(Language.fetchString(lang, "ONLY_ALLOW_SET"));
 				return false;
 			}
 			
@@ -446,13 +447,13 @@ public class RandomWorldCommand implements TabCompleter {
 					max_value = Integer.parseInt(fields.get(0));
 				}
 				catch (NumberFormatException err) {
-					sender.sendMessage(Language.LANGUAGE_DATA.get(lang).get("ONLY_ALLOW_INT"));
+					sender.sendMessage(Language.fetchString(lang, "ONLY_ALLOW_INT"));
 					return false;
 				}
 			}
 			re.write(eventName, max_value);
 			re.setEffectMax(eventName_prefix, max_value);
-			sender.sendMessage(Language.LANGUAGE_DATA.get(lang).get("COMPLETE_EDIT"));
+			sender.sendMessage(Language.fetchString(lang, "COMPLETE_EDIT"));
 			return true;
 		}
 		
@@ -511,13 +512,13 @@ public class RandomWorldCommand implements TabCompleter {
 			origin_set = new HashSet<String>(origin_list);
 		}
 		else if (!cmd_option.equals("set")) {
-			sender.sendMessage(Language.LANGUAGE_DATA.get(lang).get("WRONG_EDIT_COMMAND"));
+			sender.sendMessage(Language.fetchString(lang, "WRONG_EDIT_COMMAND"));
 			return false;
 		}
 		
 		// origin_set과 apply와 내용물이 같은 경우
 		if (origin_set.equals(apply_set)) {
-			sender.sendMessage(Language.LANGUAGE_DATA.get(lang).get("NOT_MODIFIED"));
+			sender.sendMessage(Language.fetchString(lang, "NOT_MODIFIED"));
 			return false;
 		}
 
@@ -569,7 +570,7 @@ public class RandomWorldCommand implements TabCompleter {
 			}
 		}
 		
-		sender.sendMessage(Language.LANGUAGE_DATA.get(lang).get("COMPLETE_EDIT"));
+		sender.sendMessage(Language.fetchString(lang, "COMPLETE_EDIT"));
 		
 		return true;
 	}
@@ -598,7 +599,7 @@ public class RandomWorldCommand implements TabCompleter {
 				entity_type = EntityType.valueOf(entityName);
 			}
 			catch (IllegalArgumentException err) {
-				sender.sendMessage(Language.LANGUAGE_DATA.get(lang).get("NOT_EXIST_ENTITY"));
+				sender.sendMessage(Language.fetchString(lang, "NOT_EXIST_ENTITY"));
 				return false;
 			}
 			
@@ -617,7 +618,7 @@ public class RandomWorldCommand implements TabCompleter {
 				}
 				
 				if (p == null) {
-					sender.sendMessage(Language.LANGUAGE_DATA.get(lang).get("NOT_EXIST_PLAYER"));
+					sender.sendMessage(Language.fetchString(lang, "NOT_EXIST_PLAYER"));
 					return false;
 				}
 			}
@@ -631,7 +632,7 @@ public class RandomWorldCommand implements TabCompleter {
 			re = Main.DEFAULT;
 		}
 		else {
-			sender.sendMessage(Language.LANGUAGE_DATA.get(lang).get("WRONG_SWITCH_COMMAND"));
+			sender.sendMessage(Language.fetchString(lang, "WRONG_SWITCH_COMMAND"));
 			return false;
 		}
 		
@@ -665,7 +666,7 @@ public class RandomWorldCommand implements TabCompleter {
 		
 		re.write("Enable_Events", line);
 		
-		sender.sendMessage(Language.LANGUAGE_DATA.get(lang).get("COMPLETE_EDIT"));
+		sender.sendMessage(Language.fetchString(lang, "COMPLETE_EDIT"));
 		return true;
 	}
 	
@@ -691,11 +692,12 @@ public class RandomWorldCommand implements TabCompleter {
 			for (OfflinePlayer off_p : off_players) {
 				if (off_p.getName().equals(username)) {
 					p = off_p;
+					break;
 				}
 			}
 			
 			if (p == null) {
-				sender.sendMessage(Language.LANGUAGE_DATA.get(lang).get("NOT_EXIST_PLAYER"));
+				sender.sendMessage(Language.fetchString(lang, "NOT_EXIST_PLAYER"));
 				return false;
 			}
 		}
@@ -715,12 +717,12 @@ public class RandomWorldCommand implements TabCompleter {
 			isAdmin = true;
 		}
 		else if (!level.equals("user")){
-			sender.sendMessage(Language.LANGUAGE_DATA.get(lang).get("NOT_EXIST_PLAYER"));
+			sender.sendMessage(Language.fetchString(lang, "NOT_EXIST_PLAYER"));
 			return false;
 		}
 		
 		re.setPermission(isSuper, isAdmin);
-		sender.sendMessage(Language.LANGUAGE_DATA.get(lang).get("COMPLETE_PERMISSION_EDIT"));
+		sender.sendMessage(Language.fetchString(lang, "COMPLETE_PERMISSION_EDIT"));
 		
 		return true;
 	}

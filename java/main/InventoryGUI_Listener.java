@@ -48,7 +48,7 @@ public class InventoryGUI_Listener extends InventoryGUI implements Listener {
 		Player p = (Player) e.getWhoClicked();
 		ItemStack clicked = e.getCurrentItem();
 		ItemMeta clicked_meta = clicked.getItemMeta();
-		String clicked_icon = clicked_meta.getDisplayName().replaceAll("§.", "");
+		String clicked_icon = clicked_meta.getDisplayName();
 		String title = e.getView().getTitle();
 		
 		String lang = "English";
@@ -57,15 +57,12 @@ public class InventoryGUI_Listener extends InventoryGUI implements Listener {
 			lang = re.getLanguage();
 		}
 		
-		String selected_info_icon = Language.getClearString(lang, "SELECTED_INFO");
-		String close_icon = Language.getClearString(lang, "CLOSE");
-		
-		if (clicked_icon.equals(selected_info_icon)) {
+		if (Language.equalsIgnoreColor(lang, clicked_icon, "SELECTED_INFO")) {
 			e.setCancelled(true);
 			return;
 		}
 		
-		if (clicked_icon.equals(close_icon)) {
+		if (Language.equalsIgnoreColor(lang, clicked_icon, "CLOSE")) {
 			e.setCancelled(true);
 			p.closeInventory();
 			return;
@@ -73,28 +70,28 @@ public class InventoryGUI_Listener extends InventoryGUI implements Listener {
 		
 		
 		Inventory inv = null;
-		if (title.equals(Language.getClearString(lang, "SELECT_ENTITY_TYPE"))) {
+		if (Language.equalsIgnoreColor(lang, title, "SELECT_ENTITY_TYPE")) {
 			inv = selectedEntityType(lang, e.getInventory(), clicked_icon);
 		}
-		else if (title.equals(Language.getClearString(lang, "SELECT_ENTITY"))) {
+		else if (Language.equalsIgnoreColor(lang, title, "SELECT_ENTITY")) {
 			inv = selectedEntity(lang, e.getInventory(), clicked_meta);
 		}
-		else if (title.equals(Language.getClearString(lang, "SELECT_EVENT_TYPE"))) {
+		else if (Language.equalsIgnoreColor(lang, title, "SELECT_EVENT_TYPE")) {
 			int rank = RandomWorldCommand.getRank(p);
 			inv = selectedEventType(lang, e.getInventory(), clicked_meta, rank);
 		}
-		else if (title.equals(Language.getClearString(lang, "SELECT_EVENT"))) {
+		else if (Language.equalsIgnoreColor(lang, title, "SELECT_EVENT")) {
 			ClickType click_btn = e.getClick();
 			inv = selectedEvent(lang, e.getInventory(), clicked_meta, click_btn, p);
 		}
-		else if (title.equals(Language.getClearString(lang, "SET_EVENT"))) {
+		else if (Language.equalsIgnoreColor(lang, title, "SET_EVENT")) {
 			inv = selectedEventDetail(lang, e.getInventory(), clicked_meta);
 		}
-		else if (title.equals(Language.getClearString(lang, "SET_EVENT_DETAIL"))) {
+		else if (Language.equalsIgnoreColor(lang, title, "SET_EVENT_DETAIL")) {
 			ClickType click_btn = e.getClick();
 			inv = selectedEditOption(lang, e.getInventory(), clicked, click_btn, p);
 		}
-		else if (title.equals(Language.getClearString(lang, "INPUT_INT"))) {
+		else if (Language.equalsIgnoreColor(lang, title, "INPUT_INT")) {
 			ClickType click_btn = e.getClick();
 			inv = inputInt(lang, e.getInventory(), clicked, click_btn, p);
 		}
@@ -116,13 +113,14 @@ public class InventoryGUI_Listener extends InventoryGUI implements Listener {
 	private Inventory selectedEntityType(String lang, Inventory GUI, String clicked) {
 		
 		String entityType = "";
-		if (clicked.equals(Language.LANGUAGE_DATA.get(lang).get("PLAYER"))) {
+		
+		if (Language.equalsIgnoreColor(lang, clicked, "PLAYER")) {
 			entityType = "player";
 		}
-		else if (clicked.equals(Language.LANGUAGE_DATA.get(lang).get("ENTITY"))) {
+		else if (Language.equalsIgnoreColor(lang, clicked, "ENTITY")) {
 			entityType = "entity";
 		}
-		else if (clicked.equals(Language.LANGUAGE_DATA.get(lang).get("DEFAULT"))) {
+		else if (Language.equalsIgnoreColor(lang, clicked, "DEFAULT")) {
 			ArrayList<String> stack = new ArrayList<String>();
 			stack.add("default");
 			stack.add("default");
@@ -154,7 +152,7 @@ public class InventoryGUI_Listener extends InventoryGUI implements Listener {
 		Inventory inv = null;
 		String clicked_name = clicked_meta.getDisplayName();
 		
-		if (clicked_name.equals(Language.LANGUAGE_DATA.get(lang).get("PREV_PAGE"))) {
+		if (Language.equalsIgnoreColor(lang, clicked_name, "PREV_PAGE")) {
 			String page = clicked_meta.getLore().get(0);
 			page = page.replaceAll(ChatColor.GOLD + "\\(" + ChatColor.GREEN, "");
 			page = page.replaceAll(ChatColor.GOLD + " / [0-9]+\\)", "");
@@ -162,7 +160,7 @@ public class InventoryGUI_Listener extends InventoryGUI implements Listener {
 			
 			inv = openEntitySelect(lang, stack, prev_page);
 		}
-		else if (clicked_name.equals(Language.LANGUAGE_DATA.get(lang).get("NEXT_PAGE"))) {
+		else if (Language.equalsIgnoreColor(lang, clicked_name, "NEXT_PAGE")) {
 			String page = clicked_meta.getLore().get(0);
 			page = page.replaceAll(ChatColor.GOLD + "\\(" + ChatColor.GREEN, "");
 			page = page.replaceAll(ChatColor.GOLD + " / [0-9]+\\)", "");
@@ -170,10 +168,10 @@ public class InventoryGUI_Listener extends InventoryGUI implements Listener {
 			
 			inv = openEntitySelect(lang, stack, next_page);
 		}
-		else if (clicked_name.equals(Language.LANGUAGE_DATA.get(lang).get("BACKWARD"))) {
+		else if (Language.equalsIgnoreColor(lang, clicked_name, "BACKWARD")) {
 			inv = openEntityTypeSelect(lang);
 		}
-		else if (clicked_name.equals(Language.LANGUAGE_DATA.get(lang).get("SEARCH"))) {
+		else if (Language.equalsIgnoreColor(lang, clicked_name, "SEARCH")) {
 			// search
 		}
 		else {
@@ -199,19 +197,19 @@ public class InventoryGUI_Listener extends InventoryGUI implements Listener {
 		Inventory inv = null;
 		String clicked_name = clicked_meta.getDisplayName();
 		
-		if (clicked_name.equals(Language.LANGUAGE_DATA.get(lang).get("ITEM"))) {
+		if (Language.equalsIgnoreColor(lang, clicked_name, "ITEM")) {
 			stack.add("item");
 			inv = openEventSelect(lang, stack, 1);
 		}
-		else if (clicked_name.equals(Language.LANGUAGE_DATA.get(lang).get("POTION_EFFECT"))) {
+		else if (Language.equalsIgnoreColor(lang, clicked_name, "POTION_EFFECT")) {
 			stack.add("potion");
 			inv = openEventSelect(lang, stack, 1);
 		}
-		else if (clicked_name.equals(Language.LANGUAGE_DATA.get(lang).get("ENCHANT"))) {
+		else if (Language.equalsIgnoreColor(lang, clicked_name, "ENCHANT")) {
 			stack.add("enchant");
 			inv = openEventSelect(lang, stack, 1);
 		}
-		else if (clicked_name.equals(Language.LANGUAGE_DATA.get(lang).get("BACKWARD")) && rank >= 3) {
+		else if (Language.equalsIgnoreColor(lang, clicked_name, "BACKWARD") && rank >= 3) {
 			
 			String entityType = stack.get(0);
 			String entityName = stack.get(1);
@@ -251,13 +249,13 @@ public class InventoryGUI_Listener extends InventoryGUI implements Listener {
 		Inventory inv = null;
 		String clicked_name = clicked_meta.getDisplayName();
 		
-		if (clicked_name.equals(Language.LANGUAGE_DATA.get(lang).get("PREV_PAGE"))) {
+		if (Language.equalsIgnoreColor(lang, clicked_name, "PREV_PAGE")) {
 			inv = openEventSelect(lang, stack, current_page - 1);
 		}
-		else if (clicked_name.equals(Language.LANGUAGE_DATA.get(lang).get("NEXT_PAGE"))) {
+		else if (Language.equalsIgnoreColor(lang, clicked_name, "NEXT_PAGE")) {
 			inv = openEventSelect(lang, stack, current_page + 1);
 		}
-		else if (clicked_name.equals(Language.LANGUAGE_DATA.get(lang).get("BACKWARD"))) {
+		else if (Language.equalsIgnoreColor(lang, clicked_name, "BACKWARD")) {
 			stack.remove(stack.size() - 1);
 			inv = openEventTypeSelect(lang, stack);
 		}
@@ -291,19 +289,19 @@ public class InventoryGUI_Listener extends InventoryGUI implements Listener {
 		Inventory inv = null;
 		String clicked_name = clicked_meta.getDisplayName();
 		
-		if (clicked_name.equals(Language.LANGUAGE_DATA.get(lang).get("EXCEPT"))) {
+		if (Language.equalsIgnoreColor(lang, clicked_name, "EXCEPT")) {
 			stack.add("EXCEPT");
 			inv = openEditGUI(lang, stack, 1);
 		}
-		else if (clicked_name.equals(Language.LANGUAGE_DATA.get(lang).get("BAN"))) {
+		else if (Language.equalsIgnoreColor(lang, clicked_name, "BAN")) {
 			stack.add("BAN");
 			inv = openEditGUI(lang, stack, 1);
 		}
-		else if (clicked_name.equals(Language.LANGUAGE_DATA.get(lang).get("MAX"))) {
+		else if (Language.equalsIgnoreColor(lang, clicked_name, "MAX")) {
 			stack.add("MAX");
 			inv = openEditIntGUI(lang, stack);
 		}
-		else if (clicked_name.equals(Language.LANGUAGE_DATA.get(lang).get("BACKWARD"))) {
+		else if (Language.equalsIgnoreColor(lang, clicked_name, "BACKWARD")) {
 			stack.remove(stack.size() - 1);
 			inv = openEventSelect(lang, stack, 1);
 		}
@@ -338,21 +336,19 @@ public class InventoryGUI_Listener extends InventoryGUI implements Listener {
 		}
 		
 		
-		if (clicked_name.equals(Language.LANGUAGE_DATA.get(lang).get("PREV_PAGE"))) {
+		if (Language.equalsIgnoreColor(lang, clicked_name, "PREV_PAGE")) {
 			inv = openEditGUI(lang, stack, current_page - 1);
 		}
-		else if (clicked_name.equals(Language.LANGUAGE_DATA.get(lang).get("NEXT_PAGE"))) {
+		else if (Language.equalsIgnoreColor(lang, clicked_name, "NEXT_PAGE")) {
 			inv = openEditGUI(lang, stack, current_page + 1);
 		}
-		else if (clicked_name.equals(Language.LANGUAGE_DATA.get(lang).get("BACKWARD"))) {
+		else if (Language.equalsIgnoreColor(lang, clicked_name, "BACKWARD")) {
 			stack.remove(stack.size() - 1);
 			inv = openEventDetailSetting(lang, stack);
 		}
 		else if (btn.equals(ClickType.LEFT)) {
 			String detailName = clicked_name.replaceAll(ChatColor.GRAY + "", "");
 			String status = clicked_meta.getLore().get(0);
-			String allow = Language.LANGUAGE_DATA.get(lang).get("STATUS_ACTIVATE");
-			String deny = Language.LANGUAGE_DATA.get(lang).get("STATUS_INACTIVATE");
 			String cmd_option = "";
 			String entityType = stack.get(0);
 			String entityName = stack.get(1);
@@ -361,13 +357,11 @@ public class InventoryGUI_Listener extends InventoryGUI implements Listener {
 			fields.add(detailName);
 			
 			status = status.replaceAll("§.", "");
-			allow = allow.replaceAll("§.", "");
-			deny = deny.replaceAll("§.", "");
 			
-			if (status.equals(allow)) {
+			if (Language.equalsIgnoreColor(lang, status, "STATUS_ACTIVATE")) {
 				cmd_option = "remove";
 			}
-			else if (status.equals(deny)) {
+			else if (Language.equalsIgnoreColor(lang, status, "STATUS_INACTIVATE")) {
 				cmd_option = "add";
 			}
 			else {
@@ -408,7 +402,7 @@ public class InventoryGUI_Listener extends InventoryGUI implements Listener {
 		int value = Integer.parseInt(value_str);
 		
 
-		if (clicked_name.equals(Language.LANGUAGE_DATA.get(lang).get("BACKWARD"))) {
+		if (Language.equalsIgnoreColor(lang, clicked_name, "BACKWARD")) {
 			stack.remove(stack.size() - 1);
 			inv = openEventDetailSetting(lang, stack);
 		}

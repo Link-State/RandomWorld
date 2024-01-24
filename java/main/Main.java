@@ -77,6 +77,12 @@ public class Main extends JavaPlugin {
 		
 		// config 파일 불러오기 성공 시
 		PLUGIN = Bukkit.getPluginManager().getPlugin("RandomWorld"); // 플러그인 객체
+
+		// 명령어 자동완성 등록
+		this.getCommand("randomworld").setTabCompleter(new RandomWorldCommand());
+		
+		// 전역변수 초기화 용도
+		new InventoryGUI();
 		
 		// 이벤트 해시맵에 저장
 		EVENTS = new HashMap<String, Listener>();
@@ -104,9 +110,6 @@ public class Main extends JavaPlugin {
 		Bukkit.getPluginManager().registerEvents(EVENTS.get("potion"), this);
 		Bukkit.getPluginManager().registerEvents(EVENTS.get("playerIO"), this);
 		Bukkit.getPluginManager().registerEvents(EVENTS.get("GUI"), this);
-
-		// 명령어 자동완성 등록
-		this.getCommand("randomworld").setTabCompleter(new RandomWorldCommand());
 	}
 	
 	
@@ -138,15 +141,10 @@ public class Main extends JavaPlugin {
 			return false;
 		}
 		
-		if (args[0].equals("test")) {
-			for (ChatColor str : ChatColor.values()) {
-				System.out.println(str + " : " + str.name());
-			}
-		}
 		
 		if (args[0].equals("setting")) {
 			if (p == null) {
-				sender.sendMessage(Language.LANGUAGE_DATA.get(lang).get("ONLY_PLAYER"));
+				sender.sendMessage(Language.fetchString(lang, "ONLY_PLAYER"));
 				return false;
 			}
 			
@@ -155,7 +153,7 @@ public class Main extends JavaPlugin {
 			
 			// 일반유저 또는 유저가 아닌 경우
 			if (rank <= 1) {
-				p.sendMessage(Language.LANGUAGE_DATA.get(lang).get("NO_PERMISSION"));
+				p.sendMessage(Language.fetchString(lang, "NO_PERMISSION"));
 				return false;
 			}
 			
@@ -165,7 +163,7 @@ public class Main extends JavaPlugin {
 		
 		if (args[0].equals("permission")) {
 			if (args.length != 3) {
-				sender.sendMessage(Language.LANGUAGE_DATA.get(lang).get("WRONG_PERMISSION_COMMAND"));
+				sender.sendMessage(Language.fetchString(lang, "WRONG_PERMISSION_COMMAND"));
 				return false;
 			}
 			
@@ -174,7 +172,7 @@ public class Main extends JavaPlugin {
 				int rank = RandomWorldCommand.getRank(p.getUniqueId());
 				
 				if (rank <= 2) {
-					p.sendMessage(Language.LANGUAGE_DATA.get(lang).get("NO_PERMISSION"));
+					p.sendMessage(Language.fetchString(lang, "NO_PERMISSION"));
 					return false;
 				}
 			}
@@ -188,29 +186,40 @@ public class Main extends JavaPlugin {
 		
 		if (args[0].equals("language")) {
 			if (args.length != 3) {
-				sender.sendMessage(Language.LANGUAGE_DATA.get(lang).get("WRONG_LANGUAGE_COMMAND"));
+				sender.sendMessage(Language.fetchString(lang, "WRONG_LANGUAGE_COMMAND"));
 				return false;
 			}
 			
 			String player_name = args[1];
 			String change_lang = args[2];
 			
-			OfflinePlayer target_p = InventoryGUI.SORTED_PLAYERS.get(player_name);
+			OfflinePlayer[] all_player = Bukkit.getOfflinePlayers();
+			OfflinePlayer target_p = null;
+			for (OfflinePlayer off_player : all_player) {
+				if (off_player.getName().equals(player_name)) {
+					target_p = off_player;
+					break;
+				}
+			}
+			
+			if (target_p == null) {
+				sender.sendMessage(Language.fetchString(lang, "NOT_EXIST_PLAYER"));
+			}
 			
 			re = Main.REGISTED_PLAYER.get(target_p.getUniqueId());
 			if (re == null) {
-				sender.sendMessage(Language.LANGUAGE_DATA.get(lang).get("NOT_EXIST_PLAYER"));
+				sender.sendMessage(Language.fetchString(lang, "NOT_EXIST_PLAYER"));
 				return false;
 			}
 			
 			if (Language.LANGUAGE.get(change_lang) == null) {
-				sender.sendMessage(Language.LANGUAGE_DATA.get(lang).get("NOT_EXIST_LANGUAGE"));
+				sender.sendMessage(Language.fetchString(lang, "NOT_EXIST_LANGUAGE"));
 				return false;
 			}
 			
 			re.setLanguage(change_lang);
 			
-			sender.sendMessage(Language.LANGUAGE_DATA.get(change_lang).get("COMPLETE_LANGUAGE_EDIT"));
+			sender.sendMessage(Language.fetchString(change_lang, "COMPLETE_LANGUAGE_EDIT"));
 			
 			isSuccess = true;
 		}
@@ -220,7 +229,7 @@ public class Main extends JavaPlugin {
 			args[0].equals("remove") ||
 			args[0].equals("set")) {
 			if (args.length < 5) {
-				sender.sendMessage(Language.LANGUAGE_DATA.get(lang).get("WRONG_EDIT_COMMAND"));
+				sender.sendMessage(Language.fetchString(lang, "WRONG_EDIT_COMMAND"));
 				return false;
 			}
 			
@@ -230,7 +239,7 @@ public class Main extends JavaPlugin {
 				
 				if ((rank <= 1 && args[1].equals("player") && p.getName().equals(args[2])) ||
 					(rank <= 2)) {
-					p.sendMessage(Language.LANGUAGE_DATA.get(lang).get("NO_PERMISSION"));
+					p.sendMessage(Language.fetchString(lang, "NO_PERMISSION"));
 					return false;
 				}
 			}
@@ -400,5 +409,7 @@ public class Main extends JavaPlugin {
 			
 			DISABLE_WORLD.put(world, true);
 		}
+		
+		// 전역변수 초기화
 	}
 }

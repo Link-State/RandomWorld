@@ -61,7 +61,7 @@ public class InventoryGUI {
 	public Inventory openEntityTypeSelect(String lang) {
 		
 		ArrayList<String> stack = new ArrayList<String>();
-		Inventory inv = createWindow(lang, 45, Language.LANGUAGE_DATA.get(lang).get("SELECT_ENTITY_TYPE"), stack);
+		Inventory inv = createWindow(lang, 45, Language.fetchString(lang, "SELECT_ENTITY_TYPE"), stack);
 		if (inv == null) {
 			return null;
 		}
@@ -69,14 +69,14 @@ public class InventoryGUI {
 		// 플레이어
 		ItemStack player_icon = new ItemStack(Material.PLAYER_HEAD, 1);
 		SkullMeta player_icon_meta = (SkullMeta) player_icon.getItemMeta();
-		player_icon_meta.setDisplayName(Language.LANGUAGE_DATA.get(lang).get("PLAYER"));
+		player_icon_meta.setDisplayName(Language.fetchString(lang, "PLAYER"));
 		player_icon.setItemMeta(player_icon_meta);
 		inv.setItem(20, player_icon);
 		
 		// 엔티티
 		ItemStack entity_icon = new ItemStack(Material.SKELETON_SKULL, 1);
 		SkullMeta entity_icon_meta = (SkullMeta) entity_icon.getItemMeta();
-		entity_icon_meta.setDisplayName(Language.LANGUAGE_DATA.get(lang).get("ENTITY"));
+		entity_icon_meta.setDisplayName(Language.fetchString(lang, "ENTITY"));
 		entity_icon.setItemMeta(entity_icon_meta);
 		inv.setItem(22, entity_icon);
 		
@@ -85,7 +85,7 @@ public class InventoryGUI {
 		SkullMeta default_icon_meta = (SkullMeta) default_icon.getItemMeta();
 		PlayerProfile default_icon_profile = createProfile("c69196b330c6b8962f23ad5627fb6ecce472eaf5c9d44f791f6709c7d0f4dece");
 		default_icon_meta.setOwnerProfile(default_icon_profile);
-		default_icon_meta.setDisplayName(Language.LANGUAGE_DATA.get(lang).get("DEFAULT"));
+		default_icon_meta.setDisplayName(Language.fetchString(lang, "DEFAULT"));
 		default_icon.setItemMeta(default_icon_meta);
 		inv.setItem(24, default_icon);
 		
@@ -132,7 +132,7 @@ public class InventoryGUI {
 		}
 		
 		// 페이지뷰 생성
-		Inventory inv = createPageWindow(lang, 54, Language.LANGUAGE_DATA.get(lang).get("SELECT_ENTITY"), icons, page, stack);
+		Inventory inv = createPageWindow(lang, 54, Language.fetchString(lang, "SELECT_ENTITY"), icons, page, stack);
 		if (inv == null) {
 			return null;
 		}
@@ -141,7 +141,7 @@ public class InventoryGUI {
 		if (entityType.equals("player")) {
 			ItemStack search_icon = new ItemStack(Material.SPYGLASS, 1);
 			ItemMeta search_icon_meta = search_icon.getItemMeta();
-			search_icon_meta.setDisplayName(Language.LANGUAGE_DATA.get(lang).get("SEARCH"));
+			search_icon_meta.setDisplayName(Language.fetchString(lang, "SEARCH"));
 			search_icon.setItemMeta(search_icon_meta);
 			inv.setItem(4, search_icon);
 		}
@@ -158,7 +158,7 @@ public class InventoryGUI {
 			return null;
 		}
 		
-		Inventory inv = createWindow(lang, 45, Language.LANGUAGE_DATA.get(lang).get("SELECT_EVENT_TYPE"), stack);
+		Inventory inv = createWindow(lang, 45, Language.fetchString(lang, "SELECT_EVENT_TYPE"), stack);
 		if (inv == null) {
 			return null;
 		}
@@ -166,7 +166,7 @@ public class InventoryGUI {
 		// 아이템
 		ItemStack item_icon = new ItemStack(Material.CRAFTING_TABLE, 1);
 		ItemMeta item_icon_meta = item_icon.getItemMeta();
-		item_icon_meta.setDisplayName(Language.LANGUAGE_DATA.get(lang).get("ITEM"));
+		item_icon_meta.setDisplayName(Language.fetchString(lang, "ITEM"));
 		item_icon.setItemMeta(item_icon_meta);
 		inv.setItem(20, item_icon);
 		
@@ -174,14 +174,14 @@ public class InventoryGUI {
 		ItemStack potion_icon = new ItemStack(Material.POTION, 1);
 		ItemMeta potion_icon_meta = potion_icon.getItemMeta();
 		potion_icon_meta.addItemFlags(ItemFlag.HIDE_POTION_EFFECTS);
-		potion_icon_meta.setDisplayName(Language.LANGUAGE_DATA.get(lang).get("POTION_EFFECT"));
+		potion_icon_meta.setDisplayName(Language.fetchString(lang, "POTION_EFFECT"));
 		potion_icon.setItemMeta(potion_icon_meta);
 		inv.setItem(22, potion_icon);
 		
 		// 인첸트
 		ItemStack enchant_icon = new ItemStack(Material.ENCHANTED_BOOK, 1);
 		ItemMeta enchant_icon_meta = enchant_icon.getItemMeta();
-		enchant_icon_meta.setDisplayName(Language.LANGUAGE_DATA.get(lang).get("ENCHANT"));
+		enchant_icon_meta.setDisplayName(Language.fetchString(lang, "ENCHANT"));
 		enchant_icon.setItemMeta(enchant_icon_meta);
 		inv.setItem(24, enchant_icon);
 		
@@ -260,15 +260,15 @@ public class InventoryGUI {
 			
 			Boolean activate = user_field_map.get(field);
 			field_icon_meta.setLore(Arrays.asList(
-					activate ? Language.LANGUAGE_DATA.get(lang).get("STATUS_ENABLE") : Language.LANGUAGE_DATA.get(lang).get("STATUS_DISABLE"),
-					activate ? Language.LANGUAGE_DATA.get(lang).get("LEFTCLICK_DISABLE") : Language.LANGUAGE_DATA.get(lang).get("LEFTCLICK_ENABLE"),
-					Language.LANGUAGE_DATA.get(lang).get("RIGHTCLICK_EVENT_DETAIL")
+					activate ? Language.fetchString(lang, "STATUS_ENABLE") : Language.fetchString(lang, "STATUS_DISABLE"),
+					activate ? Language.fetchString(lang, "LEFTCLICK_DISABLE") : Language.fetchString(lang, "LEFTCLICK_ENABLE"),
+					Language.fetchString(lang, "RIGHTCLICK_EVENT_DETAIL")
 				));
 			field_icon.setItemMeta(field_icon_meta);
 			icons.add(field_icon);
 		}
 		
-		Inventory inv = createPageWindow(lang, 54, Language.LANGUAGE_DATA.get(lang).get("SELECT_EVENT"), icons, page, stack);
+		Inventory inv = createPageWindow(lang, 54, Language.fetchString(lang, "SELECT_EVENT"), icons, page, stack);
 		if (inv == null) {
 			return null;
 		}
@@ -287,7 +287,7 @@ public class InventoryGUI {
 		
 		String eventName = stack.get(3);
 		
-		Inventory inv = createWindow(lang, 45, Language.LANGUAGE_DATA.get(lang).get("SET_EVENT"), stack);
+		Inventory inv = createWindow(lang, 45, Language.fetchString(lang, "SET_EVENT"), stack);
 		if (inv == null) {
 			return null;
 		}
@@ -295,13 +295,13 @@ public class InventoryGUI {
 		// except 아이콘
 		ItemStack except_icon = new ItemStack(Material.WRITABLE_BOOK, 1);
 		ItemMeta except_icon_meta = except_icon.getItemMeta();
-		except_icon_meta.setDisplayName(Language.LANGUAGE_DATA.get(lang).get("EXCEPT"));
+		except_icon_meta.setDisplayName(Language.fetchString(lang, "EXCEPT"));
 		except_icon.setItemMeta(except_icon_meta);
 		
 		// ban 아이콘
 		ItemStack ban_icon = new ItemStack(Material.WRITABLE_BOOK, 1);
 		ItemMeta ban_icon_meta = ban_icon.getItemMeta();
-		ban_icon_meta.setDisplayName(Language.LANGUAGE_DATA.get(lang).get("BAN"));
+		ban_icon_meta.setDisplayName(Language.fetchString(lang, "BAN"));
 		ban_icon.setItemMeta(ban_icon_meta);
 		
 		// max 아이콘
@@ -309,7 +309,7 @@ public class InventoryGUI {
 		if (category != null && category == 4) {
 			ItemStack max_icon = new ItemStack(Material.WRITABLE_BOOK, 1);
 			ItemMeta max_icon_meta = max_icon.getItemMeta();
-			max_icon_meta.setDisplayName(Language.LANGUAGE_DATA.get(lang).get("MAX"));
+			max_icon_meta.setDisplayName(Language.fetchString(lang, "MAX"));
 			max_icon.setItemMeta(max_icon_meta);
 			inv.setItem(20, except_icon);
 			inv.setItem(22, ban_icon);
@@ -370,8 +370,8 @@ public class InventoryGUI {
 				ItemMeta item_meta = item_stack.getItemMeta();
 				boolean status = applying_items.contains(material.name().toUpperCase());
 				item_meta.setLore(Arrays.asList(
-						status ? Language.LANGUAGE_DATA.get(lang).get("STATUS_ACTIVATE") : Language.LANGUAGE_DATA.get(lang).get("STATUS_INACTIVATE"),
-						status ? Language.LANGUAGE_DATA.get(lang).get("LEFTCLICK_INACTIVATE") : Language.LANGUAGE_DATA.get(lang).get("LEFTCLICK_ACTIVATE")
+						status ? Language.fetchString(lang, "STATUS_ACTIVATE") : Language.fetchString(lang, "STATUS_INACTIVATE"),
+						status ? Language.fetchString(lang, "LEFTCLICK_INACTIVATE") : Language.fetchString(lang, "LEFTCLICK_ACTIVATE")
 						));
 				item_stack.setItemMeta(item_meta);
 				items.put(material.name().toUpperCase(), item_stack);
@@ -388,8 +388,8 @@ public class InventoryGUI {
 				item_meta.addCustomEffect(new PotionEffect(potion, 0, 0, false, false), false);
 				boolean status = applying_items.contains(potion.getKey().getKey().toUpperCase());
 				item_meta.setLore(Arrays.asList(
-						status ? Language.LANGUAGE_DATA.get(lang).get("STATUS_ACTIVATE") : Language.LANGUAGE_DATA.get(lang).get("STATUS_INACTIVATE"),
-						status ? Language.LANGUAGE_DATA.get(lang).get("LEFTCLICK_INACTIVATE") : Language.LANGUAGE_DATA.get(lang).get("LEFTCLICK_ACTIVATE")
+						status ? Language.fetchString(lang, "STATUS_ACTIVATE") : Language.fetchString(lang, "STATUS_INACTIVATE"),
+						status ? Language.fetchString(lang, "LEFTCLICK_INACTIVATE") : Language.fetchString(lang, "LEFTCLICK_ACTIVATE")
 						));
 				
 				item_stack.setItemMeta(item_meta);
@@ -407,8 +407,8 @@ public class InventoryGUI {
 				item_meta.addStoredEnchant(enchant, 1, false);
 				boolean status = applying_items.contains(enchant.getKey().getKey().toUpperCase());
 				item_meta.setLore(Arrays.asList(
-						status ? Language.LANGUAGE_DATA.get(lang).get("STATUS_ACTIVATE") : Language.LANGUAGE_DATA.get(lang).get("STATUS_INACTIVATE"),
-						status ? Language.LANGUAGE_DATA.get(lang).get("LEFTCLICK_INACTIVATE") : Language.LANGUAGE_DATA.get(lang).get("LEFTCLICK_ACTIVATE")
+						status ? Language.fetchString(lang, "STATUS_ACTIVATE") : Language.fetchString(lang, "STATUS_INACTIVATE"),
+						status ? Language.fetchString(lang, "LEFTCLICK_INACTIVATE") : Language.fetchString(lang, "LEFTCLICK_ACTIVATE")
 						));
 
 				item_stack.setItemMeta(item_meta);
@@ -423,7 +423,7 @@ public class InventoryGUI {
 		}
 		
 		
-		Inventory inv = createPageWindow(lang, 54, Language.LANGUAGE_DATA.get(lang).get("SET_EVENT_DETAIL"), sorted_items, page, stack);
+		Inventory inv = createPageWindow(lang, 54, Language.fetchString(lang, "SET_EVENT_DETAIL"), sorted_items, page, stack);
 		if (inv == null) {
 			return null;
 		}
@@ -479,34 +479,34 @@ public class InventoryGUI {
 			return null;
 		}
 		
-		Inventory inv = createWindow(lang, 45, Language.LANGUAGE_DATA.get(lang).get("INPUT_INT"), stack);
+		Inventory inv = createWindow(lang, 45, Language.fetchString(lang, "INPUT_INT"), stack);
 		if (inv == null) {
 			return null;
 		}
 
 		ItemStack one_icon = new ItemStack(Material.IRON_NUGGET, 1);
 		ItemMeta one_icon_meta = one_icon.getItemMeta();
-		one_icon_meta.setDisplayName(Language.LANGUAGE_DATA.get(lang).get("LEFTCLICK_1"));
+		one_icon_meta.setDisplayName(Language.fetchString(lang, "LEFTCLICK_1"));
 		one_icon_meta.setLore(Arrays.asList(
-				Language.LANGUAGE_DATA.get(lang).get("RIGHTCLICK_1")
+				Language.fetchString(lang, "RIGHTCLICK_1")
 				));
 		one_icon.setItemMeta(one_icon_meta);
 		inv.setItem(14, one_icon);
 
 		ItemStack five_icon = new ItemStack(Material.IRON_INGOT, 1);
 		ItemMeta five_icon_meta = five_icon.getItemMeta();
-		five_icon_meta.setDisplayName(Language.LANGUAGE_DATA.get(lang).get("LEFTCLICK_5"));
+		five_icon_meta.setDisplayName(Language.fetchString(lang, "LEFTCLICK_5"));
 		five_icon_meta.setLore(Arrays.asList(
-				Language.LANGUAGE_DATA.get(lang).get("RIGHTCLICK_5")
+				Language.fetchString(lang, "RIGHTCLICK_5")
 				));
 		five_icon.setItemMeta(five_icon_meta);
 		inv.setItem(23, five_icon);
 
 		ItemStack ten_icon = new ItemStack(Material.IRON_BLOCK, 1);
 		ItemMeta ten_icon_meta = ten_icon.getItemMeta();
-		ten_icon_meta.setDisplayName(Language.LANGUAGE_DATA.get(lang).get("LEFTCLICK_10"));
+		ten_icon_meta.setDisplayName(Language.fetchString(lang, "LEFTCLICK_10"));
 		ten_icon_meta.setLore(Arrays.asList(
-				Language.LANGUAGE_DATA.get(lang).get("RIGHTCLICK_10")
+				Language.fetchString(lang, "RIGHTCLICK_10")
 				));
 		ten_icon.setItemMeta(ten_icon_meta);
 		inv.setItem(32, ten_icon);
@@ -515,7 +515,7 @@ public class InventoryGUI {
 		ItemMeta value_icon_meta = value_icon.getItemMeta();
 		value_icon_meta.setDisplayName("" + ChatColor.GOLD + ChatColor.BOLD + default_value);
 		value_icon_meta.setLore(Arrays.asList(
-				Language.LANGUAGE_DATA.get(lang).get("LEFTCLICK_APPLY")
+				Language.fetchString(lang, "LEFTCLICK_APPLY")
 				));
 		value_icon.setItemMeta(value_icon_meta);
 		inv.setItem(22, value_icon);
@@ -556,7 +556,7 @@ public class InventoryGUI {
 		ItemStack prev_icon = new ItemStack(Material.PLAYER_HEAD, 1);
 		SkullMeta prev_icon_meta = (SkullMeta) prev_icon.getItemMeta();
 		prev_icon_meta.setOwnerProfile(createProfile("77334cddfab45d75ad28e1a47bf8cf5017d2f0982f6737da22d4972952510661"));
-		prev_icon_meta.setDisplayName(Language.LANGUAGE_DATA.get(lang).get("PREV_PAGE"));
+		prev_icon_meta.setDisplayName(Language.fetchString(lang, "PREV_PAGE"));
 		prev_icon_meta.setLore(Arrays.asList(ChatColor.GOLD + "(" + ChatColor.GREEN + page + ChatColor.GOLD + " / " + lastPage + ")"));
 		prev_icon.setItemMeta(prev_icon_meta);
 		inv.setItem(3, prev_icon);
@@ -565,7 +565,7 @@ public class InventoryGUI {
 		ItemStack next_icon = new ItemStack(Material.PLAYER_HEAD, 1);
 		SkullMeta next_icon_meta = (SkullMeta) next_icon.getItemMeta();
 		next_icon_meta.setOwnerProfile(createProfile("e7742034f59db890c8004156b727c77ca695c4399d8e0da5ce9227cf836bb8e2"));
-		next_icon_meta.setDisplayName(Language.LANGUAGE_DATA.get(lang).get("NEXT_PAGE"));
+		next_icon_meta.setDisplayName(Language.fetchString(lang, "NEXT_PAGE"));
 		next_icon_meta.setLore(Arrays.asList(ChatColor.GOLD + "(" + ChatColor.GREEN + page + ChatColor.GOLD + " / " + lastPage + ")"));
 		next_icon.setItemMeta(next_icon_meta);
 		inv.setItem(5, next_icon);
@@ -599,7 +599,7 @@ public class InventoryGUI {
 			ItemStack backward_icon = new ItemStack(Material.PLAYER_HEAD, 1);
 			SkullMeta backward_icon_meta = (SkullMeta) backward_icon.getItemMeta();
 			backward_icon_meta.setOwnerProfile(createProfile("1fc2611fbabe4e799062f6b470ac5ae727e32ef00d2b115d38656e341c128936"));
-			backward_icon_meta.setDisplayName(Language.LANGUAGE_DATA.get(lang).get("BACKWARD"));
+			backward_icon_meta.setDisplayName(Language.fetchString(lang, "BACKWARD"));
 			backward_icon.setItemMeta(backward_icon_meta);
 			inv.setItem(0, backward_icon);
 		}
@@ -608,7 +608,7 @@ public class InventoryGUI {
 		if (stack.size() > 0) {
 			ItemStack info_icon = new ItemStack(Material.PRIZE_POTTERY_SHERD, 1);
 			ItemMeta info_icon_meta = info_icon.getItemMeta();
-			info_icon_meta.setDisplayName(Language.LANGUAGE_DATA.get(lang).get("SELECTED_INFO"));
+			info_icon_meta.setDisplayName(Language.fetchString(lang, "SELECTED_INFO"));
 			info_icon_meta.setLore(stack);
 			info_icon.setItemMeta(info_icon_meta);
 			inv.setItem(1, info_icon);
@@ -617,7 +617,7 @@ public class InventoryGUI {
 		// 닫기 버튼
 		ItemStack close_icon = new ItemStack(Material.BARRIER, 1);
 		ItemMeta close_icon_meta = close_icon.getItemMeta();
-		close_icon_meta.setDisplayName(Language.LANGUAGE_DATA.get(lang).get("CLOSE"));
+		close_icon_meta.setDisplayName(Language.fetchString(lang, "CLOSE"));
 		close_icon.setItemMeta(close_icon_meta);
 		inv.setItem(8, close_icon);
 		
