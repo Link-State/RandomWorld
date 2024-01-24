@@ -138,13 +138,13 @@ public class InventoryGUI {
 		}
 
 		// 플레이어인 경우 검색버튼 활성화
-		if (entityType.equals("player")) {
-			ItemStack search_icon = new ItemStack(Material.SPYGLASS, 1);
-			ItemMeta search_icon_meta = search_icon.getItemMeta();
-			search_icon_meta.setDisplayName(Language.fetchString(lang, "SEARCH"));
-			search_icon.setItemMeta(search_icon_meta);
-			inv.setItem(4, search_icon);
-		}
+//		if (entityType.equals("player")) {
+//			ItemStack search_icon = new ItemStack(Material.SPYGLASS, 1);
+//			ItemMeta search_icon_meta = search_icon.getItemMeta();
+//			search_icon_meta.setDisplayName(Language.fetchString(lang, "SEARCH"));
+//			search_icon.setItemMeta(search_icon_meta);
+//			inv.setItem(4, search_icon);
+//		}
 
 		return inv;
 	}
